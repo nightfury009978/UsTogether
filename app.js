@@ -20,7 +20,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const authorSelect = document.getElementById('authorSelect');
 
   if (lockedAuthor) {
-    // Lock the dropdown so they cannot change it
     authorSelect.value = lockedAuthor;
     authorSelect.disabled = true;
     authorSelect.style.opacity = "0.8";
@@ -28,18 +27,17 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Lock selection on first change
+// Lock selection on choosing a name
 function saveAuthorPreference() {
   const authorSelect = document.getElementById('authorSelect');
   const chosenAuthor = authorSelect.value;
-  
-  // Save permanently to this phone's memory
-  localStorage.setItem('user_identity_locked', chosenAuthor);
-  
-  // Disable dropdown immediately
-  authorSelect.disabled = true;
-  authorSelect.style.opacity = "0.8";
-  authorSelect.style.cursor = "not-allowed";
+
+  if (chosenAuthor) {
+    localStorage.setItem('user_identity_locked', chosenAuthor);
+    authorSelect.disabled = true;
+    authorSelect.style.opacity = "0.8";
+    authorSelect.style.cursor = "not-allowed";
+  }
 }
 
 // Mood selection listener
@@ -55,13 +53,10 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
 function saveEntry() {
   const authorSelect = document.getElementById('authorSelect');
   let author = localStorage.getItem('user_identity_locked') || authorSelect.value;
-  
-  // Lock it in if posting for the first time without explicitly touching the dropdown
-  if (!localStorage.getItem('user_identity_locked')) {
-    localStorage.setItem('user_identity_locked', author);
-    authorSelect.disabled = true;
-    authorSelect.style.opacity = "0.8";
-    authorSelect.style.cursor = "not-allowed";
+
+  if (!author) {
+    alert("Please select your name before posting your memory!");
+    return;
   }
 
   const text = document.getElementById('diaryInput').value.trim();
