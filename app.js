@@ -37,14 +37,14 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Hide splash screen after animation completes
+  // Hide splash screen
   setTimeout(() => {
     const splash = document.getElementById('splash');
     if (splash) splash.style.display = 'none';
   }, 2800);
 });
 
-// Lock Selection Permanently When Name is Selected
+// Lock Selection Permanently
 function saveAuthorPreference() {
   const authorSelect = document.getElementById('authorSelect');
   const chosenAuthor = authorSelect.value;
@@ -69,7 +69,7 @@ function toggleMenu() {
 
 // Open / Close Stories Bottom Sheet
 function openStoriesSheet() {
-  toggleMenu(); // Close hamburger drawer
+  toggleMenu(); 
   const overlay = document.getElementById('storyModalOverlay');
   const sheet = document.getElementById('storyBottomSheet');
   if (overlay && sheet) {
@@ -146,7 +146,7 @@ function saveEntry() {
   });
 }
 
-// Restricted Memory Delete (Owner Only)
+// Memory Delete Prompt (Fixed to clean message)
 function deleteMemory(docId, author) {
   if (!isDeleteMode) return;
 
@@ -157,7 +157,7 @@ function deleteMemory(docId, author) {
     return;
   }
 
-  const confirmDelete = confirm(`Delete your memory?`);
+  const confirmDelete = confirm("Delete your selected memory?");
   if (confirmDelete) {
     db.collection("diary").doc(docId).delete()
       .then(() => {
@@ -250,7 +250,7 @@ function saveStory() {
   });
 }
 
-// Load Stories in Real-Time
+// Load Stories with Collapsible Accordion & Delete Option
 function loadStories() {
   db.collection("stories").orderBy("timestamp", "desc")
     .onSnapshot((snapshot) => {
@@ -265,23 +265,56 @@ function loadStories() {
 
       snapshot.forEach((doc) => {
         const data = doc.data();
+        const docId = doc.id;
         const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', {
           month: 'short', day: 'numeric', year: 'numeric'
         }) : 'Just now';
 
         const card = document.createElement('div');
-        card.className = 'story-book-card';
+        card.className = 'story-accordion-card';
 
         card.innerHTML = `
-          <div class="story-book-title">${escapeHtml(data.title)}</div>
-          <div class="story-book-author">Written by ${data.author} • ${dateStr}</div>
-          <div class="story-book-body">${escapeHtml(data.content)}</div>
+          <div class="story-accordion-header" onclick="toggleStoryAccordion(this)">
+            <div class="story-accordion-title">${escapeHtml(data.title)}</div>
+            <div class="story-chevron">❯</div>
+          </div>
+          <div class="story-accordion-body">
+            <div class="story-book-author-bar">
+              <span>Written by ${data.author} • ${dateStr}</span>
+              <button class="story-delete-btn" onclick="deleteStory('${docId}', '${data.author}')">🗑️</button>
+            </div>
+            <div class="story-book-text">${escapeHtml(data.content)}</div>
+          </div>
         `;
         feed.appendChild(card);
       });
     }, (error) => {
       console.error("Error loading stories: ", error);
     });
+}
+
+// Toggle Story Expand/Collapse
+function toggleStoryAccordion(headerElem) {
+  const card = headerElem.parentElement;
+  card.classList.toggle('open');
+}
+
+// Individual Story Delete Function
+function deleteStory(docId, author) {
+  const currentDeviceUser = localStorage.getItem('user_identity_locked');
+
+  if (author !== currentDeviceUser) {
+    alert(`You can only delete stories written by you (${currentDeviceUser})!`);
+    return;
+  }
+
+  const confirmDelete = confirm("Delete your selected memory?");
+  if (confirmDelete) {
+    db.collection("stories").doc(docId).delete()
+      .catch((error) => {
+        console.error("Error removing story: ", error);
+      });
+  }
 }
 
 function triggerHeart(btn) {
