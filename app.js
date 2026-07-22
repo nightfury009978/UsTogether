@@ -13,6 +13,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let selectedMood = "🥰";
+let isDeleteMode = false;
 
 // Check & Lock identity on launch
 window.addEventListener('DOMContentLoaded', () => {
@@ -38,6 +39,33 @@ function saveAuthorPreference() {
     authorSelect.style.opacity = "0.8";
     authorSelect.style.cursor = "not-allowed";
   }
+}
+
+// Drawer & Menu Toggles
+function toggleMenu() {
+  document.getElementById('menuOverlay').classList.toggle('active');
+  document.getElementById('menuDrawer').classList.toggle('active');
+}
+
+function toggleDeleteMode() {
+  isDeleteMode = !isDeleteMode;
+  const feed = document.getElementById('entriesFeed');
+  const banner = document.getElementById('deleteBanner');
+  const btnText = document.getElementById('deleteModeText');
+
+  if (isDeleteMode) {
+    feed.classList.add('delete-mode');
+    banner.style.display = 'flex';
+    btnText.textContent = 'Exit Delete Mode';
+  } else {
+    feed.classList.remove('delete-mode');
+    banner.style.display = 'none';
+    btnText.textContent = 'Delete a Memory';
+  }
+
+  // Close drawer if open
+  document.getElementById('menuOverlay').classList.remove('active');
+  document.getElementById('menuDrawer').classList.remove('active');
 }
 
 // Mood selection listener
@@ -80,6 +108,22 @@ function saveEntry() {
   });
 }
 
+// Delete Memory Function
+function deleteMemory(docId, author) {
+  if (!isDeleteMode) return;
+
+  const confirmDelete = confirm(`Delete this memory by ${author}?`);
+  if (confirmDelete) {
+    db.collection("diary").doc(docId).delete()
+      .then(() => {
+        toggleDeleteMode(); // Exit delete mode after deleting
+      })
+      .catch((error) => {
+        console.error("Error removing memory: ", error);
+      });
+  }
+}
+
 // Real-time Feed Listener
 db.collection("diary").orderBy("timestamp", "desc")
   .onSnapshot((snapshot) => {
@@ -97,12 +141,15 @@ db.collection("diary").orderBy("timestamp", "desc")
 
     snapshot.forEach((doc) => {
       const data = doc.data();
+      const docId = doc.id;
       const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
       }) : 'Just now';
 
       const card = document.createElement('div');
       card.className = 'entry-card';
+      card.onclick = () => deleteMemory(docId, data.author);
+
       card.innerHTML = `
         <div class="entry-header">
           <span class="entry-author">${data.author}</span>
@@ -111,7 +158,7 @@ db.collection("diary").orderBy("timestamp", "desc")
         <p class="entry-text">${escapeHtml(data.text)}</p>
         <div class="entry-footer">
           <span class="entry-mood">${data.mood || '❤️'}</span>
-          <button class="like-heart" onclick="triggerHeart(this)">❤️</button>
+          <button class="like-heart" onclick="event.stopPropagation(); triggerHeart(this)">❤️</button>
         </div>
       `;
       feed.appendChild(card);
