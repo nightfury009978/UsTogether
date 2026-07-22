@@ -1,6 +1,6 @@
 :root {
   --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #1a102f 50%, #2b1030 100%);
-  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-bg: rgba(255, 255, 255, 0.04);
   --card-border: rgba(255, 255, 255, 0.12);
   --accent-pink: #ff4b8b;
   --accent-purple: #8b5cf6;
@@ -90,7 +90,6 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Glowing Visible Hamburger Icon */
 .hamburger-btn {
   background: rgba(255, 75, 139, 0.15);
   border: 1px solid rgba(255, 75, 139, 0.4);
@@ -395,17 +394,18 @@ textarea::placeholder {
   display: none;
 }
 
+/* Glowing Edge Memory Box */
 .entry-card {
   position: relative;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
+  border: 1px solid rgba(255, 75, 139, 0.35);
+  border-radius: 18px;
   padding: 16px;
   margin-bottom: 20px;
   backdrop-filter: blur(12px);
   animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 75, 139, 0.1);
+  box-shadow: 0 0 15px rgba(255, 75, 139, 0.2), inset 0 0 10px rgba(139, 92, 246, 0.15);
 }
 
 @keyframes slideIn {
@@ -548,7 +548,7 @@ textarea::placeholder {
 .story-sheet-content {
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch; /* iOS Smooth Scroll */
   scrollbar-width: none;
   padding-right: 4px;
 }
@@ -557,7 +557,6 @@ textarea::placeholder {
   display: none;
 }
 
-/* Stories Cormorant Garamond Font Formatting */
 .story-input-box {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--card-border);
@@ -582,7 +581,7 @@ textarea::placeholder {
 
 .story-text-area {
   width: 100%;
-  height: 140px;
+  height: 120px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--card-border);
   border-radius: 12px;
@@ -618,32 +617,81 @@ textarea::placeholder {
   margin-bottom: 14px;
 }
 
-.story-book-card {
+/* Collapsible Story Accordion Card */
+.story-accordion-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(192, 132, 252, 0.25);
   border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
-.story-book-title {
+.story-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.story-accordion-header:active {
+  background: rgba(255, 75, 139, 0.1);
+}
+
+.story-accordion-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #f3e8ff;
-  margin-bottom: 4px;
 }
 
-.story-book-author {
+.story-chevron {
+  font-size: 1.1rem;
+  color: #ff8fb3;
+  transition: transform 0.3s ease;
+}
+
+.story-accordion-card.open .story-chevron {
+  transform: rotate(90deg);
+}
+
+.story-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 18px;
+  transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), padding 0.3s ease;
+}
+
+.story-accordion-card.open .story-accordion-body {
+  max-height: 2000px; /* Expands smoothly */
+  padding: 0 18px 18px 18px;
+}
+
+.story-book-author-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 0.95rem;
   color: #ff8fb3;
   font-style: italic;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
 }
 
-.story-book-body {
+.story-delete-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.story-book-text {
   font-family: 'Cormorant Garamond', serif !important;
   font-size: 1.2rem;
   line-height: 1.7;
