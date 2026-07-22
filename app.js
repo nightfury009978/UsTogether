@@ -14,7 +14,7 @@ const db = firebase.firestore();
 
 let selectedMood = "🥰";
 
-// Load saved user on launch
+// Auto-load saved user identity on launch
 window.addEventListener('DOMContentLoaded', () => {
   const savedAuthor = localStorage.getItem('user_identity');
   if (savedAuthor) {
@@ -22,7 +22,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Save user identity on that phone
 function saveAuthorPreference() {
   const author = document.getElementById('authorSelect').value;
   localStorage.setItem('user_identity', author);
@@ -39,8 +38,7 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
 
 // Save Entry Function
 function saveEntry() {
-  const authorSelect = document.getElementById('authorSelect');
-  const author = authorSelect.value;
+  const author = document.getElementById('authorSelect').value;
   const text = document.getElementById('diaryInput').value.trim();
 
   if (!text) {
@@ -48,7 +46,6 @@ function saveEntry() {
     return;
   }
 
-  // Ensure preference is stored on post
   localStorage.setItem('user_identity', author);
 
   db.collection("diary").add({
@@ -69,12 +66,16 @@ function saveEntry() {
 db.collection("diary").orderBy("timestamp", "desc")
   .onSnapshot((snapshot) => {
     const feed = document.getElementById('entriesFeed');
+    const countBadge = document.getElementById('entryCount');
     feed.innerHTML = "";
 
     if (snapshot.empty) {
-      feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center;">No entries yet. Be the first to write! ✨</p>`;
+      feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; padding-top:20px;">No memories yet. Write your first memory together! ✨</p>`;
+      countBadge.textContent = "0 memories";
       return;
     }
+
+    countBadge.textContent = `${snapshot.size} memories`;
 
     snapshot.forEach((doc) => {
       const data = doc.data();
@@ -90,11 +91,21 @@ db.collection("diary").orderBy("timestamp", "desc")
           <span class="entry-date">${dateStr}</span>
         </div>
         <p class="entry-text">${escapeHtml(data.text)}</p>
-        <span class="entry-mood">${data.mood || '❤️'}</span>
+        <div class="entry-footer">
+          <span class="entry-mood">${data.mood || '❤️'}</span>
+          <button class="like-heart" onclick="triggerHeart(this)">❤️</button>
+        </div>
       `;
       feed.appendChild(card);
     });
   });
+
+function triggerHeart(btn) {
+  btn.style.transform = "scale(1.5)";
+  setTimeout(() => {
+    btn.style.transform = "scale(1)";
+  }, 200);
+}
 
 function escapeHtml(text) {
   return text.replace(/[&<>"']/g, function(m) {
