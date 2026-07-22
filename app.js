@@ -14,6 +14,20 @@ const db = firebase.firestore();
 
 let selectedMood = "🥰";
 
+// Load saved user on launch
+window.addEventListener('DOMContentLoaded', () => {
+  const savedAuthor = localStorage.getItem('user_identity');
+  if (savedAuthor) {
+    document.getElementById('authorSelect').value = savedAuthor;
+  }
+});
+
+// Save user identity on that phone
+function saveAuthorPreference() {
+  const author = document.getElementById('authorSelect').value;
+  localStorage.setItem('user_identity', author);
+}
+
 // Mood selection listener
 document.querySelectorAll('.mood-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -25,13 +39,17 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
 
 // Save Entry Function
 function saveEntry() {
-  const author = document.getElementById('authorSelect').value;
+  const authorSelect = document.getElementById('authorSelect');
+  const author = authorSelect.value;
   const text = document.getElementById('diaryInput').value.trim();
 
   if (!text) {
     alert("Please write something before posting!");
     return;
   }
+
+  // Ensure preference is stored on post
+  localStorage.setItem('user_identity', author);
 
   db.collection("diary").add({
     author: author,
@@ -89,4 +107,3 @@ function escapeHtml(text) {
     }[m];
   });
 }
-
