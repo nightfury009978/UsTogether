@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UsTogether — Our Daily Diary</title>
+  <title>UsTogether — Our Shared Memories</title>
   
-  <!-- Fonts -->
+  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css">
   
@@ -18,24 +18,26 @@
 </head>
 <body>
 
-  <!-- Splash Screen -->
+  <!-- Splash / App Launch Screen -->
   <div id="splash">
-    <div class="logo-heart">💖</div>
-    <h1 class="brand-title">UsTogether</h1>
-    <p class="brand-sub">Our Shared Moments</p>
+    <div class="splash-content">
+      <div class="heart-pulse">💖</div>
+      <h1 class="brand-title">UsTogether</h1>
+      <p class="brand-sub">Abhay & Dhakshitha</p>
+    </div>
   </div>
 
   <!-- Main Container -->
   <div class="app-container">
     <header class="app-header">
       <div class="profile-badge">
-        <span class="heart-icon">✨</span>
+        <span class="sparkle">✨</span>
         <h2>Abhay & Dhakshitha</h2>
       </div>
-      <p class="subtitle">Write today's memory...</p>
+      <p class="subtitle">Our Personal Diary & Memories</p>
     </header>
 
-    <!-- Create Entry Box -->
+    <!-- Create Memory Box -->
     <section class="card input-card">
       <div class="author-selector">
         <label>Writing as:</label>
@@ -45,25 +47,30 @@
         </select>
       </div>
 
-      <textarea id="diaryInput" placeholder="What made you smile today? Write your entry..."></textarea>
+      <textarea id="diaryInput" placeholder="What made you smile today? Write a memory..."></textarea>
       
       <div class="mood-picker">
-        <span>Mood:</span>
-        <button class="mood-btn active" data-mood="🥰">🥰</button>
-        <button class="mood-btn" data-mood="🥺">🥺</button>
-        <button class="mood-btn" data-mood="✨">✨</button>
-        <button class="mood-btn" data-mood="❤️">❤️</button>
-        <button class="mood-btn" data-mood="🌙">🌙</button>
+        <span class="mood-label">Mood:</span>
+        <div class="mood-options">
+          <button class="mood-btn active" data-mood="🥰">🥰</button>
+          <button class="mood-btn" data-mood="🥺">🥺</button>
+          <button class="mood-btn" data-mood="✨">✨</button>
+          <button class="mood-btn" data-mood="❤️">❤️</button>
+          <button class="mood-btn" data-mood="🌙">🌙</button>
+        </div>
       </div>
 
       <button id="saveBtn" onclick="saveEntry()">Post Memory ✨</button>
     </section>
 
-    <!-- Feed / Timeline -->
+    <!-- Timeline Section -->
     <section class="feed-section">
-      <h3>Memory Timeline</h3>
-      <div id="entriesFeed" class="feed">
-        <div class="loading">Loading entries...</div>
+      <div class="timeline-header">
+        <h3>Memory Timeline</h3>
+        <span class="memory-count" id="entryCount">✨</span>
+      </div>
+      <div id="entriesFeed" class="timeline-feed">
+        <div class="loading">Loading memories...</div>
       </div>
     </section>
   </div>
