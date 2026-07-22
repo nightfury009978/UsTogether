@@ -1,1 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UsTogether — Our Daily Diary</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Splash Screen -->
+  <div id="splash">
+    <div class="logo-heart">💖</div>
+    <h1 class="brand-title">UsTogether</h1>
+    <p class="brand-sub">Our Shared Moments</p>
+  </div>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <header class="app-header">
+      <div class="profile-badge">
+        <span class="heart-icon">✨</span>
+        <h2>Abhay & Dhakshitha</h2>
+      </div>
+      <p class="subtitle">Write today's memory...</p>
+    </header>
+
+    <!-- Create Entry Box -->
+    <section class="card input-card">
+      <div class="author-selector">
+        <label>Writing as:</label>
+        <select id="authorSelect">
+          <option value="Abhay">Abhay 👦🏻</option>
+          <option value="Dhakshitha">Dhakshitha 👧🏻</option>
+        </select>
+      </div>
+
+      <textarea id="diaryInput" placeholder="What made you smile today? Write your entry..."></textarea>
+      
+      <div class="mood-picker">
+        <span>Mood:</span>
+        <button class="mood-btn active" data-mood="🥰">🥰</button>
+        <button class="mood-btn" data-mood="🥺">🥺</button>
+        <button class="mood-btn" data-mood="✨">✨</button>
+        <button class="mood-btn" data-mood="❤️">❤️</button>
+        <button class="mood-btn" data-mood="🌙">🌙</button>
+      </div>
+
+      <button id="saveBtn" onclick="saveEntry()">Post Memory ✨</button>
+    </section>
+
+    <!-- Feed / Timeline -->
+    <section class="feed-section">
+      <h3>Memory Timeline</h3>
+      <div id="entriesFeed" class="feed">
+        <div class="loading">Loading entries...</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
 
