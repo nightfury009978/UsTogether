@@ -63,7 +63,6 @@ function toggleDeleteMode() {
     btnText.textContent = 'Delete a Memory';
   }
 
-  // Close drawer if open
   document.getElementById('menuOverlay').classList.remove('active');
   document.getElementById('menuDrawer').classList.remove('active');
 }
@@ -108,11 +107,18 @@ function saveEntry() {
   });
 }
 
-// Delete Memory Function
+// Restricted Delete Function (Owner-Only)
 function deleteMemory(docId, author) {
   if (!isDeleteMode) return;
 
-  const confirmDelete = confirm(`Delete this memory by ${author}?`);
+  const currentDeviceUser = localStorage.getItem('user_identity_locked');
+
+  if (author !== currentDeviceUser) {
+    alert(`You can only delete memories written by you (${currentDeviceUser})!`);
+    return;
+  }
+
+  const confirmDelete = confirm(`Delete your memory?`);
   if (confirmDelete) {
     db.collection("diary").doc(docId).delete()
       .then(() => {
