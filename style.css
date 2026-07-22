@@ -207,7 +207,7 @@ textarea::placeholder {
   cursor: pointer;
 }
 
-/* Timeline Unique Layout */
+/* Timeline Header */
 .timeline-header {
   display: flex;
   justify-content: space-between;
@@ -222,11 +222,21 @@ textarea::placeholder {
   color: #ffd1e1;
 }
 
+/* iOS-Style Inertia Scroll Container */
 .timeline-feed {
   position: relative;
   padding-left: 20px;
   border-left: 2px dashed rgba(255, 255, 255, 0.15);
   margin-left: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari, Opera */
+.timeline-feed::-webkit-scrollbar {
+  display: none;
 }
 
 /* Entry Cards */
@@ -238,15 +248,14 @@ textarea::placeholder {
   padding: 16px;
   margin-bottom: 20px;
   backdrop-filter: blur(12px);
-  animation: slideIn 0.3s ease;
+  animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Timeline Node dot */
 .entry-card::before {
   content: '';
   position: absolute;
