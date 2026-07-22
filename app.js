@@ -1,17 +1,19 @@
-// Toggle Views (Memories vs Stories)
-function openStoriesView() {
-  document.getElementById('mainTimelineView').style.display = 'none';
-  document.getElementById('storyView').style.display = 'block';
-  toggleMenu();
+// Open/Close Stories Bottom Sheet Interface
+function openStoriesSheet() {
+  document.getElementById('menuOverlay').classList.remove('active');
+  document.getElementById('menuDrawer').classList.remove('active');
+
+  document.getElementById('storyModalOverlay').classList.add('active');
+  document.getElementById('storyBottomSheet').classList.add('active');
   loadStories();
 }
 
-function closeStoriesView() {
-  document.getElementById('storyView').style.display = 'none';
-  document.getElementById('mainTimelineView').style.display = 'block';
+function closeStoriesSheet() {
+  document.getElementById('storyModalOverlay').classList.remove('active');
+  document.getElementById('storyBottomSheet').classList.remove('active');
 }
 
-// Save Story to Firebase
+// Save Story
 function saveStory() {
   const authorSelect = document.getElementById('authorSelect');
   const author = localStorage.getItem('user_identity_locked') || authorSelect.value;
@@ -25,7 +27,7 @@ function saveStory() {
   const content = document.getElementById('storyContent').value.trim();
 
   if (!title || !content) {
-    alert("Please add both a title and story content!");
+    alert("Please write a title and story content!");
     return;
   }
 
@@ -38,14 +40,13 @@ function saveStory() {
   .then(() => {
     document.getElementById('storyTitle').value = "";
     document.getElementById('storyContent').value = "";
-    alert("Story published successfully! 🥀");
   })
   .catch((error) => {
     console.error("Error publishing story: ", error);
   });
 }
 
-// Load Stories Real-time
+// Load Stories in Real-Time
 function loadStories() {
   db.collection("stories").orderBy("timestamp", "desc")
     .onSnapshot((snapshot) => {
@@ -53,7 +54,7 @@ function loadStories() {
       feed.innerHTML = "";
 
       if (snapshot.empty) {
-        feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; font-style:italic;">No stories published yet. Write the first chapter...</p>`;
+        feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; font-family:'Cormorant Garamond', serif; font-size:1.1rem; padding-top:10px;">No stories published yet. Write the first chapter...</p>`;
         return;
       }
 
@@ -64,16 +65,12 @@ function loadStories() {
         }) : 'Just now';
 
         const card = document.createElement('div');
-        card.className = 'published-story-card';
+        card.className = 'story-book-card';
 
         card.innerHTML = `
-          <div class="story-card-header">
-            <div>
-              <div class="story-card-title">${escapeHtml(data.title)}</div>
-              <div class="story-card-author">Written by ${data.author} • ${dateStr}</div>
-            </div>
-          </div>
-          <div class="story-card-content">${escapeHtml(data.content)}</div>
+          <div class="story-book-title">${escapeHtml(data.title)}</div>
+          <div class="story-book-author">Written by ${data.author} • ${dateStr}</div>
+          <div class="story-book-body">${escapeHtml(data.content)}</div>
         `;
         feed.appendChild(card);
       });
