@@ -1,191 +1,81 @@
-// Your exact Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBndZhDQVGVmrAgzwizheVErOfMz8nukYQ",
-  authDomain: "ustogether-14936.firebaseapp.com",
-  projectId: "ustogether-14936",
-  storageBucket: "ustogether-14936.firebasestorage.app",
-  messagingSenderId: "685510249495",
-  appId: "1:685510249495:web:3efd43596ca0cb621a6052"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let selectedMood = "🥰";
-let isDeleteMode = false;
-
-// Check & Lock identity on launch
-window.addEventListener('DOMContentLoaded', () => {
-  const lockedAuthor = localStorage.getItem('user_identity_locked');
-  const authorSelect = document.getElementById('authorSelect');
-
-  if (lockedAuthor) {
-    authorSelect.value = lockedAuthor;
-    authorSelect.disabled = true;
-    authorSelect.style.opacity = "0.8";
-    authorSelect.style.cursor = "not-allowed";
-  }
-});
-
-// Lock selection on choosing a name
-function saveAuthorPreference() {
-  const authorSelect = document.getElementById('authorSelect');
-  const chosenAuthor = authorSelect.value;
-
-  if (chosenAuthor) {
-    localStorage.setItem('user_identity_locked', chosenAuthor);
-    authorSelect.disabled = true;
-    authorSelect.style.opacity = "0.8";
-    authorSelect.style.cursor = "not-allowed";
-  }
+// Toggle Views (Memories vs Stories)
+function openStoriesView() {
+  document.getElementById('mainTimelineView').style.display = 'none';
+  document.getElementById('storyView').style.display = 'block';
+  toggleMenu();
+  loadStories();
 }
 
-// Drawer & Menu Toggles
-function toggleMenu() {
-  document.getElementById('menuOverlay').classList.toggle('active');
-  document.getElementById('menuDrawer').classList.toggle('active');
+function closeStoriesView() {
+  document.getElementById('storyView').style.display = 'none';
+  document.getElementById('mainTimelineView').style.display = 'block';
 }
 
-function toggleDeleteMode() {
-  isDeleteMode = !isDeleteMode;
-  const feed = document.getElementById('entriesFeed');
-  const banner = document.getElementById('deleteBanner');
-  const btnText = document.getElementById('deleteModeText');
-
-  if (isDeleteMode) {
-    feed.classList.add('delete-mode');
-    banner.style.display = 'flex';
-    btnText.textContent = 'Exit Delete Mode';
-  } else {
-    feed.classList.remove('delete-mode');
-    banner.style.display = 'none';
-    btnText.textContent = 'Delete a Memory';
-  }
-
-  document.getElementById('menuOverlay').classList.remove('active');
-  document.getElementById('menuDrawer').classList.remove('active');
-}
-
-// Mood selection listener
-document.querySelectorAll('.mood-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-    e.target.classList.add('active');
-    selectedMood = e.target.getAttribute('data-mood');
-  });
-});
-
-// Save Entry Function
-function saveEntry() {
+// Save Story to Firebase
+function saveStory() {
   const authorSelect = document.getElementById('authorSelect');
-  let author = localStorage.getItem('user_identity_locked') || authorSelect.value;
+  const author = localStorage.getItem('user_identity_locked') || authorSelect.value;
 
   if (!author) {
-    alert("Please select your name before posting your memory!");
+    alert("Please select your name on the main page first!");
     return;
   }
 
-  const text = document.getElementById('diaryInput').value.trim();
+  const title = document.getElementById('storyTitle').value.trim();
+  const content = document.getElementById('storyContent').value.trim();
 
-  if (!text) {
-    alert("Please write something before posting!");
+  if (!title || !content) {
+    alert("Please add both a title and story content!");
     return;
   }
 
-  db.collection("diary").add({
+  db.collection("stories").add({
     author: author,
-    text: text,
-    mood: selectedMood,
+    title: title,
+    content: content,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   })
   .then(() => {
-    document.getElementById('diaryInput').value = "";
+    document.getElementById('storyTitle').value = "";
+    document.getElementById('storyContent').value = "";
+    alert("Story published successfully! 🥀");
   })
   .catch((error) => {
-    console.error("Error writing entry: ", error);
+    console.error("Error publishing story: ", error);
   });
 }
 
-// Restricted Delete Function (Owner-Only)
-function deleteMemory(docId, author) {
-  if (!isDeleteMode) return;
+// Load Stories Real-time
+function loadStories() {
+  db.collection("stories").orderBy("timestamp", "desc")
+    .onSnapshot((snapshot) => {
+      const feed = document.getElementById('storiesFeed');
+      feed.innerHTML = "";
 
-  const currentDeviceUser = localStorage.getItem('user_identity_locked');
+      if (snapshot.empty) {
+        feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; font-style:italic;">No stories published yet. Write the first chapter...</p>`;
+        return;
+      }
 
-  if (author !== currentDeviceUser) {
-    alert(`You can only delete memories written by you (${currentDeviceUser})!`);
-    return;
-  }
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        }) : 'Just now';
 
-  const confirmDelete = confirm(`Delete your memory?`);
-  if (confirmDelete) {
-    db.collection("diary").doc(docId).delete()
-      .then(() => {
-        toggleDeleteMode(); // Exit delete mode after deleting
-      })
-      .catch((error) => {
-        console.error("Error removing memory: ", error);
+        const card = document.createElement('div');
+        card.className = 'published-story-card';
+
+        card.innerHTML = `
+          <div class="story-card-header">
+            <div>
+              <div class="story-card-title">${escapeHtml(data.title)}</div>
+              <div class="story-card-author">Written by ${data.author} • ${dateStr}</div>
+            </div>
+          </div>
+          <div class="story-card-content">${escapeHtml(data.content)}</div>
+        `;
+        feed.appendChild(card);
       });
-  }
-}
-
-// Real-time Feed Listener
-db.collection("diary").orderBy("timestamp", "desc")
-  .onSnapshot((snapshot) => {
-    const feed = document.getElementById('entriesFeed');
-    const countBadge = document.getElementById('entryCount');
-    feed.innerHTML = "";
-
-    if (snapshot.empty) {
-      feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; padding-top:20px;">No memories yet. Write your first memory together! ✨</p>`;
-      countBadge.textContent = "0 memories";
-      return;
-    }
-
-    countBadge.textContent = `${snapshot.size} memories`;
-
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      const docId = doc.id;
-      const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      }) : 'Just now';
-
-      const card = document.createElement('div');
-      card.className = 'entry-card';
-      card.onclick = () => deleteMemory(docId, data.author);
-
-      card.innerHTML = `
-        <div class="entry-header">
-          <span class="entry-author">${data.author}</span>
-          <span class="entry-date">${dateStr}</span>
-        </div>
-        <p class="entry-text">${escapeHtml(data.text)}</p>
-        <div class="entry-footer">
-          <span class="entry-mood">${data.mood || '❤️'}</span>
-          <button class="like-heart" onclick="event.stopPropagation(); triggerHeart(this)">❤️</button>
-        </div>
-      `;
-      feed.appendChild(card);
     });
-  });
-
-function triggerHeart(btn) {
-  btn.style.transform = "scale(1.5)";
-  setTimeout(() => {
-    btn.style.transform = "scale(1)";
-  }, 200);
-}
-
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, function(m) {
-    return {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    }[m];
-  });
 }
