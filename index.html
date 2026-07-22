@@ -27,10 +27,35 @@
     </div>
   </div>
 
+  <!-- Top Navigation Header with Hamburger -->
+  <nav class="top-nav">
+    <div class="nav-brand">UsTogether</div>
+    <button class="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <!-- Slide-out Menu Drawer -->
+  <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+  <div id="menuDrawer" class="menu-drawer">
+    <div class="drawer-header">
+      <h3>Options</h3>
+      <button class="close-drawer" onclick="toggleMenu()">✕</button>
+    </div>
+    <ul class="drawer-items">
+      <li onclick="toggleDeleteMode()">
+        <span class="drawer-icon">🗑️</span>
+        <span id="deleteModeText">Delete a Memory</span>
+      </li>
+    </ul>
+  </div>
+
   <!-- Main Container -->
   <div class="app-container">
     <header class="app-header">
-      <div class="profile-badge">
+      <div class="profile-badge glowing-badge">
         <span class="sparkle">✨</span>
         <h2>Abhay & Dhakshitha</h2>
       </div>
@@ -38,7 +63,7 @@
     </header>
 
     <!-- Create Memory Box -->
-    <section class="card input-card">
+    <section class="card input-card glowing-card">
       <div class="author-selector">
         <label>Writing as:</label>
         <select id="authorSelect" onchange="saveAuthorPreference()">
@@ -69,6 +94,10 @@
       <div class="timeline-header">
         <h3>Memory Timeline</h3>
         <span class="memory-count" id="entryCount">✨</span>
+      </div>
+      <div id="deleteBanner" class="delete-banner" style="display: none;">
+        <span>Tap any memory below to delete it</span>
+        <button onclick="toggleDeleteMode()">Cancel</button>
       </div>
       <div id="entriesFeed" class="timeline-feed">
         <div class="loading">Loading memories...</div>
