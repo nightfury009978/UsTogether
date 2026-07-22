@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UsTogether — Our Shared Memories</title>
   
-  <!-- Fonts & Icons (Added Cormorant Garamond for Dark Romance!) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,600;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,9 +45,9 @@
       <button class="close-drawer" onclick="toggleMenu()">✕</button>
     </div>
     <ul class="drawer-items">
-      <li onclick="openStoriesView()">
+      <li onclick="openStoriesSheet()">
         <span class="drawer-icon">📖</span>
-        <span>Dark Romance Stories</span>
+        <span>Stories</span>
       </li>
       <li onclick="toggleDeleteMode()">
         <span class="drawer-icon">🗑️</span>
@@ -56,8 +56,8 @@
     </ul>
   </div>
 
-  <!-- Main Timeline View -->
-  <div id="mainTimelineView" class="app-container">
+  <!-- Main App Container -->
+  <div class="app-container">
     <header class="app-header">
       <div class="profile-badge glowing-badge">
         <span class="sparkle">✨</span>
@@ -66,7 +66,7 @@
       <p class="subtitle">Our Personal Diary & Memories</p>
     </header>
 
-    <!-- Post Memory Card -->
+    <!-- Create Memory Card -->
     <section class="card input-card glowing-card">
       <div class="author-selector">
         <label>Writing as:</label>
@@ -93,7 +93,7 @@
       <button id="saveBtn" onclick="saveEntry()">Post Memory ✨</button>
     </section>
 
-    <!-- Memory Feed -->
+    <!-- Timeline Section -->
     <section class="feed-section">
       <div class="timeline-header">
         <h3>Memory Timeline</h3>
@@ -109,29 +109,32 @@
     </section>
   </div>
 
-  <!-- Story Room View (Hidden by default) -->
-  <div id="storyView" class="app-container story-container" style="display: none;">
-    <button class="back-btn" onclick="closeStoriesView()">← Back to Memories</button>
+  <!-- Bottom Sheet Overlay for Stories Interface -->
+  <div id="storyModalOverlay" class="story-modal-overlay" onclick="closeStoriesSheet()"></div>
+  <div id="storyBottomSheet" class="story-bottom-sheet">
+    <div class="sheet-handle-bar"></div>
     
-    <div class="story-header">
-      <h2 class="story-app-title">🍷 Dark Romance Vault</h2>
-      <p class="story-subtitle">Tales written under the midnight sky</p>
+    <div class="story-sheet-header">
+      <h2>Stories Vault 🥀</h2>
+      <button class="close-sheet-btn" onclick="closeStoriesSheet()">✕</button>
     </div>
 
-    <!-- Write Story Section -->
-    <section class="card story-card glowing-card">
-      <input type="text" id="storyTitle" class="story-title-input" placeholder="Chapter / Story Title..." />
-      <textarea id="storyContent" class="story-text-area" placeholder="Write your chapter here... Let the shadows speak..."></textarea>
-      <button class="story-publish-btn" onclick="saveStory()">Publish Story 🥀</button>
-    </section>
-
-    <!-- Published Stories Collection -->
-    <section class="story-feed-section">
-      <h3 class="section-title">The Collection</h3>
-      <div id="storiesFeed" class="stories-feed">
-        <!-- Stories render here -->
+    <div class="story-sheet-content">
+      <!-- Write Story Box -->
+      <div class="story-input-box glowing-card">
+        <input type="text" id="storyTitle" class="story-title-input" placeholder="Title / Chapter..." />
+        <textarea id="storyContent" class="story-text-area" placeholder="Write your chapter here..."></textarea>
+        <button class="story-publish-btn" onclick="saveStory()">Publish Chapter 🍷</button>
       </div>
-    </section>
+
+      <!-- Published Stories List -->
+      <div class="stories-feed-header">
+        <h3>Published Chapters</h3>
+      </div>
+      <div id="storiesFeed" class="stories-feed-container">
+        <!-- Stories load dynamically here -->
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
