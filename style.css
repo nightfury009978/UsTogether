@@ -1,44 +1,101 @@
-/* --- DARK ROMANCE STORY ROOM STYLES --- */
+/* --- STORIES BOTTOM SHEET INTERFACE --- */
 
-/* Font Family specifically for Stories */
-.story-container, 
-.story-title-input, 
-.story-text-area, 
-.story-card-title, 
-.story-card-content {
-  font-family: 'Cormorant Garamond', serif !important;
+.story-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
-.back-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--card-border);
-  color: #ff8fb3;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
+.story-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.story-bottom-sheet {
+  position: fixed;
+  bottom: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 85vh;
+  background: rgba(18, 12, 30, 0.96);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: none;
+  backdrop-filter: blur(25px);
+  z-index: 1001;
+  padding: 12px 20px 20px;
+  transition: bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.story-bottom-sheet.active {
+  bottom: 0;
+}
+
+.sheet-handle-bar {
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 12px;
+}
+
+.story-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 16px;
+}
+
+.story-sheet-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  color: #f3e8ff;
+}
+
+.close-sheet-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   cursor: pointer;
-  margin-bottom: 20px;
 }
 
-.story-header {
-  text-align: center;
+/* Scrollable Container inside Sheet */
+.story-sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-right: 4px;
+}
+
+.story-sheet-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cormorant Garamond Story Inputs & Typography */
+.story-input-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 16px;
   margin-bottom: 24px;
-}
-
-.story-app-title {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  background: linear-gradient(to right, #ff4b8b, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.story-subtitle {
-  font-size: 1.05rem;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 4px;
 }
 
 .story-title-input {
@@ -46,8 +103,9 @@
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   color: #ffd1e1;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.3rem;
   font-weight: 600;
   outline: none;
@@ -56,78 +114,74 @@
 
 .story-text-area {
   width: 100%;
-  height: 180px;
+  height: 140px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  padding: 14px;
+  padding: 12px;
   color: #f1f1f1;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.15rem;
   line-height: 1.6;
   resize: vertical;
   outline: none;
-  margin-bottom: 14px;
-}
-
-.story-text-area::placeholder, .story-title-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-  font-style: italic;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
 }
 
 .story-publish-btn {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   background: linear-gradient(135deg, #7e22ce 0%, #ff4b8b 100%);
   border: none;
   border-radius: 12px;
   color: white;
-  font-size: 1.1rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(126, 34, 206, 0.4);
 }
 
-.section-title {
-  font-size: 1.4rem;
+.stories-feed-header h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
   color: #ffd1e1;
-  margin-bottom: 16px;
-}
-
-/* Individual Story Book Card */
-.published-story-card {
-  background: rgba(15, 10, 25, 0.6);
-  border: 1px solid rgba(192, 132, 252, 0.25);
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-}
-
-.story-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
   margin-bottom: 14px;
 }
 
-.story-card-title {
+/* Individual Book Card */
+.story-book-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.story-book-title {
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.4rem;
   font-weight: 700;
   color: #f3e8ff;
+  margin-bottom: 4px;
 }
 
-.story-card-author {
+.story-book-author {
+  font-family: 'Cormorant Garamond', serif;
   font-size: 0.95rem;
   color: #ff8fb3;
   font-style: italic;
+  margin-bottom: 12px;
 }
 
-.story-card-content {
-  font-size: 1.15rem;
+/* Preserves Paragraph Spacing & Line Breaks like a Book */
+.story-book-body {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 1.2rem;
   line-height: 1.7;
   color: #e5e7eb;
-  white-space: pre-wrap; /* Preserves paragraph spaces */
+  white-space: pre-wrap; 
+  word-break: break-word;
 }
