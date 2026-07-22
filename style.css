@@ -1,494 +1,133 @@
-:root {
-  --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #1a102f 50%, #2b1030 100%);
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --card-border: rgba(255, 255, 255, 0.12);
-  --accent-pink: #ff4b8b;
-  --accent-purple: #8b5cf6;
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.65);
+/* --- DARK ROMANCE STORY ROOM STYLES --- */
+
+/* Font Family specifically for Stories */
+.story-container, 
+.story-title-input, 
+.story-text-area, 
+.story-card-title, 
+.story-card-content {
+  font-family: 'Cormorant Garamond', serif !important;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  -webkit-tap-highlight-color: transparent;
+.back-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--card-border);
+  color: #ff8fb3;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 20px;
 }
 
-body {
-  background: var(--bg-gradient);
-  background-attachment: fixed;
-  color: var(--text-primary);
-  min-height: 100vh;
-  padding-bottom: 40px;
-}
-
-/* Splash Screen */
-#splash {
-  position: fixed;
-  inset: 0;
-  background: #0f0c1b;
-  z-index: 999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: fadeOut 0.8s ease 2s forwards;
-  pointer-events: none;
-}
-
-.splash-content {
+.story-header {
   text-align: center;
+  margin-bottom: 24px;
 }
 
-.heart-pulse {
-  font-size: 3.5rem;
-  animation: pulse 1.2s infinite ease-in-out;
-}
-
-.brand-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 2.2rem;
-  margin-top: 10px;
-  background: linear-gradient(to right, #ff758c, #ff7eb3);
+.story-app-title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(to right, #ff4b8b, #c084fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.brand-sub {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
+.story-subtitle {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
   margin-top: 4px;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-}
-
-@keyframes fadeOut {
-  to { opacity: 0; visibility: hidden; }
-}
-
-/* Navigation Header */
-.top-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.nav-brand {
-  font-family: 'Playfair Display', serif;
-  font-weight: 600;
-  font-size: 1.1rem;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* Bright Glowing Hamburger Icon */
-.hamburger-btn {
-  background: rgba(255, 75, 139, 0.15);
-  border: 1px solid rgba(255, 75, 139, 0.4);
-  border-radius: 12px;
-  padding: 10px 12px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  box-shadow: 0 0 10px rgba(255, 75, 139, 0.2);
-  transition: all 0.2s ease;
-}
-
-.hamburger-btn:active {
-  transform: scale(0.92);
-}
-
-.hamburger-btn span {
-  display: block;
-  width: 20px;
-  height: 2.5px;
-  background-color: #ffffff;
-  border-radius: 2px;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
-}
-
-/* Menu Drawer */
-.menu-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 998;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.menu-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.menu-drawer {
-  position: fixed;
-  top: 0;
-  right: -280px;
-  width: 260px;
-  height: 100%;
-  background: rgba(20, 14, 38, 0.95);
-  border-left: 1px solid var(--card-border);
-  backdrop-filter: blur(20px);
-  z-index: 999;
-  padding: 24px 20px;
-  transition: right 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-}
-
-.menu-drawer.active {
-  right: 0;
-}
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--card-border);
-}
-
-.drawer-header h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.2rem;
-}
-
-.close-drawer {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.drawer-items {
-  list-style: none;
-}
-
-.drawer-items li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.05);
+.story-title-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: background 0.2s;
-}
-
-.drawer-items li:active {
-  background: rgba(255, 75, 139, 0.2);
-}
-
-/* Layout */
-.app-container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 10px 16px 20px;
-}
-
-.app-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-/* Glowing Border Effect */
-.glowing-badge {
-  box-shadow: 0 0 15px rgba(255, 75, 139, 0.35), inset 0 0 10px rgba(255, 75, 139, 0.15);
-  border-color: rgba(255, 75, 139, 0.5) !important;
-}
-
-.glowing-card {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.25), 0 10px 30px rgba(0, 0, 0, 0.4);
-  border-color: rgba(139, 92, 246, 0.4) !important;
-}
-
-.profile-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--card-border);
-  padding: 8px 18px;
-  border-radius: 30px;
-  backdrop-filter: blur(10px);
-}
-
-.profile-badge h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.25rem;
+  padding: 12px 16px;
+  color: #ffd1e1;
+  font-size: 1.3rem;
   font-weight: 600;
-}
-
-.subtitle {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-top: 8px;
-}
-
-/* Card UI */
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 20px;
-  padding: 18px;
-  backdrop-filter: blur(16px);
-  margin-bottom: 24px;
-}
-
-.author-selector {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  outline: none;
   margin-bottom: 12px;
 }
 
-.author-selector label {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-select {
-  background: rgba(0, 0, 0, 0.4);
-  color: white;
-  border: 1px solid var(--card-border);
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-textarea {
+.story-text-area {
   width: 100%;
-  height: 90px;
-  background: rgba(0, 0, 0, 0.25);
+  height: 180px;
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 12px;
-  color: white;
-  font-size: 0.95rem;
-  resize: none;
+  border-radius: 12px;
+  padding: 14px;
+  color: #f1f1f1;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  resize: vertical;
   outline: none;
   margin-bottom: 14px;
 }
 
-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+.story-text-area::placeholder, .story-title-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
 }
 
-/* Mood Picker */
-.mood-picker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.mood-label {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.mood-options {
-  display: flex;
-  gap: 8px;
-}
-
-.mood-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid transparent;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mood-btn.active {
-  background: rgba(255, 75, 139, 0.25);
-  border-color: var(--accent-pink);
-  transform: scale(1.15);
-}
-
-#saveBtn {
+.story-publish-btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #ff4b8b 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #7e22ce 0%, #ff4b8b 100%);
   border: none;
-  border-radius: 14px;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  box-shadow: 0 4px 15px rgba(255, 75, 139, 0.4);
-  cursor: pointer;
-}
-
-/* Timeline Header & Delete Banner */
-.timeline-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 0 4px;
-}
-
-.timeline-header h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
-  color: #ffd1e1;
-}
-
-.delete-banner {
-  background: rgba(255, 75, 75, 0.2);
-  border: 1px solid rgba(255, 75, 75, 0.5);
   border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: #ff9999;
-}
-
-.delete-banner button {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
   color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 4px 15px rgba(126, 34, 206, 0.4);
 }
 
-/* iOS-Style Inertia Scroll Container */
-.timeline-feed {
-  position: relative;
-  padding-left: 20px;
-  border-left: 2px dashed rgba(255, 255, 255, 0.15);
-  margin-left: 8px;
-  max-height: 420px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+.section-title {
+  font-size: 1.4rem;
+  color: #ffd1e1;
+  margin-bottom: 16px;
 }
 
-.timeline-feed::-webkit-scrollbar {
-  display: none;
-}
-
-/* Glowing Entry Cards */
-.entry-card {
-  position: relative;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 16px;
+/* Individual Story Book Card */
+.published-story-card {
+  background: rgba(15, 10, 25, 0.6);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  border-radius: 18px;
+  padding: 20px;
   margin-bottom: 20px;
-  backdrop-filter: blur(12px);
-  animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 75, 139, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
 }
 
-.entry-card:hover {
-  border-color: rgba(255, 75, 139, 0.4);
-  box-shadow: 0 0 15px rgba(255, 75, 139, 0.25);
-}
-
-/* Delete Mode Active Glow */
-.timeline-feed.delete-mode .entry-card {
-  border-color: rgba(255, 75, 75, 0.6) !important;
-  box-shadow: 0 0 12px rgba(255, 75, 75, 0.3) !important;
-  cursor: pointer;
-}
-
-.timeline-feed.delete-mode .entry-card:active {
-  transform: scale(0.97);
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.entry-card::before {
-  content: '';
-  position: absolute;
-  left: -27px;
-  top: 18px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--accent-pink);
-  border: 3px solid #0f0c1b;
-  box-shadow: 0 0 8px var(--accent-pink);
-}
-
-.entry-header {
+.story-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
 }
 
-.entry-author {
+.story-card-title {
+  font-size: 1.4rem;
   font-weight: 700;
+  color: #f3e8ff;
+}
+
+.story-card-author {
   font-size: 0.95rem;
   color: #ff8fb3;
+  font-style: italic;
 }
 
-.entry-date {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.entry-text {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 10px;
-}
-
-.entry-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.entry-mood {
-  font-size: 1.2rem;
-}
-
-.like-heart {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.like-heart:active {
-  transform: scale(1.4);
+.story-card-content {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #e5e7eb;
+  white-space: pre-wrap; /* Preserves paragraph spaces */
 }
