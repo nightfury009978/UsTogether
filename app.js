@@ -14,17 +14,32 @@ const db = firebase.firestore();
 
 let selectedMood = "🥰";
 
-// Auto-load saved user identity on launch
+// Check & Lock identity on launch
 window.addEventListener('DOMContentLoaded', () => {
-  const savedAuthor = localStorage.getItem('user_identity');
-  if (savedAuthor) {
-    document.getElementById('authorSelect').value = savedAuthor;
+  const lockedAuthor = localStorage.getItem('user_identity_locked');
+  const authorSelect = document.getElementById('authorSelect');
+
+  if (lockedAuthor) {
+    // Lock the dropdown so they cannot change it
+    authorSelect.value = lockedAuthor;
+    authorSelect.disabled = true;
+    authorSelect.style.opacity = "0.8";
+    authorSelect.style.cursor = "not-allowed";
   }
 });
 
+// Lock selection on first change
 function saveAuthorPreference() {
-  const author = document.getElementById('authorSelect').value;
-  localStorage.setItem('user_identity', author);
+  const authorSelect = document.getElementById('authorSelect');
+  const chosenAuthor = authorSelect.value;
+  
+  // Save permanently to this phone's memory
+  localStorage.setItem('user_identity_locked', chosenAuthor);
+  
+  // Disable dropdown immediately
+  authorSelect.disabled = true;
+  authorSelect.style.opacity = "0.8";
+  authorSelect.style.cursor = "not-allowed";
 }
 
 // Mood selection listener
@@ -38,15 +53,23 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
 
 // Save Entry Function
 function saveEntry() {
-  const author = document.getElementById('authorSelect').value;
+  const authorSelect = document.getElementById('authorSelect');
+  let author = localStorage.getItem('user_identity_locked') || authorSelect.value;
+  
+  // Lock it in if posting for the first time without explicitly touching the dropdown
+  if (!localStorage.getItem('user_identity_locked')) {
+    localStorage.setItem('user_identity_locked', author);
+    authorSelect.disabled = true;
+    authorSelect.style.opacity = "0.8";
+    authorSelect.style.cursor = "not-allowed";
+  }
+
   const text = document.getElementById('diaryInput').value.trim();
 
   if (!text) {
     alert("Please write something before posting!");
     return;
   }
-
-  localStorage.setItem('user_identity', author);
 
   db.collection("diary").add({
     author: author,
