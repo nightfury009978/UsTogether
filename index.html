@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UsTogether — Our Shared Memories</title>
   
-  <!-- Fonts & Icons -->
+  <!-- Fonts & Icons (Added Cormorant Garamond for Dark Romance!) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,600;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css">
   
@@ -18,7 +18,7 @@
 </head>
 <body>
 
-  <!-- Splash / App Launch Screen -->
+  <!-- Splash Screen -->
   <div id="splash">
     <div class="splash-content">
       <div class="heart-pulse">💖</div>
@@ -27,7 +27,7 @@
     </div>
   </div>
 
-  <!-- Top Navigation Header with Hamburger -->
+  <!-- Navigation Header -->
   <nav class="top-nav">
     <div class="nav-brand">UsTogether</div>
     <button class="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
@@ -37,7 +37,7 @@
     </button>
   </nav>
 
-  <!-- Slide-out Menu Drawer -->
+  <!-- Menu Drawer -->
   <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
   <div id="menuDrawer" class="menu-drawer">
     <div class="drawer-header">
@@ -45,6 +45,10 @@
       <button class="close-drawer" onclick="toggleMenu()">✕</button>
     </div>
     <ul class="drawer-items">
+      <li onclick="openStoriesView()">
+        <span class="drawer-icon">📖</span>
+        <span>Dark Romance Stories</span>
+      </li>
       <li onclick="toggleDeleteMode()">
         <span class="drawer-icon">🗑️</span>
         <span id="deleteModeText">Delete a Memory</span>
@@ -52,8 +56,8 @@
     </ul>
   </div>
 
-  <!-- Main Container -->
-  <div class="app-container">
+  <!-- Main Timeline View -->
+  <div id="mainTimelineView" class="app-container">
     <header class="app-header">
       <div class="profile-badge glowing-badge">
         <span class="sparkle">✨</span>
@@ -62,7 +66,7 @@
       <p class="subtitle">Our Personal Diary & Memories</p>
     </header>
 
-    <!-- Create Memory Box -->
+    <!-- Post Memory Card -->
     <section class="card input-card glowing-card">
       <div class="author-selector">
         <label>Writing as:</label>
@@ -89,7 +93,7 @@
       <button id="saveBtn" onclick="saveEntry()">Post Memory ✨</button>
     </section>
 
-    <!-- Timeline Section -->
+    <!-- Memory Feed -->
     <section class="feed-section">
       <div class="timeline-header">
         <h3>Memory Timeline</h3>
@@ -101,6 +105,31 @@
       </div>
       <div id="entriesFeed" class="timeline-feed">
         <div class="loading">Loading memories...</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Story Room View (Hidden by default) -->
+  <div id="storyView" class="app-container story-container" style="display: none;">
+    <button class="back-btn" onclick="closeStoriesView()">← Back to Memories</button>
+    
+    <div class="story-header">
+      <h2 class="story-app-title">🍷 Dark Romance Vault</h2>
+      <p class="story-subtitle">Tales written under the midnight sky</p>
+    </div>
+
+    <!-- Write Story Section -->
+    <section class="card story-card glowing-card">
+      <input type="text" id="storyTitle" class="story-title-input" placeholder="Chapter / Story Title..." />
+      <textarea id="storyContent" class="story-text-area" placeholder="Write your chapter here... Let the shadows speak..."></textarea>
+      <button class="story-publish-btn" onclick="saveStory()">Publish Story 🥀</button>
+    </section>
+
+    <!-- Published Stories Collection -->
+    <section class="story-feed-section">
+      <h3 class="section-title">The Collection</h3>
+      <div id="storiesFeed" class="stories-feed">
+        <!-- Stories render here -->
       </div>
     </section>
   </div>
