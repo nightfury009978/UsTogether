@@ -19,14 +19,14 @@ import {
   doc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your Firebase Config (Replace with your actual keys)
+// Your Firebase Config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBndZhDQVGVmrAgzwizheVErOfMz8nukYQ",
+  authDomain: "ustogether-14936.firebaseapp.com",
+  projectId: "ustogether-14936",
+  storageBucket: "ustogether-14936.firebasestorage.app",
+  messagingSenderId: "685510249495",
+  appId: "1:685510249495:web:3efd43596ca0cb621a6052"
 };
 
 // Initialize Firebase
@@ -92,7 +92,7 @@ moodBtns.forEach(btn => {
   });
 });
 
-// Toggle Auth Mode
+// Toggle Auth Mode (Login vs Sign Up)
 authToggleBtn.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
@@ -108,7 +108,7 @@ authToggleBtn.addEventListener('click', () => {
   }
 });
 
-// Authentication Submit (Converts Username to Email format automatically)
+// Authentication Submit (Uses simple username internally)
 authSubmitBtn.addEventListener('click', async () => {
   const inputVal = authEmail.value.trim().toLowerCase();
   const password = authPassword.value.trim();
@@ -118,7 +118,7 @@ authSubmitBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Convert username to email format if user didn't enter '@'
+  // Seamlessly formats simple usernames for Firebase Auth
   const email = inputVal.includes('@') ? inputVal : `${inputVal}@ourspace.com`;
 
   try {
