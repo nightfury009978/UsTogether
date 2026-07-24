@@ -26,8 +26,7 @@ import {
   serverTimestamp, 
   deleteDoc, 
   doc,
-  setDoc,
-  onDisconnect
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Firebase Credentials
@@ -91,21 +90,79 @@ const ytUrlInput = document.getElementById('ytUrlInput');
 const loadYtBtn = document.getElementById('loadYtBtn');
 const addToQueueBtn = document.getElementById('addToQueueBtn');
 const ytQueueFeed = document.getElementById('ytQueueFeed');
+const ytPlayerContainer = document.getElementById('ytPlayer');
 const closeYtVideoBar = document.getElementById('closeYtVideoBar');
 const closeYtVideoBtn = document.getElementById('closeYtVideoBtn');
-const watchPresenceBadge = document.getElementById('watchPresenceBadge');
-const presenceText = document.getElementById('presenceText');
+
+// Option 2 Presence Indicators
+const partnerPresenceDot = document.getElementById('partnerPresenceDot');
+const partnerPresenceText = document.getElementById('partnerPresenceText');
 
 let isSignUpMode = false;
 let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
 
-// YouTube SDK Player Variables
-let ytPlayer = null;
-let currentVideoId = null;
-let isRemoteUpdate = false;
-let presenceHeartbeat = null;
+// Clean Username helper
+function getCleanUsername(user) {
+  if (!user || !user.email) return "User";
+  const raw = user.email.split('@')[0];
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+// Option 2 Presence Updates Function
+async function updateMyPresence(statusState, actionDetail = "") {
+  if (!currentUser) return;
+  const username = getCleanUsername(currentUser);
+  try {
+    await setDoc(doc(db, "presence", username.toLowerCase()), {
+      username: username,
+      state: statusState, // 'opened', 'watching', 'offline'
+      detail: actionDetail,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.error("Presence update error:", e);
+  }
+}
+
+// Option 2 Realtime Presence Listener
+function listenPartnerPresence() {
+  if (!currentUser) return;
+  const currentUsername = getCleanUsername(currentUser).toLowerCase();
+
+  onSnapshot(collection(db, "presence"), (snapshot) => {
+    let partnerFound = false;
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (docSnap.id !== currentUsername) {
+        partnerFound = true;
+        const pName = data.username || "Partner";
+        const state = data.state || "offline";
+
+        if (state === 'watching') {
+          partnerPresenceDot?.classList.remove('offline');
+          partnerPresenceDot?.classList.add('online');
+          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is watching together 🎬`;
+        } else if (state === 'opened') {
+          partnerPresenceDot?.classList.remove('offline');
+          partnerPresenceDot?.classList.add('online');
+          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} opened Watch Together 📺`;
+        } else {
+          partnerPresenceDot?.classList.remove('online');
+          partnerPresenceDot?.classList.add('offline');
+          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is offline`;
+        }
+      }
+    });
+
+    if (!partnerFound && partnerPresenceText) {
+      partnerPresenceDot?.classList.remove('online');
+      partnerPresenceDot?.classList.add('offline');
+      partnerPresenceText.textContent = "Waiting for partner...";
+    }
+  });
+}
 
 // Extract Video ID
 function extractVideoId(url) {
@@ -115,95 +172,34 @@ function extractVideoId(url) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// Initialize or Update YouTube iFrame Player API
-function loadYtSdkPlayer(videoId, startTime = 0, state = 'pause') {
+// Function to render/play video directly
+function renderYtVideo(videoId) {
+  if (!ytPlayerContainer) return;
   if (!videoId) {
-    if (ytPlayer && typeof ytPlayer.destroy === 'function') {
-      ytPlayer.destroy();
-      ytPlayer = null;
-    }
-    document.getElementById('ytPlayer').innerHTML = '';
+    ytPlayerContainer.innerHTML = '';
     if (closeYtVideoBar) closeYtVideoBar.style.display = 'none';
-    currentVideoId = null;
     return;
   }
-
+  
   if (closeYtVideoBar) closeYtVideoBar.style.display = 'flex';
-
-  if (!ytPlayer || currentVideoId !== videoId) {
-    currentVideoId = videoId;
-    document.getElementById('ytPlayer').innerHTML = '<div id="ytPlayerTarget"></div>';
-
-    ytPlayer = new YT.Player('ytPlayerTarget', {
-      height: '100%',
-      width: '100%',
-      videoId: videoId,
-      playerVars: {
-        'autoplay': state === 'play' ? 1 : 0,
-        'start': Math.floor(startTime),
-        'playsinline': 1,
-        'enablejsapi': 1
-      },
-      events: {
-        'onStateChange': onPlayerStateChange
-      }
-    });
-  } else {
-    // Player exists - apply state remotely
-    isRemoteUpdate = true;
-    const currentTime = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
-    if (Math.abs(currentTime - startTime) > 2) {
-      ytPlayer.seekTo(startTime, true);
-    }
-
-    if (state === 'play') {
-      ytPlayer.playVideo();
-    } else if (state === 'pause') {
-      ytPlayer.pauseVideo();
-    }
-    setTimeout(() => { isRemoteUpdate = false; }, 500);
-  }
-}
-
-// Broadcast Local Play/Pause/Seek Changes to Firestore
-async function onPlayerStateChange(event) {
-  if (isRemoteUpdate || !currentUser) return;
-
-  const playerState = event.data;
-  let actionState = 'pause';
-
-  if (playerState === YT.PlayerState.PLAYING) {
-    actionState = 'play';
-  } else if (playerState === YT.PlayerState.PAUSED) {
-    actionState = 'pause';
-  } else {
-    return;
-  }
-
-  const time = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
-
-  try {
-    await setDoc(doc(db, "watch_sync", "current"), {
-      videoId: currentVideoId,
-      state: actionState,
-      time: time,
-      updatedBy: currentUser.email,
-      timestamp: serverTimestamp()
-    }, { merge: true });
-  } catch (e) {
-    console.error("Error broadcasting video state:", e);
-  }
+  ytPlayerContainer.innerHTML = `
+    <iframe 
+      src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&enablejsapi=1" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen
+      style="width:100%; height:100%; border:0;">
+    </iframe>
+  `;
 }
 
 // Close/Clear Current Playing Video Action
 if (closeYtVideoBtn) {
   closeYtVideoBtn.addEventListener('click', async () => {
-    loadYtSdkPlayer(null);
+    renderYtVideo(null);
+    updateMyPresence('opened');
     try {
       await setDoc(doc(db, "watch_sync", "current"), {
         videoId: "",
-        state: "pause",
-        time: 0,
         updatedBy: currentUser?.email || "User",
         timestamp: serverTimestamp()
       }, { merge: true });
@@ -224,13 +220,12 @@ if (loadYtBtn) {
       return;
     }
 
-    loadYtSdkPlayer(vidId, 0, 'play');
+    renderYtVideo(vidId);
+    updateMyPresence('watching');
 
     try {
       await setDoc(doc(db, "watch_sync", "current"), {
         videoId: vidId,
-        state: "play",
-        time: 0,
         updatedBy: currentUser?.email || "User",
         timestamp: serverTimestamp()
       }, { merge: true });
@@ -242,7 +237,7 @@ if (loadYtBtn) {
   });
 }
 
-// Save to Shared Playlist Action
+// Save to Shared Playlist Action (With Custom Title Prompt)
 if (addToQueueBtn) {
   addToQueueBtn.addEventListener('click', async () => {
     const url = ytUrlInput.value.trim();
@@ -254,8 +249,7 @@ if (addToQueueBtn) {
     }
 
     const customName = prompt("Give this video a title/name (optional):", "") || "Saved Video";
-    const rawName = currentUser.email.split('@')[0];
-    const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    const displayName = getCleanUsername(currentUser);
 
     try {
       await addDoc(collection(db, "yt_queue"), {
@@ -271,62 +265,15 @@ if (addToQueueBtn) {
   });
 }
 
-// Real-Time Synchronized Playback Listener
+// Sync Video across users in Realtime
 function listenWatchSync() {
   onSnapshot(doc(db, "watch_sync", "current"), (docSnap) => {
     if (!docSnap.exists()) return;
     const data = docSnap.data();
-
-    if (!data.videoId) {
-      loadYtSdkPlayer(null);
-      return;
-    }
-
-    // Ignore remote sync trigger if triggered by self
-    if (data.updatedBy === currentUser?.email && ytPlayer) return;
-
-    loadYtSdkPlayer(data.videoId, data.time || 0, data.state || 'pause');
-  });
-}
-
-// Real-Time Presence (Option 2)
-function updatePresence(isWatching) {
-  if (!currentUser) return;
-  const userKey = currentUser.email.split('@')[0].toLowerCase();
-  
-  setDoc(doc(db, "presence", userKey), {
-    active: isWatching,
-    lastSeen: Date.now(),
-    name: currentUser.email.split('@')[0]
-  }, { merge: true });
-}
-
-function listenPresence() {
-  onSnapshot(collection(db, "presence"), (snapshot) => {
-    let usersActive = [];
-    const now = Date.now();
-
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      // Consider active if updated within last 15 seconds and marked active
-      if (data.active && (now - (data.lastSeen || 0)) < 15000) {
-        if (docSnap.id !== currentUser?.email.split('@')[0].toLowerCase()) {
-          usersActive.push(data.name);
-        }
-      }
-    });
-
-    if (usersActive.length > 0) {
-      const otherUser = usersActive[0].charAt(0).toUpperCase() + usersActive[0].slice(1);
-      if (watchPresenceBadge) {
-        watchPresenceBadge.className = 'presence-badge active';
-        presenceText.textContent = `${otherUser} is in the Watch Room 🟢`;
-      }
+    if (data.videoId) {
+      renderYtVideo(data.videoId);
     } else {
-      if (watchPresenceBadge) {
-        watchPresenceBadge.className = 'presence-badge away';
-        presenceText.textContent = `Solo Watching ⚪`;
-      }
+      renderYtVideo(null);
     }
   });
 }
@@ -356,11 +303,10 @@ function loadYtQueue() {
       ytQueueFeed.appendChild(card);
 
       document.getElementById(`play-q-${docSnap.id}`)?.addEventListener('click', async () => {
-        loadYtSdkPlayer(data.videoId, 0, 'play');
+        renderYtVideo(data.videoId);
+        updateMyPresence('watching');
         await setDoc(doc(db, "watch_sync", "current"), {
           videoId: data.videoId,
-          state: "play",
-          time: 0,
           updatedBy: currentUser?.email || "User",
           timestamp: serverTimestamp()
         }, { merge: true });
@@ -373,27 +319,20 @@ function loadYtQueue() {
   });
 }
 
-// Watch Sheet Drawer Controls & Presence Heartbeat
+// Watch Sheet Drawer Controls
 if (openWatchTogetherBtn) {
   openWatchTogetherBtn.addEventListener('click', () => {
     closeDrawer();
     watchBottomSheet?.classList.add('active');
     watchModalOverlay?.classList.add('active');
-
-    // Start Presence Heartbeat
-    updatePresence(true);
-    clearInterval(presenceHeartbeat);
-    presenceHeartbeat = setInterval(() => updatePresence(true), 8000);
+    updateMyPresence('opened');
   });
 }
 
 const closeWatchSheet = () => {
   watchBottomSheet?.classList.remove('active');
   watchModalOverlay?.classList.remove('active');
-
-  // Stop Presence
-  clearInterval(presenceHeartbeat);
-  updatePresence(false);
+  updateMyPresence('offline');
 };
 
 closeWatchSheetBtn?.addEventListener('click', closeWatchSheet);
@@ -456,9 +395,9 @@ onAuthStateChanged(auth, (user) => {
     currentUser = user;
     authOverlay?.classList.remove('active');
     
-    const rawName = user.email.split('@')[0];
+    const displayName = getCleanUsername(user);
     if (currentUserLabel) {
-      currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      currentUserLabel.textContent = displayName;
     }
     
     setupMoodPickers();
@@ -466,7 +405,7 @@ onAuthStateChanged(auth, (user) => {
     loadStories();
     loadYtQueue();
     listenWatchSync();
-    listenPresence();
+    listenPartnerPresence();
   } else {
     currentUser = null;
     authOverlay?.classList.add('active');
@@ -494,6 +433,7 @@ accountMenuItem?.addEventListener('click', () => {
 });
 
 logoutBtn?.addEventListener('click', async () => {
+  await updateMyPresence('offline');
   await signOut(auth);
   closeDrawer();
 });
@@ -539,6 +479,7 @@ confirmBtn?.addEventListener('click', async () => {
   if (confirmBtn.disabled || !auth.currentUser) return;
 
   try {
+    await updateMyPresence('offline');
     await deleteUser(auth.currentUser);
     alert("Account permanently deleted.");
     deleteModal?.classList.remove('active');
@@ -567,8 +508,7 @@ saveBtn?.addEventListener('click', async () => {
   const text = memoryInput.value.trim();
   if (!text) return;
 
-  const rawName = currentUser.email.split('@')[0];
-  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+  const displayName = getCleanUsername(currentUser);
 
   try {
     await addDoc(collection(db, "memories"), {
@@ -629,8 +569,7 @@ publishStoryBtn?.addEventListener('click', async () => {
     return;
   }
 
-  const rawName = currentUser.email.split('@')[0];
-  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+  const displayName = getCleanUsername(currentUser);
 
   try {
     await addDoc(collection(db, "stories"), {
@@ -646,7 +585,7 @@ publishStoryBtn?.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book
+// Load Realtime Story Book (Formatted with Glowing Title & By Subtitles)
 function loadStories() {
   if (!storiesFeed) return;
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
