@@ -1,11 +1,11 @@
-// Automatically fade out splash screen on launch
+// Auto-hide Splash Screen on Launch
 setTimeout(() => {
   const splash = document.getElementById('splash');
   if (splash) {
     splash.style.opacity = '0';
     setTimeout(() => { splash.style.display = 'none'; }, 500);
   }
-}, 1500);
+}, 1200);
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
@@ -29,7 +29,7 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Exact Firebase Credentials
+// Firebase Credentials
 const firebaseConfig = {
   apiKey: "AIzaSyBndZhDQVGVmrAgzwizheVErOfMz8nukYQ",
   authDomain: "ustogether-14936.firebaseapp.com",
@@ -39,7 +39,6 @@ const firebaseConfig = {
   appId: "1:685510249495:web:3efd43596ca0cb621a6052"
 };
 
-// Initialize Firebase App & Services
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -54,7 +53,6 @@ const authSubmitBtn = document.getElementById('authSubmitBtn');
 const authToggleBtn = document.getElementById('authToggleBtn');
 const currentUserLabel = document.getElementById('currentUserLabel');
 
-// Navigation & Drawer Elements
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const menuDrawer = document.getElementById('menuDrawer');
 const menuOverlay = document.getElementById('menuOverlay');
@@ -64,20 +62,17 @@ const accountSubmenu = document.getElementById('accountSubmenu');
 const logoutBtn = document.getElementById('logoutBtn');
 const permDeleteSubBtn = document.getElementById('permDeleteSubBtn');
 
-// Delete Countdown Modal Elements
 const deleteModal = document.getElementById('deleteConfirmModal');
 const timerBadge = document.getElementById('deleteTimerBadge');
 const confirmBtn = document.getElementById('confirmDeleteBtn');
 const cancelBtn = document.getElementById('cancelDeleteBtn');
 
-// Memory Feed Elements
 const memoryInput = document.getElementById('memoryInput');
 const saveBtn = document.getElementById('saveBtn');
 const timelineFeed = document.getElementById('timelineFeed');
 const entryCountBadge = document.getElementById('entryCountBadge');
-const moodBtns = document.querySelectorAll('.mood-btn');
+let moodBtns = document.querySelectorAll('.mood-btn');
 
-// Story Book Elements
 const openStoriesMenuBtn = document.getElementById('openStoriesMenuBtn');
 const storyModalOverlay = document.getElementById('storyModalOverlay');
 const storyBottomSheet = document.getElementById('storyBottomSheet');
@@ -87,7 +82,6 @@ const storyTextInput = document.getElementById('storyTextInput');
 const publishStoryBtn = document.getElementById('publishStoryBtn');
 const storiesFeed = document.getElementById('storiesFeed');
 
-// Watch Together Elements
 const openWatchTogetherBtn = document.getElementById('openWatchTogetherBtn');
 const watchModalOverlay = document.getElementById('watchModalOverlay');
 const watchBottomSheet = document.getElementById('watchBottomSheet');
@@ -96,130 +90,69 @@ const ytUrlInput = document.getElementById('ytUrlInput');
 const loadYtBtn = document.getElementById('loadYtBtn');
 const addToQueueBtn = document.getElementById('addToQueueBtn');
 const ytQueueFeed = document.getElementById('ytQueueFeed');
+const ytPlayerContainer = document.getElementById('ytPlayer');
 
-// App & Watch Together State
 let isSignUpMode = false;
 let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
-let ytPlayer = null;
-let isRemoteChange = false;
 
-// Safe YouTube IFrame Player Setup
-window.onYouTubeIframeAPIReady = function() {
-  const container = document.getElementById('ytPlayer');
-  if (!container) return;
-  
-  ytPlayer = new YT.Player('ytPlayer', {
-    height: '100%',
-    width: '100%',
-    videoId: 'M7lc1UVf-VE',
-    playerVars: {
-      'playsinline': 1,
-      'controls': 1
-    },
-    events: {
-      'onStateChange': onPlayerStateChange
-    }
-  });
-};
-
-// Handle YouTube Player Events (Play, Pause)
-function onPlayerStateChange(event) {
-  if (isRemoteChange || !currentUser || !ytPlayer) return;
-
-  const state = event.data;
-  const currentTime = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
-
-  if (state === YT.PlayerState.PLAYING) {
-    updateWatchState('play', currentTime);
-  } else if (state === YT.PlayerState.PAUSED) {
-    updateWatchState('pause', currentTime);
-  }
-}
-
-// Helper to extract YouTube Video ID
+// YouTube Video ID Extractor (Handles standard links, mobile share links, shorts)
 function extractVideoId(url) {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// Broadcast player changes to Firestore
-async function updateWatchState(action, time, videoId = null) {
-  try {
-    const payload = {
-      action: action,
-      time: time,
-      updatedBy: currentUser.email,
-      timestamp: serverTimestamp()
-    };
-    if (videoId) payload.videoId = videoId;
-
-    await setDoc(doc(db, "watch_sync", "current"), payload, { merge: true });
-  } catch (err) {
-    console.error("Watch state update error:", err);
-  }
+// Function to render/play video directly in iframe container
+function renderYtVideo(videoId) {
+  if (!ytPlayerContainer || !videoId) return;
+  ytPlayerContainer.innerHTML = `
+    <iframe 
+      src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&enablejsapi=1" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen
+      style="width:100%; height:100%; border:0;">
+    </iframe>
+  `;
 }
 
-// Listen for Realtime Watch Together Sync
-function listenWatchSync() {
-  onSnapshot(doc(db, "watch_sync", "current"), (docSnap) => {
-    if (!docSnap.exists() || !ytPlayer || !ytPlayer.loadVideoById) return;
-
-    const data = docSnap.data();
-    if (data.updatedBy === currentUser?.email) return;
-
-    isRemoteChange = true;
-
-    if (data.videoId) {
-      const currentVid = ytPlayer.getVideoData ? ytPlayer.getVideoData()?.video_id : null;
-      if (currentVid !== data.videoId) {
-        ytPlayer.loadVideoById(data.videoId, data.time || 0);
-      }
-    }
-
-    if (data.action === 'play') {
-      if (Math.abs((ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0) - data.time) > 2) {
-        ytPlayer.seekTo(data.time, true);
-      }
-      ytPlayer.playVideo();
-    } else if (data.action === 'pause') {
-      ytPlayer.pauseVideo();
-      ytPlayer.seekTo(data.time, true);
-    }
-
-    setTimeout(() => { isRemoteChange = false; }, 500);
-  });
-}
-
-// Load Video Action
+// Play Video Action
 if (loadYtBtn) {
-  loadYtBtn.addEventListener('click', () => {
+  loadYtBtn.addEventListener('click', async () => {
     const url = ytUrlInput.value.trim();
     const vidId = extractVideoId(url);
 
     if (!vidId) {
-      alert("Please enter a valid YouTube video link!");
+      alert("Please paste a valid YouTube video or Shorts link!");
       return;
     }
 
-    if (ytPlayer && ytPlayer.loadVideoById) {
-      ytPlayer.loadVideoById(vidId);
-      updateWatchState('play', 0, vidId);
+    renderYtVideo(vidId);
+
+    try {
+      await setDoc(doc(db, "watch_sync", "current"), {
+        videoId: vidId,
+        updatedBy: currentUser?.email || "User",
+        timestamp: serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.error(e);
     }
+
     ytUrlInput.value = '';
   });
 }
 
-// Save to Playlist Action
+// Save to Shared Playlist Action
 if (addToQueueBtn) {
   addToQueueBtn.addEventListener('click', async () => {
     const url = ytUrlInput.value.trim();
     const vidId = extractVideoId(url);
 
     if (!vidId) {
-      alert("Please enter a valid YouTube link!");
+      alert("Please paste a valid YouTube link!");
       return;
     }
 
@@ -239,7 +172,18 @@ if (addToQueueBtn) {
   });
 }
 
-// Load Realtime Shared Playlist
+// Sync Video across users in Realtime
+function listenWatchSync() {
+  onSnapshot(doc(db, "watch_sync", "current"), (docSnap) => {
+    if (!docSnap.exists()) return;
+    const data = docSnap.data();
+    if (data.videoId) {
+      renderYtVideo(data.videoId);
+    }
+  });
+}
+
+// Load Playlist
 function loadYtQueue() {
   if (!ytQueueFeed) return;
   const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
@@ -252,20 +196,22 @@ function loadYtQueue() {
       card.className = 'queue-item-card';
 
       card.innerHTML = `
-        <span class="queue-item-title">📺 Video ID: ${data.videoId} (Saved by ${data.addedBy})</span>
-        <div class="queue-actions">
-          <button class="queue-play-btn" id="play-q-${docSnap.id}">Play</button>
+        <span class="queue-item-title">📺 Video ID: ${data.videoId} (${data.addedBy})</span>
+        <div style="display:flex; gap:6px;">
+          <button class="queue-play-btn" id="play-q-${docSnap.id}">Play 🎬</button>
           <button class="story-delete-btn" id="del-q-${docSnap.id}">🗑️</button>
         </div>
       `;
 
       ytQueueFeed.appendChild(card);
 
-      document.getElementById(`play-q-${docSnap.id}`)?.addEventListener('click', () => {
-        if (ytPlayer && ytPlayer.loadVideoById) {
-          ytPlayer.loadVideoById(data.videoId);
-          updateWatchState('play', 0, data.videoId);
-        }
+      document.getElementById(`play-q-${docSnap.id}`)?.addEventListener('click', async () => {
+        renderYtVideo(data.videoId);
+        await setDoc(doc(db, "watch_sync", "current"), {
+          videoId: data.videoId,
+          updatedBy: currentUser?.email || "User",
+          timestamp: serverTimestamp()
+        }, { merge: true });
       });
 
       document.getElementById(`del-q-${docSnap.id}`)?.addEventListener('click', async () => {
@@ -292,16 +238,19 @@ const closeWatchSheet = () => {
 closeWatchSheetBtn?.addEventListener('click', closeWatchSheet);
 watchModalOverlay?.addEventListener('click', closeWatchSheet);
 
-// Handle Mood Selection
-moodBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    moodBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedMood = btn.getAttribute('data-mood');
+// Re-bind Mood Buttons Event Listeners
+function setupMoodPickers() {
+  moodBtns = document.querySelectorAll('.mood-btn');
+  moodBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      moodBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedMood = btn.getAttribute('data-mood');
+    });
   });
-});
+}
 
-// Toggle Auth Mode (Login vs Sign Up)
+// Toggle Auth Mode
 authToggleBtn?.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
@@ -340,7 +289,7 @@ authSubmitBtn?.addEventListener('click', async () => {
   }
 });
 
-// Track Authentication State
+// Track Auth State
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
@@ -351,6 +300,7 @@ onAuthStateChanged(auth, (user) => {
       currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     }
     
+    setupMoodPickers();
     loadMemories();
     loadStories();
     loadYtQueue();
@@ -361,7 +311,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Navigation Drawer Controls
+// Drawer Navigation Controls
 hamburgerBtn?.addEventListener('click', () => {
   menuDrawer?.classList.add('active');
   menuOverlay?.classList.add('active');
@@ -375,19 +325,17 @@ const closeDrawer = () => {
 closeDrawerBtn?.addEventListener('click', closeDrawer);
 menuOverlay?.addEventListener('click', closeDrawer);
 
-// Account Submenu Toggle
+// Submenu Toggle
 accountMenuItem?.addEventListener('click', () => {
   accountMenuItem.classList.toggle('open');
   accountSubmenu?.classList.toggle('open');
 });
 
-// Logout Action
 logoutBtn?.addEventListener('click', async () => {
   await signOut(auth);
   closeDrawer();
 });
 
-// Permanent Delete Trigger
 permDeleteSubBtn?.addEventListener('click', () => {
   closeDrawer();
   deleteModal?.classList.add('active');
@@ -420,13 +368,11 @@ permDeleteSubBtn?.addEventListener('click', () => {
   }, 1000);
 });
 
-// Cancel Permanent Deletion
 cancelBtn?.addEventListener('click', () => {
   clearInterval(deleteTimerInterval);
   deleteModal?.classList.remove('active');
 });
 
-// Execute Account Deletion
 confirmBtn?.addEventListener('click', async () => {
   if (confirmBtn.disabled || !auth.currentUser) return;
 
@@ -435,12 +381,11 @@ confirmBtn?.addEventListener('click', async () => {
     alert("Account permanently deleted.");
     deleteModal?.classList.remove('active');
   } catch (error) {
-    console.error("Delete account error:", error);
     alert("Security limit: Please log out and log back in before deleting your account.");
   }
 });
 
-// Story Book Drawer Controls
+// Story Book Controls
 openStoriesMenuBtn?.addEventListener('click', () => {
   closeDrawer();
   storyBottomSheet?.classList.add('active');
@@ -492,14 +437,14 @@ function loadMemories() {
       const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
 
       card.innerHTML = `
-        <div class="entry-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
           <span class="entry-author">${data.author}</span>
           <span class="entry-date">${dateStr}</span>
         </div>
         <p class="entry-text">${data.text}</p>
-        <div class="entry-footer">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
           <span>${data.mood || '💖'}</span>
-          <button class="story-delete-btn" id="del-${docSnap.id}">🗑️</button>
+          <button class="story-delete-btn" id="del-${docSnap.id}" style="background:none; border:none; cursor:pointer;">🗑️</button>
         </div>
       `;
       
@@ -512,7 +457,7 @@ function loadMemories() {
   });
 }
 
-// Publish Story Chapter
+// Publish Story
 publishStoryBtn?.addEventListener('click', async () => {
   const title = storyTitleInput.value.trim();
   const text = storyTextInput.value.trim();
@@ -539,7 +484,7 @@ publishStoryBtn?.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book (With Individual Delete Option)
+// Load Realtime Story Book
 function loadStories() {
   if (!storiesFeed) return;
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
@@ -554,12 +499,12 @@ function loadStories() {
       accordion.innerHTML = `
         <div class="story-accordion-header">
           <span class="story-accordion-title">${data.title}</span>
-          <span class="story-chevron">&rsaquo;</span>
+          <span style="color:#888;">&rsaquo;</span>
         </div>
         <div class="story-accordion-body">
           <div class="story-book-author-bar">
             <span>Written by ${data.author}</span>
-            <button class="story-delete-btn" id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size: 1.1rem;" title="Delete Story">🗑️</button>
+            <button id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
           </div>
           <p class="story-book-text">${data.text}</p>
         </div>
