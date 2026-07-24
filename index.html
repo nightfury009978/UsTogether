@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Our Memory Space</title>
+  <title>Us Together 💖</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,6 +38,10 @@
       <button id="closeDrawerBtn" class="close-drawer">&times;</button>
     </div>
     <ul class="drawer-items">
+      <li id="openWatchTogetherBtn">
+        <span>📺 Watch Together</span>
+        <span>&rsaquo;</span>
+      </li>
       <li id="openStoriesMenuBtn">
         <span>📖 Our Story Book</span>
         <span>&rsaquo;</span>
@@ -163,7 +167,47 @@
     </div>
   </div>
 
-  <!-- Main JavaScript App Module -->
+  <!-- Watch Together Sheet -->
+  <div id="watchModalOverlay" class="story-modal-overlay"></div>
+  <div id="watchBottomSheet" class="story-bottom-sheet">
+    <div class="sheet-handle-bar"></div>
+    
+    <div class="story-sheet-header">
+      <h2>📺 Watch Together</h2>
+      <button id="closeWatchSheetBtn" class="close-sheet-btn">&times;</button>
+    </div>
+
+    <div class="story-sheet-content">
+      
+      <!-- Video Player Container -->
+      <div class="yt-player-wrapper">
+        <div id="ytPlayer"></div>
+      </div>
+
+      <!-- Sync Controls & Link Input -->
+      <div class="yt-input-card">
+        <input type="text" id="ytUrlInput" class="story-title-input" placeholder="Paste YouTube link here...">
+        <div class="yt-btn-row">
+          <button id="loadYtBtn" class="story-publish-btn" style="flex: 1; margin: 0;">Play Now 🎬</button>
+          <button id="addToQueueBtn" class="story-publish-btn" style="background: rgba(255, 255, 255, 0.15); flex: 1; margin: 0;">+ Save to Playlist</button>
+        </div>
+      </div>
+
+      <!-- Shared Playlist / Queue -->
+      <div class="stories-feed-header" style="margin-top: 20px;">
+        <h3>Our Shared Playlist</h3>
+      </div>
+
+      <div id="ytQueueFeed" class="stories-feed">
+        <!-- Queued video links appear here -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- YouTube iFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <!-- Main App JS -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
