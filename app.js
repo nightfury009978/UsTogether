@@ -19,7 +19,7 @@ import {
   doc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your Firebase Config (Replace with your actual keys from Firebase Console)
+// Your Firebase Config (Replace with your actual keys)
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_AUTH_DOMAIN",
@@ -92,7 +92,7 @@ moodBtns.forEach(btn => {
   });
 });
 
-// Toggle Auth Mode (Login vs Sign Up)
+// Toggle Auth Mode
 authToggleBtn.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
@@ -108,15 +108,18 @@ authToggleBtn.addEventListener('click', () => {
   }
 });
 
-// Authentication Submit
+// Authentication Submit (Converts Username to Email format automatically)
 authSubmitBtn.addEventListener('click', async () => {
-  const email = authEmail.value.trim();
+  const inputVal = authEmail.value.trim().toLowerCase();
   const password = authPassword.value.trim();
 
-  if (!email || !password) {
-    alert("Please enter both email and passcode.");
+  if (!inputVal || !password) {
+    alert("Please enter both username and passcode.");
     return;
   }
+
+  // Convert username to email format if user didn't enter '@'
+  const email = inputVal.includes('@') ? inputVal : `${inputVal}@ourspace.com`;
 
   try {
     if (isSignUpMode) {
@@ -134,7 +137,9 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
     authOverlay.classList.remove('active');
-    currentUserLabel.textContent = user.email.split('@')[0];
+    // Display clean name (e.g. Abhay instead of abhay@ourspace.com)
+    const rawName = user.email.split('@')[0];
+    currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     loadMemories();
     loadStories();
   } else {
@@ -169,14 +174,12 @@ logoutBtn.addEventListener('click', async () => {
   closeDrawer();
 });
 
-// Permanent Delete Trigger -> Open Countdown Modal
+// Permanent Delete Countdown Trigger
 permDeleteSubBtn.addEventListener('click', () => {
   closeDrawer();
 
-  // Show Modal
   deleteModal.classList.add('active');
 
-  // Reset Countdown State
   let timeLeft = 7;
   timerBadge.textContent = timeLeft;
   confirmBtn.disabled = true;
@@ -185,7 +188,6 @@ permDeleteSubBtn.addEventListener('click', () => {
 
   clearInterval(deleteTimerInterval);
 
-  // Start 7s Reverse Timer
   deleteTimerInterval = setInterval(() => {
     timeLeft--;
     timerBadge.textContent = timeLeft;
@@ -208,7 +210,7 @@ cancelBtn.addEventListener('click', () => {
   deleteModal.classList.remove('active');
 });
 
-// Execute Account Deletion when Continue is Tapped
+// Execute Account Deletion
 confirmBtn.addEventListener('click', async () => {
   if (confirmBtn.disabled || !auth.currentUser) return;
 
@@ -242,11 +244,14 @@ saveBtn.addEventListener('click', async () => {
   const text = memoryInput.value.trim();
   if (!text) return;
 
+  const rawName = currentUser.email.split('@')[0];
+  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
   try {
     await addDoc(collection(db, "memories"), {
       text: text,
       mood: selectedMood,
-      author: currentUser.email.split('@')[0],
+      author: displayName,
       createdAt: serverTimestamp()
     });
     memoryInput.value = '';
@@ -295,11 +300,14 @@ publishStoryBtn.addEventListener('click', async () => {
     return;
   }
 
+  const rawName = currentUser.email.split('@')[0];
+  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
   try {
     await addDoc(collection(db, "stories"), {
       title: title,
       text: text,
-      author: currentUser.email.split('@')[0],
+      author: displayName,
       createdAt: serverTimestamp()
     });
     storyTitleInput.value = '';
