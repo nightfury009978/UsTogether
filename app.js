@@ -19,7 +19,7 @@ import {
   doc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your Firebase Config
+// Exact Firebase Credentials
 const firebaseConfig = {
   apiKey: "AIzaSyBndZhDQVGVmrAgzwizheVErOfMz8nukYQ",
   authDomain: "ustogether-14936.firebaseapp.com",
@@ -29,7 +29,7 @@ const firebaseConfig = {
   appId: "1:685510249495:web:3efd43596ca0cb621a6052"
 };
 
-// Initialize Firebase
+// Initialize Firebase App & Services Explicitly
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -97,28 +97,28 @@ authToggleBtn.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
     authTitle.textContent = "Create Account";
-    authSub.textContent = "Create a passcode for our space";
+    authSub.textContent = "Create an account for our space";
     authSubmitBtn.textContent = "Sign Up ✨";
     authToggleBtn.textContent = "Login";
   } else {
     authTitle.textContent = "Welcome Back";
-    authSub.textContent = "Enter your passcode to unlock our space";
+    authSub.textContent = "Enter details to unlock our space";
     authSubmitBtn.textContent = "Unlock Space ✨";
     authToggleBtn.textContent = "Sign Up";
   }
 });
 
-// Authentication Submit (Uses simple username internally)
+// Authentication Submit
 authSubmitBtn.addEventListener('click', async () => {
   const inputVal = authEmail.value.trim().toLowerCase();
   const password = authPassword.value.trim();
 
   if (!inputVal || !password) {
-    alert("Please enter both username and passcode.");
+    alert("Please enter both username and password.");
     return;
   }
 
-  // Seamlessly formats simple usernames for Firebase Auth
+  // Auto-format username into email format for Firebase
   const email = inputVal.includes('@') ? inputVal : `${inputVal}@ourspace.com`;
 
   try {
@@ -137,9 +137,11 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
     authOverlay.classList.remove('active');
-    // Display clean name (e.g. Abhay instead of abhay@ourspace.com)
+    
+    // Clean Username display (Capitalized)
     const rawName = user.email.split('@')[0];
     currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    
     loadMemories();
     loadStories();
   } else {
@@ -174,10 +176,9 @@ logoutBtn.addEventListener('click', async () => {
   closeDrawer();
 });
 
-// Permanent Delete Countdown Trigger
+// Permanent Delete Trigger
 permDeleteSubBtn.addEventListener('click', () => {
   closeDrawer();
-
   deleteModal.classList.add('active');
 
   let timeLeft = 7;
@@ -282,10 +283,15 @@ function loadMemories() {
         <p class="entry-text">${data.text}</p>
         <div class="entry-footer">
           <span>${data.mood || '💖'}</span>
-          <button class="story-delete-btn" onclick="deleteDoc(doc(db, 'memories', '${docSnap.id}'))">🗑️</button>
+          <button class="story-delete-btn" id="del-${docSnap.id}">🗑️</button>
         </div>
       `;
+      
       timelineFeed.appendChild(card);
+
+      document.getElementById(`del-${docSnap.id}`)?.addEventListener('click', async () => {
+        await deleteDoc(doc(db, 'memories', docSnap.id));
+      });
     });
   });
 }
