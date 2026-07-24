@@ -3,18 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UsTogether — Our Shared Memories</title>
-  
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,600;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+  <title>Us Together ✨</title>
   <link rel="stylesheet" href="style.css">
-  
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -22,59 +13,77 @@
   <div id="splash">
     <div class="splash-content">
       <div class="heart-pulse">💖</div>
-      <h1 class="brand-title">UsTogether</h1>
-      <p class="brand-sub">Abhay & Dhakshitha</p>
+      <h1 class="brand-title">Us Together</h1>
+      <p class="brand-sub">Our Private Space</p>
     </div>
   </div>
 
-  <!-- Navigation Header -->
+  <!-- Auth Modal (Login / Register) -->
+  <div id="authOverlay" class="auth-overlay active">
+    <div class="auth-card">
+      <h2 id="authTitle">Welcome Back ✨</h2>
+      <p id="authSubtitle" class="auth-sub">Sign in to your private diary</p>
+      
+      <div class="auth-inputs">
+        <input type="text" id="authUsername" placeholder="Username" autocomplete="off">
+        <input type="password" id="authPassword" placeholder="Password">
+      </div>
+
+      <button id="authPrimaryBtn" class="auth-btn" onclick="handleAuthSubmit()">Login</button>
+
+      <div class="auth-toggle">
+        <span id="authToggleText">Need an account?</span>
+        <button id="authToggleBtn" onclick="toggleAuthMode()">Register</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Navigation -->
   <nav class="top-nav">
-    <div class="nav-brand">UsTogether</div>
-    <button class="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
+    <div class="nav-brand">✨ Us Together</div>
+    <button class="hamburger-btn" onclick="toggleMenu()">
       <span></span>
       <span></span>
       <span></span>
     </button>
   </nav>
 
-  <!-- Menu Drawer -->
+  <!-- Side Drawer Menu -->
   <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
   <div id="menuDrawer" class="menu-drawer">
     <div class="drawer-header">
-      <h3>Options</h3>
+      <h3>Menu</h3>
       <button class="close-drawer" onclick="toggleMenu()">✕</button>
     </div>
     <ul class="drawer-items">
-      <li onclick="openStoriesSheet()">
-        <span class="drawer-icon">📖</span>
-        <span>Stories</span>
-      </li>
-      <li onclick="toggleDeleteMode()">
-        <span class="drawer-icon">🗑️</span>
-        <span id="deleteModeText">Delete a Memory</span>
+      <li onclick="openStoriesSheet()">📖 Stories Vault</li>
+      <li onclick="toggleDeleteMode()"><span id="deleteModeText">🗑️ Delete a Memory</span></li>
+      <li onclick="toggleAccountSubmenu()" class="account-menu-item">
+        <span>👤 Account Controls</span>
+        <span id="accountChevron" class="chevron-sm">❯</span>
       </li>
     </ul>
+
+    <!-- Account Submenu -->
+    <div id="accountSubmenu" class="account-submenu">
+      <button class="sub-btn logout-btn" onclick="handleLogout()">Logout</button>
+      <button class="sub-btn delete-acc-btn" onclick="handlePermanentDelete()">Permanently Delete Account</button>
+    </div>
   </div>
 
-  <!-- Main App Container -->
-  <div class="app-container">
+  <!-- Main Content Container -->
+  <main class="app-container">
     <header class="app-header">
       <div class="profile-badge glowing-badge">
-        <span class="sparkle">✨</span>
-        <h2>Abhay & Dhakshitha</h2>
+        <h2>✨ Abhay & Dhakshitha</h2>
       </div>
       <p class="subtitle">Our Personal Diary & Memories</p>
     </header>
 
-    <!-- Create Memory Card -->
-    <section class="card input-card glowing-card">
-      <div class="author-selector">
-        <label>Writing as:</label>
-        <select id="authorSelect" onchange="saveAuthorPreference()">
-          <option value="" disabled selected>Select your name...</option>
-          <option value="Abhay">Abhay 👦🏻</option>
-          <option value="Dhakshitha">Dhakshitha 👧🏻</option>
-        </select>
+    <!-- Write Memory Card -->
+    <section class="card glowing-card">
+      <div class="active-user-bar">
+        <span>Logged in as: <strong id="loggedInUserLabel">...</strong></span>
       </div>
 
       <textarea id="diaryInput" placeholder="What made you smile today? Write a memory..."></textarea>
@@ -93,50 +102,50 @@
       <button id="saveBtn" onclick="saveEntry()">Post Memory ✨</button>
     </section>
 
-    <!-- Timeline Section -->
-    <section class="feed-section">
+    <!-- Memory Timeline Section -->
+    <section class="timeline-section">
       <div class="timeline-header">
         <h3>Memory Timeline</h3>
-        <span class="memory-count" id="entryCount">✨</span>
+        <span id="entryCount" class="entry-count-badge">0 memories</span>
       </div>
+
       <div id="deleteBanner" class="delete-banner" style="display: none;">
-        <span>Tap any memory below to delete it</span>
-        <button onclick="toggleDeleteMode()">Cancel</button>
+        <span>Tap any memory written by you to delete it</span>
+        <button onclick="toggleDeleteMode()">Done</button>
       </div>
+
       <div id="entriesFeed" class="timeline-feed">
-        <div class="loading">Loading memories...</div>
+        <p style="color:var(--text-secondary); text-align:center; padding-top:20px;">Loading memories...</p>
       </div>
     </section>
-  </div>
+  </main>
 
-  <!-- Bottom Sheet Overlay for Stories Interface -->
+  <!-- Stories Bottom Sheet -->
   <div id="storyModalOverlay" class="story-modal-overlay" onclick="closeStoriesSheet()"></div>
   <div id="storyBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
-    
     <div class="story-sheet-header">
-      <h2>Stories Vault 🥀</h2>
+      <h2>Stories Vault 🌹</h2>
       <button class="close-sheet-btn" onclick="closeStoriesSheet()">✕</button>
     </div>
-
+    
     <div class="story-sheet-content">
-      <!-- Write Story Box -->
       <div class="story-input-box glowing-card">
-        <input type="text" id="storyTitle" class="story-title-input" placeholder="Title / Chapter..." />
+        <input type="text" id="storyTitle" class="story-title-input" placeholder="Title / Chapter Name...">
         <textarea id="storyContent" class="story-text-area" placeholder="Write your chapter here..."></textarea>
         <button class="story-publish-btn" onclick="saveStory()">Publish Chapter 🍷</button>
       </div>
 
-      <!-- Published Stories List -->
       <div class="stories-feed-header">
         <h3>Published Chapters</h3>
       </div>
-      <div id="storiesFeed" class="stories-feed-container">
-        <!-- Stories load dynamically here -->
-      </div>
+      <div id="storiesFeed" class="stories-feed-list"></div>
     </div>
   </div>
 
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
