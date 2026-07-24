@@ -237,31 +237,44 @@ body {
   font-size: 0.95rem;
 }
 
+/* Account Submenu - Uniform & Clean Sub-topics */
 .account-submenu {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin-top: 6px;
-  padding-left: 8px;
+  padding-left: 12px;
 }
 
-.account-submenu.open { max-height: 150px; }
+.account-submenu.open { 
+  max-height: 120px; 
+}
 
 .sub-btn {
-  padding: 10px;
+  width: 100%;
+  padding: 10px 12px;
   border-radius: 10px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   text-align: left;
+  transition: background 0.2s;
 }
 
-.logout-btn { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-.delete-acc-btn { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+.sub-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.delete-acc-btn {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.2);
+}
 
 .chevron-sm { font-size: 0.8rem; transition: transform 0.3s ease; }
 .account-menu-item.open .chevron-sm { transform: rotate(90deg); }
@@ -383,7 +396,7 @@ textarea {
 }
 .timeline-feed::-webkit-scrollbar { display: none; }
 
-/* Dual-Tone Edge Glowing Memory Box */
+/* Memory Card */
 .entry-card {
   position: relative;
   background: rgba(255, 255, 255, 0.04);
