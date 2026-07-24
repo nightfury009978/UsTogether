@@ -279,6 +279,60 @@ body {
 .chevron-sm { font-size: 0.8rem; transition: transform 0.3s ease; }
 .account-menu-item.open .chevron-sm { transform: rotate(90deg); }
 
+/* Permanent Delete Confirmation Countdown Modal */
+.timer-badge {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.confirm-delete-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.confirm-delete-btn.ready {
+  cursor: pointer;
+  background: linear-gradient(135deg, #ef4444 0%, #ff4b8b 100%);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+  animation: pulseDelete 1.5s infinite;
+}
+
+.cancel-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+@keyframes pulseDelete {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
 /* App Main Container */
 .app-container { max-width: 480px; margin: 0 auto; padding: 10px 16px 20px; }
 .app-header { text-align: center; margin-bottom: 24px; }
@@ -368,21 +422,6 @@ textarea {
 .timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .timeline-header h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: #f3e8ff; }
 .entry-count-badge { font-size: 0.85rem; color: var(--text-secondary); }
-
-.delete-banner {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: #fca5a5;
-}
-
-.delete-banner button { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 4px 8px; border-radius: 6px; }
 
 .timeline-feed {
   position: relative;
