@@ -91,13 +91,15 @@ const loadYtBtn = document.getElementById('loadYtBtn');
 const addToQueueBtn = document.getElementById('addToQueueBtn');
 const ytQueueFeed = document.getElementById('ytQueueFeed');
 const ytPlayerContainer = document.getElementById('ytPlayer');
+const closeYtVideoBar = document.getElementById('closeYtVideoBar');
+const closeYtVideoBtn = document.getElementById('closeYtVideoBtn');
 
 let isSignUpMode = false;
 let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
 
-// YouTube Video ID Extractor (Handles standard links, mobile share links, shorts)
+// Extract Video ID
 function extractVideoId(url) {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -105,9 +107,16 @@ function extractVideoId(url) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// Function to render/play video directly in iframe container
+// Function to render/play video directly
 function renderYtVideo(videoId) {
-  if (!ytPlayerContainer || !videoId) return;
+  if (!ytPlayerContainer) return;
+  if (!videoId) {
+    ytPlayerContainer.innerHTML = '';
+    if (closeYtVideoBar) closeYtVideoBar.style.display = 'none';
+    return;
+  }
+  
+  if (closeYtVideoBar) closeYtVideoBar.style.display = 'flex';
   ytPlayerContainer.innerHTML = `
     <iframe 
       src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&enablejsapi=1" 
@@ -116,6 +125,22 @@ function renderYtVideo(videoId) {
       style="width:100%; height:100%; border:0;">
     </iframe>
   `;
+}
+
+// Close/Clear Current Playing Video Action
+if (closeYtVideoBtn) {
+  closeYtVideoBtn.addEventListener('click', async () => {
+    renderYtVideo(null);
+    try {
+      await setDoc(doc(db, "watch_sync", "current"), {
+        videoId: "",
+        updatedBy: currentUser?.email || "User",
+        timestamp: serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.error(e);
+    }
+  });
 }
 
 // Play Video Action
@@ -145,7 +170,7 @@ if (loadYtBtn) {
   });
 }
 
-// Save to Shared Playlist Action
+// Save to Shared Playlist Action (With Custom Title Prompt)
 if (addToQueueBtn) {
   addToQueueBtn.addEventListener('click', async () => {
     const url = ytUrlInput.value.trim();
@@ -156,12 +181,15 @@ if (addToQueueBtn) {
       return;
     }
 
+    const customName = prompt("Give this video a title/name (optional):", "") || "Saved Video";
+
     const rawName = currentUser.email.split('@')[0];
     const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
     try {
       await addDoc(collection(db, "yt_queue"), {
         videoId: vidId,
+        videoTitle: customName,
         addedBy: displayName,
         createdAt: serverTimestamp()
       });
@@ -179,11 +207,13 @@ function listenWatchSync() {
     const data = docSnap.data();
     if (data.videoId) {
       renderYtVideo(data.videoId);
+    } else {
+      renderYtVideo(null);
     }
   });
 }
 
-// Load Playlist
+// Load Shared Playlist
 function loadYtQueue() {
   if (!ytQueueFeed) return;
   const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
@@ -195,8 +225,10 @@ function loadYtQueue() {
       const card = document.createElement('div');
       card.className = 'queue-item-card';
 
+      const displayTitle = data.videoTitle ? data.videoTitle : `Video (${data.addedBy})`;
+
       card.innerHTML = `
-        <span class="queue-item-title">📺 Video ID: ${data.videoId} (${data.addedBy})</span>
+        <span class="queue-item-title">📺 ${displayTitle}</span>
         <div style="display:flex; gap:6px;">
           <button class="queue-play-btn" id="play-q-${docSnap.id}">Play 🎬</button>
           <button class="story-delete-btn" id="del-q-${docSnap.id}">🗑️</button>
@@ -484,7 +516,7 @@ publishStoryBtn?.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book
+// Load Realtime Story Book (Formatted with Glowing Title & By Subtitles)
 function loadStories() {
   if (!storiesFeed) return;
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
@@ -496,14 +528,19 @@ function loadStories() {
       const accordion = document.createElement('div');
       accordion.className = 'story-accordion-card';
 
+      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Recently';
+
       accordion.innerHTML = `
         <div class="story-accordion-header">
-          <span class="story-accordion-title">${data.title}</span>
-          <span style="color:#888;">&rsaquo;</span>
+          <div>
+            <div class="story-accordion-title glowing-story-title">${data.title}</div>
+            <div class="story-by-sub">By: ${data.author} • ${dateStr}</div>
+          </div>
+          <span style="color:#ffb6c1; font-size: 1.2rem;">&rsaquo;</span>
         </div>
         <div class="story-accordion-body">
           <div class="story-book-author-bar">
-            <span>Written by ${data.author}</span>
+            <span>By: ${data.author}</span>
             <button id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
           </div>
           <p class="story-book-text">${data.text}</p>
