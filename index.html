@@ -57,14 +57,14 @@
   </div>
 
   <!-- Auth Overlay (Login / Signup) -->
-  <div id="authOverlay" class="auth-overlay">
+  <div id="authOverlay" class="auth-overlay active">
     <div class="auth-card">
       <h2 id="authTitle">Welcome Back</h2>
-      <p id="authSub" class="auth-sub">Enter your passcode to unlock our space</p>
+      <p id="authSub" class="auth-sub">Enter details to unlock our space</p>
       
       <div class="auth-inputs">
-        <input type="text" id="authEmail" placeholder="Username (e.g., Abhay)" autocomplete="username">
-        <input type="password" id="authPassword" placeholder="Passcode">
+        <input type="text" id="authEmail" placeholder="Username" autocomplete="username">
+        <input type="password" id="authPassword" placeholder="Password">
       </div>
 
       <button id="authSubmitBtn" class="auth-btn">Unlock Space ✨</button>
@@ -163,7 +163,7 @@
     </div>
   </div>
 
-  <!-- Firebase Scripts -->
+  <!-- Main JavaScript App Module -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
