@@ -1,404 +1,343 @@
-// Your Firebase Configuration
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  onAuthStateChanged, 
+  signOut,
+  deleteUser 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  serverTimestamp, 
+  deleteDoc, 
+  doc 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Your Firebase Config (Replace with your actual keys from Firebase Console)
 const firebaseConfig = {
-  apiKey: "AIzaSyBndZhDQVGVmrAgzwizheVErOfMz8nukYQ",
-  authDomain: "ustogether-14936.firebaseapp.com",
-  projectId: "ustogether-14936",
-  storageBucket: "ustogether-14936.firebasestorage.app",
-  messagingSenderId: "685510249495",
-  appId: "1:685510249495:web:3efd43596ca0cb621a6052"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-let selectedMood = "🥰";
-let isDeleteMode = false;
-let isRegisterMode = false;
+// DOM Elements
+const authOverlay = document.getElementById('authOverlay');
+const authTitle = document.getElementById('authTitle');
+const authSub = document.getElementById('authSub');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authToggleBtn = document.getElementById('authToggleBtn');
+const currentUserLabel = document.getElementById('currentUserLabel');
+
+// Navigation & Drawer Elements
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const menuDrawer = document.getElementById('menuDrawer');
+const menuOverlay = document.getElementById('menuOverlay');
+const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+const accountMenuItem = document.getElementById('accountMenuItem');
+const accountSubmenu = document.getElementById('accountSubmenu');
+const logoutBtn = document.getElementById('logoutBtn');
+const permDeleteSubBtn = document.getElementById('permDeleteSubBtn');
+
+// Delete Countdown Modal Elements
+const deleteModal = document.getElementById('deleteConfirmModal');
+const timerBadge = document.getElementById('deleteTimerBadge');
+const confirmBtn = document.getElementById('confirmDeleteBtn');
+const cancelBtn = document.getElementById('cancelDeleteBtn');
+
+// Memory Feed Elements
+const memoryInput = document.getElementById('memoryInput');
+const saveBtn = document.getElementById('saveBtn');
+const timelineFeed = document.getElementById('timelineFeed');
+const entryCountBadge = document.getElementById('entryCountBadge');
+const moodBtns = document.querySelectorAll('.mood-btn');
+
+// Story Book Elements
+const openStoriesMenuBtn = document.getElementById('openStoriesMenuBtn');
+const storyModalOverlay = document.getElementById('storyModalOverlay');
+const storyBottomSheet = document.getElementById('storyBottomSheet');
+const closeStorySheetBtn = document.getElementById('closeStorySheetBtn');
+const storyTitleInput = document.getElementById('storyTitleInput');
+const storyTextInput = document.getElementById('storyTextInput');
+const publishStoryBtn = document.getElementById('publishStoryBtn');
+const storiesFeed = document.getElementById('storiesFeed');
+
+// App State
+let isSignUpMode = false;
+let selectedMood = '💖';
 let currentUser = null;
+let deleteTimerInterval = null;
 
-// Check Auth Session on Launch
-window.addEventListener('DOMContentLoaded', () => {
-  const savedUser = localStorage.getItem('ustogether_logged_user');
-  if (savedUser) {
-    currentUser = savedUser;
-    document.getElementById('authOverlay').classList.remove('active');
-    document.getElementById('loggedInUserLabel').innerText = currentUser;
-  } else {
-    document.getElementById('authOverlay').classList.add('active');
-  }
-
-  // Attach Mood Click Listeners
-  document.querySelectorAll('.mood-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-      const target = e.currentTarget;
-      target.classList.add('active');
-      selectedMood = target.getAttribute('data-mood') || "🥰";
-    });
+// Handle Mood Selection
+moodBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    moodBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMood = btn.getAttribute('data-mood');
   });
-
-  // Hide splash screen
-  setTimeout(() => {
-    const splash = document.getElementById('splash');
-    if (splash) splash.style.display = 'none';
-  }, 2800);
 });
 
-// Toggle Auth Mode (Login vs Register)
-function toggleAuthMode() {
-  isRegisterMode = !isRegisterMode;
-  const title = document.getElementById('authTitle');
-  const sub = document.getElementById('authSubtitle');
-  const btn = document.getElementById('authPrimaryBtn');
-  const toggleText = document.getElementById('authToggleText');
-  const toggleBtn = document.getElementById('authToggleBtn');
-
-  if (isRegisterMode) {
-    title.innerText = "Create Account ✨";
-    sub.innerText = "Set up your credentials for the diary";
-    btn.innerText = "Register";
-    toggleText.innerText = "Already have an account?";
-    toggleBtn.innerText = "Login";
+// Toggle Auth Mode (Login vs Sign Up)
+authToggleBtn.addEventListener('click', () => {
+  isSignUpMode = !isSignUpMode;
+  if (isSignUpMode) {
+    authTitle.textContent = "Create Account";
+    authSub.textContent = "Create a passcode for our space";
+    authSubmitBtn.textContent = "Sign Up ✨";
+    authToggleBtn.textContent = "Login";
   } else {
-    title.innerText = "Welcome Back ✨";
-    sub.innerText = "Sign in to your private diary";
-    btn.innerText = "Login";
-    toggleText.innerText = "Need an account?";
-    toggleBtn.innerText = "Register";
+    authTitle.textContent = "Welcome Back";
+    authSub.textContent = "Enter your passcode to unlock our space";
+    authSubmitBtn.textContent = "Unlock Space ✨";
+    authToggleBtn.textContent = "Sign Up";
   }
-}
+});
 
-// Handle Login / Register Submit
-function handleAuthSubmit() {
-  const username = document.getElementById('authUsername').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
+// Authentication Submit
+authSubmitBtn.addEventListener('click', async () => {
+  const email = authEmail.value.trim();
+  const password = authPassword.value.trim();
 
-  if (!username || !password) {
-    alert("Please enter both username and password!");
+  if (!email || !password) {
+    alert("Please enter both email and passcode.");
     return;
   }
 
-  const userDocRef = db.collection("users").doc(username.toLowerCase());
-
-  if (isRegisterMode) {
-    userDocRef.get().then((doc) => {
-      if (doc.exists) {
-        alert("Username already exists! Please pick another or log in.");
-      } else {
-        userDocRef.set({
-          username: username,
-          password: password,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-          completeLogin(username);
-        });
-      }
-    });
-  } else {
-    userDocRef.get().then((doc) => {
-      if (doc.exists && doc.data().password === password) {
-        completeLogin(doc.data().username);
-      } else {
-        alert("Invalid username or password!");
-      }
-    });
-  }
-}
-
-function completeLogin(username) {
-  currentUser = username;
-  localStorage.setItem('ustogether_logged_user', username);
-  document.getElementById('loggedInUserLabel').innerText = username;
-  document.getElementById('authOverlay').classList.remove('active');
-  document.getElementById('authUsername').value = "";
-  document.getElementById('authPassword').value = "";
-}
-
-// Drawer Account Submenu
-function toggleAccountSubmenu() {
-  const menu = document.getElementById('accountSubmenu');
-  const item = document.querySelector('.account-menu-item');
-  if (menu && item) {
-    menu.classList.toggle('open');
-    item.classList.toggle('open');
-  }
-}
-
-// Logout Option
-function handleLogout() {
-  localStorage.removeItem('ustogether_logged_user');
-  currentUser = null;
-  toggleMenu();
-  document.getElementById('authOverlay').classList.add('active');
-}
-
-// Permanent Delete Account & Wipe All Posts
-function handlePermanentDelete() {
-  if (!currentUser) return;
-
-  const confirmDelete = confirm(`⚠️ Are you sure you want to permanently delete account "${currentUser}"? ALL your posted memories and stories will be deleted forever!`);
-  
-  if (confirmDelete) {
-    const userLower = currentUser.toLowerCase();
-
-    // 1. Delete user account doc
-    db.collection("users").doc(userLower).delete();
-
-    // 2. Wipe user's memories
-    db.collection("diary").where("author", "==", currentUser).get().then((snapshot) => {
-      snapshot.forEach(doc => doc.ref.delete());
-    });
-
-    // 3. Wipe user's stories
-    db.collection("stories").where("author", "==", currentUser).get().then((snapshot) => {
-      snapshot.forEach(doc => doc.ref.delete());
-    });
-
-    alert("Your account and all associated posts have been permanently deleted.");
-    handleLogout();
-  }
-}
-
-// Toggle Hamburger Menu Drawer
-function toggleMenu() {
-  const overlay = document.getElementById('menuOverlay');
-  const drawer = document.getElementById('menuDrawer');
-  if (overlay && drawer) {
-    overlay.classList.toggle('active');
-    drawer.classList.toggle('active');
-  }
-}
-
-// Open / Close Stories Bottom Sheet
-function openStoriesSheet() {
-  toggleMenu();
-  const overlay = document.getElementById('storyModalOverlay');
-  const sheet = document.getElementById('storyBottomSheet');
-  if (overlay && sheet) {
-    overlay.classList.add('active');
-    sheet.classList.add('active');
-    loadStories();
-  }
-}
-
-function closeStoriesSheet() {
-  const overlay = document.getElementById('storyModalOverlay');
-  const sheet = document.getElementById('storyBottomSheet');
-  if (overlay && sheet) {
-    overlay.classList.remove('active');
-    sheet.classList.remove('active');
-  }
-}
-
-// Toggle Memory Delete Mode
-function toggleDeleteMode() {
-  isDeleteMode = !isDeleteMode;
-  const feed = document.getElementById('entriesFeed');
-  const banner = document.getElementById('deleteBanner');
-  const btnText = document.getElementById('deleteModeText');
-
-  if (isDeleteMode) {
-    if (feed) feed.classList.add('delete-mode');
-    if (banner) banner.style.display = 'flex';
-    if (btnText) btnText.textContent = 'Exit Delete Mode';
-  } else {
-    if (feed) feed.classList.remove('delete-mode');
-    if (banner) banner.style.display = 'none';
-    if (btnText) btnText.textContent = 'Delete a Memory';
-  }
-
-  toggleMenu();
-}
-
-// Post Memory Function
-function saveEntry() {
-  if (!currentUser) {
-    alert("Please log in first!");
-    return;
-  }
-
-  const inputElem = document.getElementById('diaryInput');
-  const text = inputElem ? inputElem.value.trim() : "";
-
-  if (!text) {
-    alert("Please write something before posting!");
-    return;
-  }
-
-  const saveBtn = document.getElementById('saveBtn');
-  if (saveBtn) saveBtn.innerText = "Posting...";
-
-  db.collection("diary").add({
-    author: currentUser,
-    text: text,
-    mood: selectedMood,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  })
-  .then(() => {
-    if (inputElem) inputElem.value = "";
-    if (saveBtn) saveBtn.innerText = "Post Memory ✨";
-  })
-  .catch((error) => {
-    console.error("Error writing entry: ", error);
-    if (saveBtn) saveBtn.innerText = "Post Memory ✨";
-  });
-}
-
-// Memory Delete Prompt
-function deleteMemory(docId, author) {
-  if (!isDeleteMode) return;
-
-  if (author !== currentUser) {
-    alert(`You can only delete memories written by you (${currentUser})!`);
-    return;
-  }
-
-  const confirmDelete = confirm("Delete your selected memory?");
-  if (confirmDelete) {
-    db.collection("diary").doc(docId).delete().then(() => toggleDeleteMode());
-  }
-}
-
-// Real-Time Memory Feed Listener
-db.collection("diary").orderBy("timestamp", "desc")
-  .onSnapshot((snapshot) => {
-    const feed = document.getElementById('entriesFeed');
-    const countBadge = document.getElementById('entryCount');
-    if (!feed) return;
-
-    feed.innerHTML = "";
-
-    if (snapshot.empty) {
-      feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; padding-top:20px;">No memories yet. Write your first memory together! ✨</p>`;
-      if (countBadge) countBadge.textContent = "0 memories";
-      return;
+  try {
+    if (isSignUpMode) {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
     }
+  } catch (error) {
+    alert(error.message);
+  }
+});
 
-    if (countBadge) countBadge.textContent = `${snapshot.size} memories`;
+// Track Authentication State
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    authOverlay.classList.remove('active');
+    currentUserLabel.textContent = user.email.split('@')[0];
+    loadMemories();
+    loadStories();
+  } else {
+    currentUser = null;
+    authOverlay.classList.add('active');
+  }
+});
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      const docId = doc.id;
-      const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      }) : 'Just now';
+// Navigation Drawer Controls
+hamburgerBtn.addEventListener('click', () => {
+  menuDrawer.classList.add('active');
+  menuOverlay.classList.add('active');
+});
 
+const closeDrawer = () => {
+  menuDrawer.classList.remove('active');
+  menuOverlay.classList.remove('active');
+};
+
+closeDrawerBtn.addEventListener('click', closeDrawer);
+menuOverlay.addEventListener('click', closeDrawer);
+
+// Account Submenu Toggle
+accountMenuItem.addEventListener('click', () => {
+  accountMenuItem.classList.toggle('open');
+  accountSubmenu.classList.toggle('open');
+});
+
+// Logout Action
+logoutBtn.addEventListener('click', async () => {
+  await signOut(auth);
+  closeDrawer();
+});
+
+// Permanent Delete Trigger -> Open Countdown Modal
+permDeleteSubBtn.addEventListener('click', () => {
+  closeDrawer();
+
+  // Show Modal
+  deleteModal.classList.add('active');
+
+  // Reset Countdown State
+  let timeLeft = 7;
+  timerBadge.textContent = timeLeft;
+  confirmBtn.disabled = true;
+  confirmBtn.classList.remove('ready');
+  confirmBtn.textContent = `Wait ${timeLeft}s...`;
+
+  clearInterval(deleteTimerInterval);
+
+  // Start 7s Reverse Timer
+  deleteTimerInterval = setInterval(() => {
+    timeLeft--;
+    timerBadge.textContent = timeLeft;
+
+    if (timeLeft > 0) {
+      confirmBtn.textContent = `Wait ${timeLeft}s...`;
+    } else {
+      clearInterval(deleteTimerInterval);
+      timerBadge.textContent = '✓';
+      confirmBtn.disabled = false;
+      confirmBtn.classList.add('ready');
+      confirmBtn.textContent = 'Continue & Delete Permanently';
+    }
+  }, 1000);
+});
+
+// Cancel Permanent Deletion
+cancelBtn.addEventListener('click', () => {
+  clearInterval(deleteTimerInterval);
+  deleteModal.classList.remove('active');
+});
+
+// Execute Account Deletion when Continue is Tapped
+confirmBtn.addEventListener('click', async () => {
+  if (confirmBtn.disabled || !auth.currentUser) return;
+
+  try {
+    await deleteUser(auth.currentUser);
+    alert("Account permanently deleted.");
+    deleteModal.classList.remove('active');
+  } catch (error) {
+    console.error("Delete account error:", error);
+    alert("Security limit: Please log out and log back in before deleting your account.");
+  }
+});
+
+// Story Book Drawer Controls
+openStoriesMenuBtn.addEventListener('click', () => {
+  closeDrawer();
+  storyBottomSheet.classList.add('active');
+  storyModalOverlay.classList.add('active');
+});
+
+const closeStorySheet = () => {
+  storyBottomSheet.classList.remove('active');
+  storyModalOverlay.classList.remove('active');
+};
+
+closeStorySheetBtn.addEventListener('click', closeStorySheet);
+storyModalOverlay.addEventListener('click', closeStorySheet);
+
+// Share Memory
+saveBtn.addEventListener('click', async () => {
+  const text = memoryInput.value.trim();
+  if (!text) return;
+
+  try {
+    await addDoc(collection(db, "memories"), {
+      text: text,
+      mood: selectedMood,
+      author: currentUser.email.split('@')[0],
+      createdAt: serverTimestamp()
+    });
+    memoryInput.value = '';
+  } catch (err) {
+    console.error("Error saving memory:", err);
+  }
+});
+
+// Load Realtime Memories
+function loadMemories() {
+  const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    timelineFeed.innerHTML = '';
+    entryCountBadge.textContent = `${snapshot.docs.length} memories`;
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
       const card = document.createElement('div');
       card.className = 'entry-card';
-      card.onclick = () => deleteMemory(docId, data.author);
+      
+      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
 
       card.innerHTML = `
         <div class="entry-header">
           <span class="entry-author">${data.author}</span>
           <span class="entry-date">${dateStr}</span>
         </div>
-        <p class="entry-text">${escapeHtml(data.text)}</p>
+        <p class="entry-text">${data.text}</p>
         <div class="entry-footer">
-          <span class="entry-mood">${data.mood || '❤️'}</span>
-          <button class="like-heart" onclick="event.stopPropagation(); triggerHeart(this)">❤️</button>
+          <span>${data.mood || '💖'}</span>
+          <button class="story-delete-btn" onclick="deleteDoc(doc(db, 'memories', '${docSnap.id}'))">🗑️</button>
         </div>
       `;
-      feed.appendChild(card);
+      timelineFeed.appendChild(card);
     });
-  });
-
-// Save Story Function
-function saveStory() {
-  if (!currentUser) {
-    alert("Please log in first!");
-    return;
-  }
-
-  const titleElem = document.getElementById('storyTitle');
-  const contentElem = document.getElementById('storyContent');
-
-  const title = titleElem ? titleElem.value.trim() : "";
-  const content = contentElem ? contentElem.value.trim() : "";
-
-  if (!title || !content) {
-    alert("Please write both a title and story content!");
-    return;
-  }
-
-  db.collection("stories").add({
-    author: currentUser,
-    title: title,
-    content: content,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  })
-  .then(() => {
-    if (titleElem) titleElem.value = "";
-    if (contentElem) contentElem.value = "";
   });
 }
 
-// Load Stories with Accordion & Delete
+// Publish Story Chapter
+publishStoryBtn.addEventListener('click', async () => {
+  const title = storyTitleInput.value.trim();
+  const text = storyTextInput.value.trim();
+
+  if (!title || !text) {
+    alert("Please write a title and story content!");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "stories"), {
+      title: title,
+      text: text,
+      author: currentUser.email.split('@')[0],
+      createdAt: serverTimestamp()
+    });
+    storyTitleInput.value = '';
+    storyTextInput.value = '';
+  } catch (err) {
+    console.error("Error adding story chapter:", err);
+  }
+});
+
+// Load Realtime Story Book
 function loadStories() {
-  db.collection("stories").orderBy("timestamp", "desc")
-    .onSnapshot((snapshot) => {
-      const feed = document.getElementById('storiesFeed');
-      if (!feed) return;
-      feed.innerHTML = "";
+  const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    storiesFeed.innerHTML = '';
 
-      if (snapshot.empty) {
-        feed.innerHTML = `<p style="color:var(--text-secondary); text-align:center; font-family:'Cormorant Garamond', serif; font-size:1.15rem; padding-top:10px;">No stories published yet. Write the first chapter...</p>`;
-        return;
-      }
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const accordion = document.createElement('div');
+      accordion.className = 'story-accordion-card';
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const docId = doc.id;
-        const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric'
-        }) : 'Just now';
-
-        const card = document.createElement('div');
-        card.className = 'story-accordion-card';
-
-        card.innerHTML = `
-          <div class="story-accordion-header" onclick="toggleStoryAccordion(this)">
-            <div class="story-accordion-title">${escapeHtml(data.title)}</div>
-            <div class="story-chevron">❯</div>
+      accordion.innerHTML = `
+        <div class="story-accordion-header">
+          <span class="story-accordion-title">${data.title}</span>
+          <span class="story-chevron">&rsaquo;</span>
+        </div>
+        <div class="story-accordion-body">
+          <div class="story-book-author-bar">
+            <span>Written by ${data.author}</span>
           </div>
-          <div class="story-accordion-body">
-            <div class="story-book-author-bar">
-              <span>Written by ${data.author} • ${dateStr}</span>
-              <button class="story-delete-btn" onclick="deleteStory('${docId}', '${data.author}')">🗑️</button>
-            </div>
-            <div class="story-book-text">${escapeHtml(data.content)}</div>
-          </div>
-        `;
-        feed.appendChild(card);
+          <p class="story-book-text">${data.text}</p>
+        </div>
+      `;
+
+      accordion.querySelector('.story-accordion-header').addEventListener('click', () => {
+        accordion.classList.toggle('open');
       });
+
+      storiesFeed.appendChild(accordion);
     });
-}
-
-function toggleStoryAccordion(headerElem) {
-  const card = headerElem.parentElement;
-  card.classList.toggle('open');
-}
-
-function deleteStory(docId, author) {
-  if (author !== currentUser) {
-    alert(`You can only delete stories written by you (${currentUser})!`);
-    return;
-  }
-
-  const confirmDelete = confirm("Delete your selected memory?");
-  if (confirmDelete) {
-    db.collection("stories").doc(docId).delete();
-  }
-}
-
-function triggerHeart(btn) {
-  btn.style.transform = "scale(1.5)";
-  setTimeout(() => { btn.style.transform = "scale(1)"; }, 200);
-}
-
-function escapeHtml(text) {
-  if (!text) return "";
-  return text.replace(/[&<>"']/g, function(m) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
 }
