@@ -178,18 +178,19 @@
     <div class="sheet-handle-bar"></div>
     
     <div class="story-sheet-header">
-      <h2>📺 Watch Together</h2>
+      <div>
+        <h2>📺 Watch Together</h2>
+        <!-- Option 2 Presence Status Indicator -->
+        <div class="presence-status-bar">
+          <span id="partnerPresenceDot" class="presence-dot offline"></span>
+          <span id="partnerPresenceText" class="presence-text">Checking partner status...</span>
+        </div>
+      </div>
       <button id="closeWatchSheetBtn" class="close-sheet-btn">&times;</button>
     </div>
 
     <div class="story-sheet-content">
       
-      <!-- Live Presence Banner -->
-      <div id="watchPresenceBadge" class="presence-badge away">
-        <span class="presence-dot"></span>
-        <span id="presenceText">Solo Watching ⚪</span>
-      </div>
-
       <!-- Close Video Bar & Video Player Container -->
       <div id="closeYtVideoBar" class="close-yt-bar" style="display: none;">
         <button id="closeYtVideoBtn" class="close-yt-btn">✖ Close Video</button>
