@@ -323,7 +323,7 @@ publishStoryBtn.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book
+// Load Realtime Story Book (With Individual Delete Option)
 function loadStories() {
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
@@ -342,6 +342,7 @@ function loadStories() {
         <div class="story-accordion-body">
           <div class="story-book-author-bar">
             <span>Written by ${data.author}</span>
+            <button class="story-delete-btn" id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size: 1.1rem;" title="Delete Story">🗑️</button>
           </div>
           <p class="story-book-text">${data.text}</p>
         </div>
@@ -352,6 +353,14 @@ function loadStories() {
       });
 
       storiesFeed.appendChild(accordion);
+
+      // Add delete listener for each story
+      document.getElementById(`del-story-${docSnap.id}`)?.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Prevents accordion toggle when clicking delete
+        if (confirm("Are you sure you want to delete this story chapter?")) {
+          await deleteDoc(doc(db, 'stories', docSnap.id));
+        }
+      });
     });
   });
 }
