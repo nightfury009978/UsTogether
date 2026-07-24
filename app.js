@@ -1,3 +1,12 @@
+// Automatically fade out splash screen on launch
+setTimeout(() => {
+  const splash = document.getElementById('splash');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 500);
+  }
+}, 1500);
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getAuth, 
@@ -96,12 +105,15 @@ let deleteTimerInterval = null;
 let ytPlayer = null;
 let isRemoteChange = false;
 
-// Initialize YouTube IFrame Player
+// Safe YouTube IFrame Player Setup
 window.onYouTubeIframeAPIReady = function() {
+  const container = document.getElementById('ytPlayer');
+  if (!container) return;
+  
   ytPlayer = new YT.Player('ytPlayer', {
     height: '100%',
     width: '100%',
-    videoId: 'M7lc1UVf-VE', // Default initial video
+    videoId: 'M7lc1UVf-VE',
     playerVars: {
       'playsinline': 1,
       'controls': 1
@@ -112,12 +124,12 @@ window.onYouTubeIframeAPIReady = function() {
   });
 };
 
-// Handle YouTube Player Events (Play, Pause, Seek)
+// Handle YouTube Player Events (Play, Pause)
 function onPlayerStateChange(event) {
-  if (isRemoteChange || !currentUser) return;
+  if (isRemoteChange || !currentUser || !ytPlayer) return;
 
   const state = event.data;
-  const currentTime = ytPlayer.getCurrentTime();
+  const currentTime = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
 
   if (state === YT.PlayerState.PLAYING) {
     updateWatchState('play', currentTime);
@@ -126,7 +138,7 @@ function onPlayerStateChange(event) {
   }
 }
 
-// Helper to extract YouTube Video ID from any URL
+// Helper to extract YouTube Video ID
 function extractVideoId(url) {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
@@ -156,19 +168,19 @@ function listenWatchSync() {
     if (!docSnap.exists() || !ytPlayer || !ytPlayer.loadVideoById) return;
 
     const data = docSnap.data();
-    if (data.updatedBy === currentUser?.email) return; // Skip if self-triggered
+    if (data.updatedBy === currentUser?.email) return;
 
     isRemoteChange = true;
 
     if (data.videoId) {
-      const currentVid = ytPlayer.getVideoData()?.video_id;
+      const currentVid = ytPlayer.getVideoData ? ytPlayer.getVideoData()?.video_id : null;
       if (currentVid !== data.videoId) {
         ytPlayer.loadVideoById(data.videoId, data.time || 0);
       }
     }
 
     if (data.action === 'play') {
-      if (Math.abs(ytPlayer.getCurrentTime() - data.time) > 2) {
+      if (Math.abs((ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0) - data.time) > 2) {
         ytPlayer.seekTo(data.time, true);
       }
       ytPlayer.playVideo();
@@ -181,48 +193,55 @@ function listenWatchSync() {
   });
 }
 
-// Load Video Button Action
-loadYtBtn.addEventListener('click', () => {
-  const url = ytUrlInput.value.trim();
-  const vidId = extractVideoId(url);
+// Load Video Action
+if (loadYtBtn) {
+  loadYtBtn.addEventListener('click', () => {
+    const url = ytUrlInput.value.trim();
+    const vidId = extractVideoId(url);
 
-  if (!vidId) {
-    alert("Please enter a valid YouTube video link!");
-    return;
-  }
+    if (!vidId) {
+      alert("Please enter a valid YouTube video link!");
+      return;
+    }
 
-  ytPlayer.loadVideoById(vidId);
-  updateWatchState('play', 0, vidId);
-  ytUrlInput.value = '';
-});
+    if (ytPlayer && ytPlayer.loadVideoById) {
+      ytPlayer.loadVideoById(vidId);
+      updateWatchState('play', 0, vidId);
+    }
+    ytUrlInput.value = '';
+  });
+}
 
 // Save to Playlist Action
-addToQueueBtn.addEventListener('click', async () => {
-  const url = ytUrlInput.value.trim();
-  const vidId = extractVideoId(url);
+if (addToQueueBtn) {
+  addToQueueBtn.addEventListener('click', async () => {
+    const url = ytUrlInput.value.trim();
+    const vidId = extractVideoId(url);
 
-  if (!vidId) {
-    alert("Please enter a valid YouTube link!");
-    return;
-  }
+    if (!vidId) {
+      alert("Please enter a valid YouTube link!");
+      return;
+    }
 
-  const rawName = currentUser.email.split('@')[0];
-  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    const rawName = currentUser.email.split('@')[0];
+    const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-  try {
-    await addDoc(collection(db, "yt_queue"), {
-      videoId: vidId,
-      addedBy: displayName,
-      createdAt: serverTimestamp()
-    });
-    ytUrlInput.value = '';
-  } catch (err) {
-    console.error("Error adding to queue:", err);
-  }
-});
+    try {
+      await addDoc(collection(db, "yt_queue"), {
+        videoId: vidId,
+        addedBy: displayName,
+        createdAt: serverTimestamp()
+      });
+      ytUrlInput.value = '';
+    } catch (err) {
+      console.error("Error adding to queue:", err);
+    }
+  });
+}
 
 // Load Realtime Shared Playlist
 function loadYtQueue() {
+  if (!ytQueueFeed) return;
   const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     ytQueueFeed.innerHTML = '';
@@ -242,13 +261,13 @@ function loadYtQueue() {
 
       ytQueueFeed.appendChild(card);
 
-      // Play video from queue
       document.getElementById(`play-q-${docSnap.id}`)?.addEventListener('click', () => {
-        ytPlayer.loadVideoById(data.videoId);
-        updateWatchState('play', 0, data.videoId);
+        if (ytPlayer && ytPlayer.loadVideoById) {
+          ytPlayer.loadVideoById(data.videoId);
+          updateWatchState('play', 0, data.videoId);
+        }
       });
 
-      // Delete from queue
       document.getElementById(`del-q-${docSnap.id}`)?.addEventListener('click', async () => {
         await deleteDoc(doc(db, 'yt_queue', docSnap.id));
       });
@@ -257,19 +276,21 @@ function loadYtQueue() {
 }
 
 // Watch Sheet Drawer Controls
-openWatchTogetherBtn.addEventListener('click', () => {
-  closeDrawer();
-  watchBottomSheet.classList.add('active');
-  watchModalOverlay.classList.add('active');
-});
+if (openWatchTogetherBtn) {
+  openWatchTogetherBtn.addEventListener('click', () => {
+    closeDrawer();
+    watchBottomSheet?.classList.add('active');
+    watchModalOverlay?.classList.add('active');
+  });
+}
 
 const closeWatchSheet = () => {
-  watchBottomSheet.classList.remove('active');
-  watchModalOverlay.classList.remove('active');
+  watchBottomSheet?.classList.remove('active');
+  watchModalOverlay?.classList.remove('active');
 };
 
-closeWatchSheetBtn.addEventListener('click', closeWatchSheet);
-watchModalOverlay.addEventListener('click', closeWatchSheet);
+closeWatchSheetBtn?.addEventListener('click', closeWatchSheet);
+watchModalOverlay?.addEventListener('click', closeWatchSheet);
 
 // Handle Mood Selection
 moodBtns.forEach(btn => {
@@ -281,7 +302,7 @@ moodBtns.forEach(btn => {
 });
 
 // Toggle Auth Mode (Login vs Sign Up)
-authToggleBtn.addEventListener('click', () => {
+authToggleBtn?.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
     authTitle.textContent = "Create Account";
@@ -297,7 +318,7 @@ authToggleBtn.addEventListener('click', () => {
 });
 
 // Authentication Submit
-authSubmitBtn.addEventListener('click', async () => {
+authSubmitBtn?.addEventListener('click', async () => {
   const inputVal = authEmail.value.trim().toLowerCase();
   const password = authPassword.value.trim();
 
@@ -323,10 +344,12 @@ authSubmitBtn.addEventListener('click', async () => {
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
-    authOverlay.classList.remove('active');
+    authOverlay?.classList.remove('active');
     
     const rawName = user.email.split('@')[0];
-    currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    if (currentUserLabel) {
+      currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    }
     
     loadMemories();
     loadStories();
@@ -334,79 +357,83 @@ onAuthStateChanged(auth, (user) => {
     listenWatchSync();
   } else {
     currentUser = null;
-    authOverlay.classList.add('active');
+    authOverlay?.classList.add('active');
   }
 });
 
 // Navigation Drawer Controls
-hamburgerBtn.addEventListener('click', () => {
-  menuDrawer.classList.add('active');
-  menuOverlay.classList.add('active');
+hamburgerBtn?.addEventListener('click', () => {
+  menuDrawer?.classList.add('active');
+  menuOverlay?.classList.add('active');
 });
 
 const closeDrawer = () => {
-  menuDrawer.classList.remove('active');
-  menuOverlay.classList.remove('active');
+  menuDrawer?.classList.remove('active');
+  menuOverlay?.classList.remove('active');
 };
 
-closeDrawerBtn.addEventListener('click', closeDrawer);
-menuOverlay.addEventListener('click', closeDrawer);
+closeDrawerBtn?.addEventListener('click', closeDrawer);
+menuOverlay?.addEventListener('click', closeDrawer);
 
 // Account Submenu Toggle
-accountMenuItem.addEventListener('click', () => {
+accountMenuItem?.addEventListener('click', () => {
   accountMenuItem.classList.toggle('open');
-  accountSubmenu.classList.toggle('open');
+  accountSubmenu?.classList.toggle('open');
 });
 
 // Logout Action
-logoutBtn.addEventListener('click', async () => {
+logoutBtn?.addEventListener('click', async () => {
   await signOut(auth);
   closeDrawer();
 });
 
 // Permanent Delete Trigger
-permDeleteSubBtn.addEventListener('click', () => {
+permDeleteSubBtn?.addEventListener('click', () => {
   closeDrawer();
-  deleteModal.classList.add('active');
+  deleteModal?.classList.add('active');
 
   let timeLeft = 7;
-  timerBadge.textContent = timeLeft;
-  confirmBtn.disabled = true;
-  confirmBtn.classList.remove('ready');
-  confirmBtn.textContent = `Wait ${timeLeft}s...`;
+  if (timerBadge) timerBadge.textContent = timeLeft;
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.classList.remove('ready');
+    confirmBtn.textContent = `Wait ${timeLeft}s...`;
+  }
 
   clearInterval(deleteTimerInterval);
 
   deleteTimerInterval = setInterval(() => {
     timeLeft--;
-    timerBadge.textContent = timeLeft;
+    if (timerBadge) timerBadge.textContent = timeLeft;
 
     if (timeLeft > 0) {
-      confirmBtn.textContent = `Wait ${timeLeft}s...`;
+      if (confirmBtn) confirmBtn.textContent = `Wait ${timeLeft}s...`;
     } else {
       clearInterval(deleteTimerInterval);
-      timerBadge.textContent = '✓';
-      confirmBtn.disabled = false;
-      confirmBtn.classList.add('ready');
-      confirmBtn.textContent = 'Continue & Delete Permanently';
+      if (timerBadge) timerBadge.textContent = '✓';
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.classList.add('ready');
+        confirmBtn.textContent = 'Continue & Delete Permanently';
+      }
     }
   }, 1000);
 });
 
 // Cancel Permanent Deletion
-cancelBtn.addEventListener('click', () => {
+cancelBtn?.addEventListener('click', () => {
   clearInterval(deleteTimerInterval);
-  deleteModal.classList.remove('active');
+  deleteModal?.classList.remove('active');
 });
 
 // Execute Account Deletion
-confirmBtn.addEventListener('click', async () => {
+confirmBtn?.addEventListener('click', async () => {
   if (confirmBtn.disabled || !auth.currentUser) return;
 
   try {
     await deleteUser(auth.currentUser);
     alert("Account permanently deleted.");
-    deleteModal.classList.remove('active');
+    deleteModal?.classList.remove('active');
   } catch (error) {
     console.error("Delete account error:", error);
     alert("Security limit: Please log out and log back in before deleting your account.");
@@ -414,22 +441,22 @@ confirmBtn.addEventListener('click', async () => {
 });
 
 // Story Book Drawer Controls
-openStoriesMenuBtn.addEventListener('click', () => {
+openStoriesMenuBtn?.addEventListener('click', () => {
   closeDrawer();
-  storyBottomSheet.classList.add('active');
-  storyModalOverlay.classList.add('active');
+  storyBottomSheet?.classList.add('active');
+  storyModalOverlay?.classList.add('active');
 });
 
 const closeStorySheet = () => {
-  storyBottomSheet.classList.remove('active');
-  storyModalOverlay.classList.remove('active');
+  storyBottomSheet?.classList.remove('active');
+  storyModalOverlay?.classList.remove('active');
 };
 
-closeStorySheetBtn.addEventListener('click', closeStorySheet);
-storyModalOverlay.addEventListener('click', closeStorySheet);
+closeStorySheetBtn?.addEventListener('click', closeStorySheet);
+storyModalOverlay?.addEventListener('click', closeStorySheet);
 
 // Share Memory
-saveBtn.addEventListener('click', async () => {
+saveBtn?.addEventListener('click', async () => {
   const text = memoryInput.value.trim();
   if (!text) return;
 
@@ -451,10 +478,11 @@ saveBtn.addEventListener('click', async () => {
 
 // Load Realtime Memories
 function loadMemories() {
+  if (!timelineFeed) return;
   const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     timelineFeed.innerHTML = '';
-    entryCountBadge.textContent = `${snapshot.docs.length} memories`;
+    if (entryCountBadge) entryCountBadge.textContent = `${snapshot.docs.length} memories`;
 
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
@@ -485,7 +513,7 @@ function loadMemories() {
 }
 
 // Publish Story Chapter
-publishStoryBtn.addEventListener('click', async () => {
+publishStoryBtn?.addEventListener('click', async () => {
   const title = storyTitleInput.value.trim();
   const text = storyTextInput.value.trim();
 
@@ -511,8 +539,9 @@ publishStoryBtn.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book
+// Load Realtime Story Book (With Individual Delete Option)
 function loadStories() {
+  if (!storiesFeed) return;
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     storiesFeed.innerHTML = '';
