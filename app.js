@@ -16,7 +16,8 @@ import {
   orderBy, 
   serverTimestamp, 
   deleteDoc, 
-  doc 
+  doc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Exact Firebase Credentials
@@ -29,7 +30,7 @@ const firebaseConfig = {
   appId: "1:685510249495:web:3efd43596ca0cb621a6052"
 };
 
-// Initialize Firebase App & Services Explicitly
+// Initialize Firebase App & Services
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -77,11 +78,198 @@ const storyTextInput = document.getElementById('storyTextInput');
 const publishStoryBtn = document.getElementById('publishStoryBtn');
 const storiesFeed = document.getElementById('storiesFeed');
 
-// App State
+// Watch Together Elements
+const openWatchTogetherBtn = document.getElementById('openWatchTogetherBtn');
+const watchModalOverlay = document.getElementById('watchModalOverlay');
+const watchBottomSheet = document.getElementById('watchBottomSheet');
+const closeWatchSheetBtn = document.getElementById('closeWatchSheetBtn');
+const ytUrlInput = document.getElementById('ytUrlInput');
+const loadYtBtn = document.getElementById('loadYtBtn');
+const addToQueueBtn = document.getElementById('addToQueueBtn');
+const ytQueueFeed = document.getElementById('ytQueueFeed');
+
+// App & Watch Together State
 let isSignUpMode = false;
 let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
+let ytPlayer = null;
+let isRemoteChange = false;
+
+// Initialize YouTube IFrame Player
+window.onYouTubeIframeAPIReady = function() {
+  ytPlayer = new YT.Player('ytPlayer', {
+    height: '100%',
+    width: '100%',
+    videoId: 'M7lc1UVf-VE', // Default initial video
+    playerVars: {
+      'playsinline': 1,
+      'controls': 1
+    },
+    events: {
+      'onStateChange': onPlayerStateChange
+    }
+  });
+};
+
+// Handle YouTube Player Events (Play, Pause, Seek)
+function onPlayerStateChange(event) {
+  if (isRemoteChange || !currentUser) return;
+
+  const state = event.data;
+  const currentTime = ytPlayer.getCurrentTime();
+
+  if (state === YT.PlayerState.PLAYING) {
+    updateWatchState('play', currentTime);
+  } else if (state === YT.PlayerState.PAUSED) {
+    updateWatchState('pause', currentTime);
+  }
+}
+
+// Helper to extract YouTube Video ID from any URL
+function extractVideoId(url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Broadcast player changes to Firestore
+async function updateWatchState(action, time, videoId = null) {
+  try {
+    const payload = {
+      action: action,
+      time: time,
+      updatedBy: currentUser.email,
+      timestamp: serverTimestamp()
+    };
+    if (videoId) payload.videoId = videoId;
+
+    await setDoc(doc(db, "watch_sync", "current"), payload, { merge: true });
+  } catch (err) {
+    console.error("Watch state update error:", err);
+  }
+}
+
+// Listen for Realtime Watch Together Sync
+function listenWatchSync() {
+  onSnapshot(doc(db, "watch_sync", "current"), (docSnap) => {
+    if (!docSnap.exists() || !ytPlayer || !ytPlayer.loadVideoById) return;
+
+    const data = docSnap.data();
+    if (data.updatedBy === currentUser?.email) return; // Skip if self-triggered
+
+    isRemoteChange = true;
+
+    if (data.videoId) {
+      const currentVid = ytPlayer.getVideoData()?.video_id;
+      if (currentVid !== data.videoId) {
+        ytPlayer.loadVideoById(data.videoId, data.time || 0);
+      }
+    }
+
+    if (data.action === 'play') {
+      if (Math.abs(ytPlayer.getCurrentTime() - data.time) > 2) {
+        ytPlayer.seekTo(data.time, true);
+      }
+      ytPlayer.playVideo();
+    } else if (data.action === 'pause') {
+      ytPlayer.pauseVideo();
+      ytPlayer.seekTo(data.time, true);
+    }
+
+    setTimeout(() => { isRemoteChange = false; }, 500);
+  });
+}
+
+// Load Video Button Action
+loadYtBtn.addEventListener('click', () => {
+  const url = ytUrlInput.value.trim();
+  const vidId = extractVideoId(url);
+
+  if (!vidId) {
+    alert("Please enter a valid YouTube video link!");
+    return;
+  }
+
+  ytPlayer.loadVideoById(vidId);
+  updateWatchState('play', 0, vidId);
+  ytUrlInput.value = '';
+});
+
+// Save to Playlist Action
+addToQueueBtn.addEventListener('click', async () => {
+  const url = ytUrlInput.value.trim();
+  const vidId = extractVideoId(url);
+
+  if (!vidId) {
+    alert("Please enter a valid YouTube link!");
+    return;
+  }
+
+  const rawName = currentUser.email.split('@')[0];
+  const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+  try {
+    await addDoc(collection(db, "yt_queue"), {
+      videoId: vidId,
+      addedBy: displayName,
+      createdAt: serverTimestamp()
+    });
+    ytUrlInput.value = '';
+  } catch (err) {
+    console.error("Error adding to queue:", err);
+  }
+});
+
+// Load Realtime Shared Playlist
+function loadYtQueue() {
+  const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    ytQueueFeed.innerHTML = '';
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const card = document.createElement('div');
+      card.className = 'queue-item-card';
+
+      card.innerHTML = `
+        <span class="queue-item-title">📺 Video ID: ${data.videoId} (Saved by ${data.addedBy})</span>
+        <div class="queue-actions">
+          <button class="queue-play-btn" id="play-q-${docSnap.id}">Play</button>
+          <button class="story-delete-btn" id="del-q-${docSnap.id}">🗑️</button>
+        </div>
+      `;
+
+      ytQueueFeed.appendChild(card);
+
+      // Play video from queue
+      document.getElementById(`play-q-${docSnap.id}`)?.addEventListener('click', () => {
+        ytPlayer.loadVideoById(data.videoId);
+        updateWatchState('play', 0, data.videoId);
+      });
+
+      // Delete from queue
+      document.getElementById(`del-q-${docSnap.id}`)?.addEventListener('click', async () => {
+        await deleteDoc(doc(db, 'yt_queue', docSnap.id));
+      });
+    });
+  });
+}
+
+// Watch Sheet Drawer Controls
+openWatchTogetherBtn.addEventListener('click', () => {
+  closeDrawer();
+  watchBottomSheet.classList.add('active');
+  watchModalOverlay.classList.add('active');
+});
+
+const closeWatchSheet = () => {
+  watchBottomSheet.classList.remove('active');
+  watchModalOverlay.classList.remove('active');
+};
+
+closeWatchSheetBtn.addEventListener('click', closeWatchSheet);
+watchModalOverlay.addEventListener('click', closeWatchSheet);
 
 // Handle Mood Selection
 moodBtns.forEach(btn => {
@@ -118,7 +306,6 @@ authSubmitBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Auto-format username into email format for Firebase
   const email = inputVal.includes('@') ? inputVal : `${inputVal}@ourspace.com`;
 
   try {
@@ -138,12 +325,13 @@ onAuthStateChanged(auth, (user) => {
     currentUser = user;
     authOverlay.classList.remove('active');
     
-    // Clean Username display (Capitalized)
     const rawName = user.email.split('@')[0];
     currentUserLabel.textContent = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
     loadMemories();
     loadStories();
+    loadYtQueue();
+    listenWatchSync();
   } else {
     currentUser = null;
     authOverlay.classList.add('active');
@@ -323,7 +511,7 @@ publishStoryBtn.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book (With Individual Delete Option)
+// Load Realtime Story Book
 function loadStories() {
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
@@ -354,9 +542,8 @@ function loadStories() {
 
       storiesFeed.appendChild(accordion);
 
-      // Add delete listener for each story
       document.getElementById(`del-story-${docSnap.id}`)?.addEventListener('click', async (e) => {
-        e.stopPropagation(); // Prevents accordion toggle when clicking delete
+        e.stopPropagation();
         if (confirm("Are you sure you want to delete this story chapter?")) {
           await deleteDoc(doc(db, 'stories', docSnap.id));
         }
