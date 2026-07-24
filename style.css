@@ -103,7 +103,7 @@ body {
   display: block;
   width: 26px;
   height: 3px;
-  background: #ff758c; /* Vivid glowing pink so it stands out */
+  background: #ff758c;
   border-radius: 3px;
   box-shadow: 0 0 8px rgba(255, 117, 140, 0.6);
   transition: 0.3s;
@@ -592,18 +592,29 @@ textarea:focus {
   gap: 12px;
 }
 
-.story-title-input {
+/* Glowing Title Input with Cormorant Garamond */
+.glowing-title-input {
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 14px;
+  border: 1px solid rgba(255, 117, 140, 0.3);
+  padding: 12px 16px;
   border-radius: 12px;
   color: #fff;
-  font-size: 0.95rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   outline: none;
+  text-shadow: 0 0 10px rgba(255, 117, 140, 0.6);
+  transition: 0.3s ease;
 }
 
-/* Story Text Vault Font Customization */
+.glowing-title-input:focus {
+  border-color: #ff758c;
+  box-shadow: 0 0 15px rgba(255, 117, 140, 0.4);
+}
+
+/* Story Text Vault Font */
 .story-text-area {
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
@@ -611,7 +622,7 @@ textarea:focus {
   padding: 14px;
   border-radius: 12px;
   color: #fff;
-  font-family: 'Cormorant Garamond', serif; /* Elegant Storybook Font */
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.2rem;
   line-height: 1.5;
   height: 130px;
@@ -629,9 +640,26 @@ textarea:focus {
   cursor: pointer;
 }
 
+/* Story Accordion Card Title Glow & Subtitle */
+.glowing-story-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 117, 140, 0.7), 0 0 20px rgba(255, 117, 140, 0.3);
+}
+
+.story-by-sub {
+  font-size: 0.78rem;
+  color: #aaaaaa;
+  margin-top: 2px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: 0.3px;
+}
+
 /* Story Book Content Font */
 .story-book-text {
-  font-family: 'Cormorant Garamond', serif; /* Beautiful Book Font */
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.25rem;
   color: #f0e6e8;
   line-height: 1.6;
@@ -654,12 +682,6 @@ textarea:focus {
   cursor: pointer;
 }
 
-.story-accordion-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.05rem;
-  color: #fff;
-}
-
 .story-accordion-body {
   padding: 0 16px 16px 16px;
   display: none;
@@ -677,6 +699,30 @@ textarea:focus {
   font-size: 0.8rem;
   color: #ff758c;
   margin-top: 10px;
+}
+
+/* Close Video Button Header Bar */
+.close-yt-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.close-yt-btn {
+  background: rgba(255, 71, 87, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 71, 87, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.close-yt-btn:hover {
+  background: rgba(255, 71, 87, 0.4);
+  color: #fff;
 }
 
 /* Watch Together Player */
