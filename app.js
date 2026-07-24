@@ -14,20 +14,21 @@ const db = firebase.firestore();
 
 let selectedMood = "🥰";
 let isDeleteMode = false;
+let isRegisterMode = false;
+let currentUser = null;
 
-// Check & Lock Identity on Launch + Attach Listeners
+// Check Auth Session on Launch
 window.addEventListener('DOMContentLoaded', () => {
-  const lockedAuthor = localStorage.getItem('user_identity_locked');
-  const authorSelect = document.getElementById('authorSelect');
-
-  if (lockedAuthor && authorSelect) {
-    authorSelect.value = lockedAuthor;
-    authorSelect.disabled = true;
-    authorSelect.style.opacity = "0.8";
-    authorSelect.style.cursor = "not-allowed";
+  const savedUser = localStorage.getItem('ustogether_logged_user');
+  if (savedUser) {
+    currentUser = savedUser;
+    document.getElementById('authOverlay').classList.remove('active');
+    document.getElementById('loggedInUserLabel').innerText = currentUser;
+  } else {
+    document.getElementById('authOverlay').classList.add('active');
   }
 
-  // Attach Mood Button Click Listeners
+  // Attach Mood Click Listeners
   document.querySelectorAll('.mood-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
@@ -44,16 +45,118 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 2800);
 });
 
-// Lock Selection Permanently
-function saveAuthorPreference() {
-  const authorSelect = document.getElementById('authorSelect');
-  const chosenAuthor = authorSelect.value;
+// Toggle Auth Mode (Login vs Register)
+function toggleAuthMode() {
+  isRegisterMode = !isRegisterMode;
+  const title = document.getElementById('authTitle');
+  const sub = document.getElementById('authSubtitle');
+  const btn = document.getElementById('authPrimaryBtn');
+  const toggleText = document.getElementById('authToggleText');
+  const toggleBtn = document.getElementById('authToggleBtn');
 
-  if (chosenAuthor) {
-    localStorage.setItem('user_identity_locked', chosenAuthor);
-    authorSelect.disabled = true;
-    authorSelect.style.opacity = "0.8";
-    authorSelect.style.cursor = "not-allowed";
+  if (isRegisterMode) {
+    title.innerText = "Create Account ✨";
+    sub.innerText = "Set up your credentials for the diary";
+    btn.innerText = "Register";
+    toggleText.innerText = "Already have an account?";
+    toggleBtn.innerText = "Login";
+  } else {
+    title.innerText = "Welcome Back ✨";
+    sub.innerText = "Sign in to your private diary";
+    btn.innerText = "Login";
+    toggleText.innerText = "Need an account?";
+    toggleBtn.innerText = "Register";
+  }
+}
+
+// Handle Login / Register Submit
+function handleAuthSubmit() {
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+
+  if (!username || !password) {
+    alert("Please enter both username and password!");
+    return;
+  }
+
+  const userDocRef = db.collection("users").doc(username.toLowerCase());
+
+  if (isRegisterMode) {
+    userDocRef.get().then((doc) => {
+      if (doc.exists) {
+        alert("Username already exists! Please pick another or log in.");
+      } else {
+        userDocRef.set({
+          username: username,
+          password: password,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          completeLogin(username);
+        });
+      }
+    });
+  } else {
+    userDocRef.get().then((doc) => {
+      if (doc.exists && doc.data().password === password) {
+        completeLogin(doc.data().username);
+      } else {
+        alert("Invalid username or password!");
+      }
+    });
+  }
+}
+
+function completeLogin(username) {
+  currentUser = username;
+  localStorage.setItem('ustogether_logged_user', username);
+  document.getElementById('loggedInUserLabel').innerText = username;
+  document.getElementById('authOverlay').classList.remove('active');
+  document.getElementById('authUsername').value = "";
+  document.getElementById('authPassword').value = "";
+}
+
+// Drawer Account Submenu
+function toggleAccountSubmenu() {
+  const menu = document.getElementById('accountSubmenu');
+  const item = document.querySelector('.account-menu-item');
+  if (menu && item) {
+    menu.classList.toggle('open');
+    item.classList.toggle('open');
+  }
+}
+
+// Logout Option
+function handleLogout() {
+  localStorage.removeItem('ustogether_logged_user');
+  currentUser = null;
+  toggleMenu();
+  document.getElementById('authOverlay').classList.add('active');
+}
+
+// Permanent Delete Account & Wipe All Posts
+function handlePermanentDelete() {
+  if (!currentUser) return;
+
+  const confirmDelete = confirm(`⚠️ Are you sure you want to permanently delete account "${currentUser}"? ALL your posted memories and stories will be deleted forever!`);
+  
+  if (confirmDelete) {
+    const userLower = currentUser.toLowerCase();
+
+    // 1. Delete user account doc
+    db.collection("users").doc(userLower).delete();
+
+    // 2. Wipe user's memories
+    db.collection("diary").where("author", "==", currentUser).get().then((snapshot) => {
+      snapshot.forEach(doc => doc.ref.delete());
+    });
+
+    // 3. Wipe user's stories
+    db.collection("stories").where("author", "==", currentUser).get().then((snapshot) => {
+      snapshot.forEach(doc => doc.ref.delete());
+    });
+
+    alert("Your account and all associated posts have been permanently deleted.");
+    handleLogout();
   }
 }
 
@@ -69,7 +172,7 @@ function toggleMenu() {
 
 // Open / Close Stories Bottom Sheet
 function openStoriesSheet() {
-  toggleMenu(); 
+  toggleMenu();
   const overlay = document.getElementById('storyModalOverlay');
   const sheet = document.getElementById('storyBottomSheet');
   if (overlay && sheet) {
@@ -110,11 +213,8 @@ function toggleDeleteMode() {
 
 // Post Memory Function
 function saveEntry() {
-  const authorSelect = document.getElementById('authorSelect');
-  let author = localStorage.getItem('user_identity_locked') || (authorSelect ? authorSelect.value : "");
-
-  if (!author) {
-    alert("Please select your name before posting your memory!");
+  if (!currentUser) {
+    alert("Please log in first!");
     return;
   }
 
@@ -130,7 +230,7 @@ function saveEntry() {
   if (saveBtn) saveBtn.innerText = "Posting...";
 
   db.collection("diary").add({
-    author: author,
+    author: currentUser,
     text: text,
     mood: selectedMood,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -141,31 +241,22 @@ function saveEntry() {
   })
   .catch((error) => {
     console.error("Error writing entry: ", error);
-    alert("Could not post memory. Please check your network!");
     if (saveBtn) saveBtn.innerText = "Post Memory ✨";
   });
 }
 
-// Memory Delete Prompt (Fixed to clean message)
+// Memory Delete Prompt
 function deleteMemory(docId, author) {
   if (!isDeleteMode) return;
 
-  const currentDeviceUser = localStorage.getItem('user_identity_locked');
-
-  if (author !== currentDeviceUser) {
-    alert(`You can only delete memories written by you (${currentDeviceUser})!`);
+  if (author !== currentUser) {
+    alert(`You can only delete memories written by you (${currentUser})!`);
     return;
   }
 
   const confirmDelete = confirm("Delete your selected memory?");
   if (confirmDelete) {
-    db.collection("diary").doc(docId).delete()
-      .then(() => {
-        toggleDeleteMode();
-      })
-      .catch((error) => {
-        console.error("Error removing memory: ", error);
-      });
+    db.collection("diary").doc(docId).delete().then(() => toggleDeleteMode());
   }
 }
 
@@ -210,17 +301,12 @@ db.collection("diary").orderBy("timestamp", "desc")
       `;
       feed.appendChild(card);
     });
-  }, (error) => {
-    console.error("Error fetching memories: ", error);
   });
 
 // Save Story Function
 function saveStory() {
-  const authorSelect = document.getElementById('authorSelect');
-  const author = localStorage.getItem('user_identity_locked') || (authorSelect ? authorSelect.value : "");
-
-  if (!author) {
-    alert("Please select your name on the main page first!");
+  if (!currentUser) {
+    alert("Please log in first!");
     return;
   }
 
@@ -236,7 +322,7 @@ function saveStory() {
   }
 
   db.collection("stories").add({
-    author: author,
+    author: currentUser,
     title: title,
     content: content,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -244,13 +330,10 @@ function saveStory() {
   .then(() => {
     if (titleElem) titleElem.value = "";
     if (contentElem) contentElem.value = "";
-  })
-  .catch((error) => {
-    console.error("Error publishing story: ", error);
   });
 }
 
-// Load Stories with Collapsible Accordion & Delete Option
+// Load Stories with Accordion & Delete
 function loadStories() {
   db.collection("stories").orderBy("timestamp", "desc")
     .onSnapshot((snapshot) => {
@@ -288,51 +371,34 @@ function loadStories() {
         `;
         feed.appendChild(card);
       });
-    }, (error) => {
-      console.error("Error loading stories: ", error);
     });
 }
 
-// Toggle Story Expand/Collapse
 function toggleStoryAccordion(headerElem) {
   const card = headerElem.parentElement;
   card.classList.toggle('open');
 }
 
-// Individual Story Delete Function
 function deleteStory(docId, author) {
-  const currentDeviceUser = localStorage.getItem('user_identity_locked');
-
-  if (author !== currentDeviceUser) {
-    alert(`You can only delete stories written by you (${currentDeviceUser})!`);
+  if (author !== currentUser) {
+    alert(`You can only delete stories written by you (${currentUser})!`);
     return;
   }
 
   const confirmDelete = confirm("Delete your selected memory?");
   if (confirmDelete) {
-    db.collection("stories").doc(docId).delete()
-      .catch((error) => {
-        console.error("Error removing story: ", error);
-      });
+    db.collection("stories").doc(docId).delete();
   }
 }
 
 function triggerHeart(btn) {
   btn.style.transform = "scale(1.5)";
-  setTimeout(() => {
-    btn.style.transform = "scale(1)";
-  }, 200);
+  setTimeout(() => { btn.style.transform = "scale(1)"; }, 200);
 }
 
 function escapeHtml(text) {
   if (!text) return "";
   return text.replace(/[&<>"']/g, function(m) {
-    return {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    }[m];
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
 }
