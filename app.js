@@ -26,7 +26,8 @@ import {
   serverTimestamp, 
   deleteDoc, 
   doc,
-  setDoc
+  setDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Firebase Credentials
@@ -62,6 +63,12 @@ const accountSubmenu = document.getElementById('accountSubmenu');
 const logoutBtn = document.getElementById('logoutBtn');
 const permDeleteSubBtn = document.getElementById('permDeleteSubBtn');
 
+const friendsList = document.getElementById('friendsList');
+const todoInput = document.getElementById('todoInput');
+const addTodoBtn = document.getElementById('addTodoBtn');
+const todoList = document.getElementById('todoList');
+const bubbleContainer = document.getElementById('bubbleContainer');
+
 const deleteModal = document.getElementById('deleteConfirmModal');
 const timerBadge = document.getElementById('deleteTimerBadge');
 const confirmBtn = document.getElementById('confirmDeleteBtn');
@@ -94,7 +101,6 @@ const ytPlayerContainer = document.getElementById('ytPlayer');
 const closeYtVideoBar = document.getElementById('closeYtVideoBar');
 const closeYtVideoBtn = document.getElementById('closeYtVideoBtn');
 
-// Option 2 Presence Indicators
 const partnerPresenceDot = document.getElementById('partnerPresenceDot');
 const partnerPresenceText = document.getElementById('partnerPresenceText');
 
@@ -110,14 +116,41 @@ function getCleanUsername(user) {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
-// Option 2 Presence Updates Function
+// Memory Bubbles Generator
+function spawnMemoryBubble(moodSymbol = '💖', textSnippet = '') {
+  if (!bubbleContainer) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'memory-bubble';
+  
+  const randomLeft = Math.floor(Math.random() * 80) + 10; 
+  bubble.style.left = `${randomLeft}%`;
+
+  const size = Math.floor(Math.random() * 20) + 45; 
+  bubble.style.width = `${size}px`;
+  bubble.style.height = `${size}px`;
+
+  bubble.innerHTML = `<span>${moodSymbol}</span>`;
+
+  bubble.addEventListener('click', () => {
+    bubble.classList.add('pop');
+    setTimeout(() => bubble.remove(), 300);
+  });
+
+  bubbleContainer.appendChild(bubble);
+
+  setTimeout(() => {
+    if (bubble.parentNode) bubble.remove();
+  }, 7000);
+}
+
+// Presence Updates Function
 async function updateMyPresence(statusState, actionDetail = "") {
   if (!currentUser) return;
   const username = getCleanUsername(currentUser);
   try {
     await setDoc(doc(db, "presence", username.toLowerCase()), {
       username: username,
-      state: statusState, // 'opened', 'watching', 'offline'
+      state: statusState, // 'online', 'watching', 'opened', 'offline'
       detail: actionDetail,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -126,7 +159,47 @@ async function updateMyPresence(statusState, actionDetail = "") {
   }
 }
 
-// Option 2 Realtime Presence Listener
+// Realtime Friends List Listener with Online/Offline Indicators
+function listenFriendsList() {
+  if (!currentUser) return;
+  const currentUsername = getCleanUsername(currentUser).toLowerCase();
+
+  onSnapshot(collection(db, "presence"), (snapshot) => {
+    if (!friendsList) return;
+    friendsList.innerHTML = '';
+
+    let friendsCount = 0;
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const fName = data.username || docSnap.id;
+      
+      if (docSnap.id.toLowerCase() !== currentUsername) {
+        friendsCount++;
+        const state = data.state || 'offline';
+        const isOnline = (state === 'online' || state === 'watching' || state === 'opened');
+
+        const friendCard = document.createElement('div');
+        friendCard.className = 'friend-item';
+        friendCard.innerHTML = `
+          <span class="friend-name">👤 ${fName}</span>
+          <span class="friend-status-dot ${isOnline ? 'online' : 'offline'}" title="${isOnline ? 'Online' : 'Offline'}"></span>
+        `;
+        friendsList.appendChild(friendCard);
+      }
+    });
+
+    if (friendsCount === 0) {
+      friendsList.innerHTML = `
+        <div class="friend-item">
+          <span class="friend-name" style="font-size:0.8rem; color:#888;">No other friends found</span>
+        </div>
+      `;
+    }
+  });
+}
+
+// Realtime Presence Listener for Watch Together
 function listenPartnerPresence() {
   if (!currentUser) return;
   const currentUsername = getCleanUsername(currentUser).toLowerCase();
@@ -135,7 +208,7 @@ function listenPartnerPresence() {
     let partnerFound = false;
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
-      if (docSnap.id !== currentUsername) {
+      if (docSnap.id.toLowerCase() !== currentUsername) {
         partnerFound = true;
         const pName = data.username || "Partner";
         const state = data.state || "offline";
@@ -143,11 +216,11 @@ function listenPartnerPresence() {
         if (state === 'watching') {
           partnerPresenceDot?.classList.remove('offline');
           partnerPresenceDot?.classList.add('online');
-          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is watching together 🎬`;
-        } else if (state === 'opened') {
+          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is watching 🎬`;
+        } else if (state === 'opened' || state === 'online') {
           partnerPresenceDot?.classList.remove('offline');
           partnerPresenceDot?.classList.add('online');
-          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} opened Watch Together 📺`;
+          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is online 🟢`;
         } else {
           partnerPresenceDot?.classList.remove('online');
           partnerPresenceDot?.classList.add('offline');
@@ -159,8 +232,59 @@ function listenPartnerPresence() {
     if (!partnerFound && partnerPresenceText) {
       partnerPresenceDot?.classList.remove('online');
       partnerPresenceDot?.classList.add('offline');
-      partnerPresenceText.textContent = "Waiting for partner...";
+      partnerPresenceText.textContent = "Waiting for friends...";
     }
+  });
+}
+
+// Realtime To-Do List Implementation
+if (addTodoBtn) {
+  addTodoBtn.addEventListener('click', async () => {
+    const text = todoInput.value.trim();
+    if (!text || !currentUser) return;
+
+    try {
+      await addDoc(collection(db, "todos"), {
+        task: text,
+        completed: false,
+        createdBy: getCleanUsername(currentUser),
+        createdAt: serverTimestamp()
+      });
+      todoInput.value = '';
+    } catch (e) {
+      console.error("Error adding todo:", e);
+    }
+  });
+}
+
+function listenTodoList() {
+  if (!todoList) return;
+  const q = query(collection(db, "todos"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    todoList.innerHTML = '';
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const item = document.createElement('div');
+      item.className = `todo-item ${data.completed ? 'completed' : ''}`;
+
+      item.innerHTML = `
+        <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docSnap.id}">
+        <span class="todo-text">${data.task}</span>
+        <button class="todo-del-btn" id="del-todo-${docSnap.id}">&times;</button>
+      `;
+
+      todoList.appendChild(item);
+
+      document.getElementById(`check-${docSnap.id}`)?.addEventListener('change', async (e) => {
+        await updateDoc(doc(db, "todos", docSnap.id), {
+          completed: e.target.checked
+        });
+      });
+
+      document.getElementById(`del-todo-${docSnap.id}`)?.addEventListener('click', async () => {
+        await deleteDoc(doc(db, "todos", docSnap.id));
+      });
+    });
   });
 }
 
@@ -172,7 +296,7 @@ function extractVideoId(url) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// Function to render/play video directly
+// Render/Play YouTube Video
 function renderYtVideo(videoId) {
   if (!ytPlayerContainer) return;
   if (!videoId) {
@@ -192,7 +316,7 @@ function renderYtVideo(videoId) {
   `;
 }
 
-// Close/Clear Current Playing Video Action
+// Video Controls
 if (closeYtVideoBtn) {
   closeYtVideoBtn.addEventListener('click', async () => {
     renderYtVideo(null);
@@ -209,7 +333,6 @@ if (closeYtVideoBtn) {
   });
 }
 
-// Play Video Action
 if (loadYtBtn) {
   loadYtBtn.addEventListener('click', async () => {
     const url = ytUrlInput.value.trim();
@@ -237,7 +360,6 @@ if (loadYtBtn) {
   });
 }
 
-// Save to Shared Playlist Action (With Custom Title Prompt)
 if (addToQueueBtn) {
   addToQueueBtn.addEventListener('click', async () => {
     const url = ytUrlInput.value.trim();
@@ -265,7 +387,6 @@ if (addToQueueBtn) {
   });
 }
 
-// Sync Video across users in Realtime
 function listenWatchSync() {
   onSnapshot(doc(db, "watch_sync", "current"), (docSnap) => {
     if (!docSnap.exists()) return;
@@ -278,7 +399,6 @@ function listenWatchSync() {
   });
 }
 
-// Load Shared Playlist
 function loadYtQueue() {
   if (!ytQueueFeed) return;
   const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
@@ -319,7 +439,6 @@ function loadYtQueue() {
   });
 }
 
-// Watch Sheet Drawer Controls
 if (openWatchTogetherBtn) {
   openWatchTogetherBtn.addEventListener('click', () => {
     closeDrawer();
@@ -332,13 +451,12 @@ if (openWatchTogetherBtn) {
 const closeWatchSheet = () => {
   watchBottomSheet?.classList.remove('active');
   watchModalOverlay?.classList.remove('active');
-  updateMyPresence('offline');
+  updateMyPresence('online');
 };
 
 closeWatchSheetBtn?.addEventListener('click', closeWatchSheet);
 watchModalOverlay?.addEventListener('click', closeWatchSheet);
 
-// Re-bind Mood Buttons Event Listeners
 function setupMoodPickers() {
   moodBtns = document.querySelectorAll('.mood-btn');
   moodBtns.forEach(btn => {
@@ -350,7 +468,6 @@ function setupMoodPickers() {
   });
 }
 
-// Toggle Auth Mode
 authToggleBtn?.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
@@ -366,7 +483,6 @@ authToggleBtn?.addEventListener('click', () => {
   }
 });
 
-// Authentication Submit
 authSubmitBtn?.addEventListener('click', async () => {
   const inputVal = authEmail.value.trim().toLowerCase();
   const password = authPassword.value.trim();
@@ -389,7 +505,6 @@ authSubmitBtn?.addEventListener('click', async () => {
   }
 });
 
-// Track Auth State
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
@@ -400,15 +515,25 @@ onAuthStateChanged(auth, (user) => {
       currentUserLabel.textContent = displayName;
     }
     
+    updateMyPresence('online');
     setupMoodPickers();
     loadMemories();
     loadStories();
     loadYtQueue();
     listenWatchSync();
     listenPartnerPresence();
+    listenFriendsList();
+    listenTodoList();
   } else {
     currentUser = null;
     authOverlay?.classList.add('active');
+  }
+});
+
+// Window BeforeUnload to Set Offline
+window.addEventListener('beforeunload', () => {
+  if (currentUser) {
+    updateMyPresence('offline');
   }
 });
 
@@ -426,7 +551,6 @@ const closeDrawer = () => {
 closeDrawerBtn?.addEventListener('click', closeDrawer);
 menuOverlay?.addEventListener('click', closeDrawer);
 
-// Submenu Toggle
 accountMenuItem?.addEventListener('click', () => {
   accountMenuItem.classList.toggle('open');
   accountSubmenu?.classList.toggle('open');
@@ -488,7 +612,6 @@ confirmBtn?.addEventListener('click', async () => {
   }
 });
 
-// Story Book Controls
 openStoriesMenuBtn?.addEventListener('click', () => {
   closeDrawer();
   storyBottomSheet?.classList.add('active');
@@ -503,7 +626,7 @@ const closeStorySheet = () => {
 closeStorySheetBtn?.addEventListener('click', closeStorySheet);
 storyModalOverlay?.addEventListener('click', closeStorySheet);
 
-// Share Memory
+// Share Memory with Memory Bubble Trigger
 saveBtn?.addEventListener('click', async () => {
   const text = memoryInput.value.trim();
   if (!text) return;
@@ -517,13 +640,14 @@ saveBtn?.addEventListener('click', async () => {
       author: displayName,
       createdAt: serverTimestamp()
     });
+
+    spawnMemoryBubble(selectedMood, text);
     memoryInput.value = '';
   } catch (err) {
     console.error("Error saving memory:", err);
   }
 });
 
-// Load Realtime Memories
 function loadMemories() {
   if (!timelineFeed) return;
   const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
@@ -545,7 +669,7 @@ function loadMemories() {
         </div>
         <p class="entry-text">${data.text}</p>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span>${data.mood || '💖'}</span>
+          <span style="font-size:1.3rem;">${data.mood || '💖'}</span>
           <button class="story-delete-btn" id="del-${docSnap.id}" style="background:none; border:none; cursor:pointer;">🗑️</button>
         </div>
       `;
@@ -559,7 +683,6 @@ function loadMemories() {
   });
 }
 
-// Publish Story
 publishStoryBtn?.addEventListener('click', async () => {
   const title = storyTitleInput.value.trim();
   const text = storyTextInput.value.trim();
@@ -585,7 +708,6 @@ publishStoryBtn?.addEventListener('click', async () => {
   }
 });
 
-// Load Realtime Story Book (Formatted with Glowing Title & By Subtitles)
 function loadStories() {
   if (!storiesFeed) return;
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
