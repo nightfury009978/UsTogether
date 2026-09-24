@@ -27,7 +27,9 @@ import {
   deleteDoc, 
   doc,
   setDoc,
-  updateDoc
+  updateDoc,
+  getDocs,
+  where
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Firebase Credentials
@@ -76,7 +78,8 @@ const cancelBtn = document.getElementById('cancelDeleteBtn');
 
 const memoryInput = document.getElementById('memoryInput');
 const saveBtn = document.getElementById('saveBtn');
-const timelineFeed = document.getElementById('timelineFeed');
+const latestTimelineFeed = document.getElementById('latestTimelineFeed');
+const olderTimelineFeed = document.getElementById('olderTimelineFeed');
 const entryCountBadge = document.getElementById('entryCountBadge');
 let moodBtns = document.querySelectorAll('.mood-btn');
 
@@ -91,6 +94,13 @@ const openTodoBtn = document.getElementById('openTodoBtn');
 const todoModalOverlay = document.getElementById('todoModalOverlay');
 const todoBottomSheet = document.getElementById('todoBottomSheet');
 const closeTodoSheetBtn = document.getElementById('closeTodoSheetBtn');
+
+// To-Do History Sub-Menu Controls
+const openTodoHistoryBtn = document.getElementById('openTodoHistoryBtn');
+const todoHistoryModalOverlay = document.getElementById('todoHistoryModalOverlay');
+const todoHistoryBottomSheet = document.getElementById('todoHistoryBottomSheet');
+const closeTodoHistorySheetBtn = document.getElementById('closeTodoHistorySheetBtn');
+const todoHistoryList = document.getElementById('todoHistoryList');
 
 // Main Page Reminder Elements
 const mainPageReminder = document.getElementById('mainPageReminder');
@@ -126,11 +136,17 @@ let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
 
-// Clean Username helper
+// Helper: Clean Username
 function getCleanUsername(user) {
   if (!user || !user.email) return "User";
   const raw = user.email.split('@')[0];
   return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+// Helper: Format Date Key (YYYY-MM-DD)
+function getTodayDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // Memory Bubbles Generator
@@ -167,7 +183,7 @@ async function updateMyPresence(statusState, actionDetail = "") {
   try {
     await setDoc(doc(db, "presence", username.toLowerCase()), {
       username: username,
-      state: statusState, // 'online', 'watching', 'opened', 'offline'
+      state: statusState, 
       detail: actionDetail,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -249,6 +265,22 @@ const closeTodoSheet = () => {
 closeTodoSheetBtn?.addEventListener('click', closeTodoSheet);
 todoModalOverlay?.addEventListener('click', closeTodoSheet);
 
+// To-Do History Trigger
+openTodoHistoryBtn?.addEventListener('click', () => {
+  closeDrawer();
+  todoHistoryBottomSheet?.classList.add('active');
+  todoHistoryModalOverlay?.classList.add('active');
+  loadTodoHistory();
+});
+
+const closeTodoHistorySheet = () => {
+  todoHistoryBottomSheet?.classList.remove('active');
+  todoHistoryModalOverlay?.classList.remove('active');
+};
+
+closeTodoHistorySheetBtn?.addEventListener('click', closeTodoHistorySheet);
+todoHistoryModalOverlay?.addEventListener('click', closeTodoHistorySheet);
+
 // Realtime Presence Listener for Watch Together
 function listenPartnerPresence() {
   if (!currentUser) return;
@@ -287,7 +319,31 @@ function listenPartnerPresence() {
   });
 }
 
-// Realtime To-Do List Implementation with Main Page Reminder Sync
+// Check & Reset Active To-Do List at 12:00 AM Midnight
+async function checkAndResetDailyTodos() {
+  const todayKey = getTodayDateKey();
+  const q = query(collection(db, "todos"));
+  const snapshot = await getDocs(q);
+
+  snapshot.docs.forEach(async (docSnap) => {
+    const data = docSnap.data();
+    if (data.dateKey && data.dateKey !== todayKey) {
+      // Move past items to todo_history collection
+      await addDoc(collection(db, "todo_history"), {
+        task: data.task,
+        completed: data.completed,
+        createdBy: data.createdBy,
+        createdAt: data.createdAt || serverTimestamp(),
+        dateKey: data.dateKey,
+        archivedAt: serverTimestamp()
+      });
+      // Delete from active list
+      await deleteDoc(doc(db, "todos", docSnap.id));
+    }
+  });
+}
+
+// Realtime To-Do List Implementation (Separate Sticky Note Cards per Task)
 if (addTodoBtn) {
   addTodoBtn.addEventListener('click', async () => {
     const text = todoInput.value.trim();
@@ -298,7 +354,8 @@ if (addTodoBtn) {
         task: text,
         completed: false,
         createdBy: getCleanUsername(currentUser),
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        dateKey: getTodayDateKey()
       });
       todoInput.value = '';
     } catch (e) {
@@ -309,6 +366,8 @@ if (addTodoBtn) {
 
 function listenTodoList() {
   if (!todoList) return;
+  checkAndResetDailyTodos();
+
   const q = query(collection(db, "todos"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     todoList.innerHTML = '';
@@ -317,19 +376,34 @@ function listenTodoList() {
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
       if (!data.completed) {
-        pendingTasks.push(data.task);
+        pendingTasks.push({
+          task: data.task,
+          author: data.createdBy || "User"
+        });
       }
 
-      const item = document.createElement('div');
-      item.className = `sticky-todo-item ${data.completed ? 'completed' : ''}`;
+      let dateTimeStr = 'Just now';
+      if (data.createdAt) {
+        const d = new Date(data.createdAt.seconds * 1000);
+        dateTimeStr = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
 
-      item.innerHTML = `
-        <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docSnap.id}">
-        <span class="todo-text">${data.task}</span>
-        <button class="todo-del-btn" id="del-todo-${docSnap.id}">&times;</button>
+      const stickyCard = document.createElement('div');
+      stickyCard.className = `sticky-note-card ${data.completed ? 'completed' : ''}`;
+
+      stickyCard.innerHTML = `
+        <div class="sticky-pin">📌</div>
+        <div class="sticky-content">
+          <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docSnap.id}">
+          <span class="todo-text">${data.task}</span>
+          <button class="todo-del-btn" id="del-todo-${docSnap.id}">&times;</button>
+        </div>
+        <div class="sticky-footer-stamp">
+          <strong>${data.createdBy || 'User'}</strong> • ${dateTimeStr}
+        </div>
       `;
 
-      todoList.appendChild(item);
+      todoList.appendChild(stickyCard);
 
       document.getElementById(`check-${docSnap.id}`)?.addEventListener('change', async (e) => {
         await updateDoc(doc(db, "todos", docSnap.id), {
@@ -342,15 +416,54 @@ function listenTodoList() {
       });
     });
 
-    // Update Main Page Reminder Banner dynamically
+    // Update Main Page Reminder Banner with Name
     if (mainPageReminder && reminderTaskText) {
       if (pendingTasks.length > 0) {
         mainPageReminder.classList.remove('hidden');
-        reminderTaskText.textContent = `${pendingTasks[0]} ${pendingTasks.length > 1 ? `(+${pendingTasks.length - 1} more)` : ''}`;
+        const first = pendingTasks[0];
+        reminderTaskText.textContent = `${first.author}: "${first.task}" ${pendingTasks.length > 1 ? `(+${pendingTasks.length - 1} more)` : ''}`;
       } else {
         mainPageReminder.classList.add('hidden');
       }
     }
+  });
+}
+
+// Load Sub-History of Past To-Do Items with iOS Notification Scroll
+function loadTodoHistory() {
+  if (!todoHistoryList) return;
+  const q = query(collection(db, "todo_history"), orderBy("createdAt", "desc"));
+  
+  onSnapshot(q, (snapshot) => {
+    todoHistoryList.innerHTML = '';
+    if (snapshot.empty) {
+      todoHistoryList.innerHTML = `<div class="history-empty">No past to-do records found.</div>`;
+      return;
+    }
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      let dateTimeStr = 'Past Task';
+      if (data.createdAt) {
+        const d = new Date(data.createdAt.seconds * 1000);
+        dateTimeStr = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'entry-card ios-notification-card';
+      
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="entry-author">👤 ${data.createdBy || 'User'}</span>
+          <span class="entry-date">${dateTimeStr}</span>
+        </div>
+        <p class="entry-text" style="${data.completed ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
+          ${data.task} ${data.completed ? '✅' : '⏳'}
+        </p>
+      `;
+
+      todoHistoryList.appendChild(card);
+    });
   });
 }
 
@@ -714,14 +827,18 @@ saveBtn?.addEventListener('click', async () => {
   }
 });
 
+// Load Memories (2 Latest Top + iOS Notification Scroll Container below)
 function loadMemories() {
-  if (!timelineFeed) return;
+  if (!latestTimelineFeed || !olderTimelineFeed) return;
   const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
+  
   onSnapshot(q, (snapshot) => {
-    timelineFeed.innerHTML = '';
+    latestTimelineFeed.innerHTML = '';
+    olderTimelineFeed.innerHTML = '';
+    
     if (entryCountBadge) entryCountBadge.textContent = `${snapshot.docs.length} memories`;
 
-    snapshot.docs.forEach((docSnap) => {
+    snapshot.docs.forEach((docSnap, index) => {
       const data = docSnap.data();
       const card = document.createElement('div');
       card.className = 'entry-card ios-notification-card';
@@ -740,7 +857,12 @@ function loadMemories() {
         </div>
       `;
       
-      timelineFeed.appendChild(card);
+      // Top 2 items go to latest feed, rest go into iOS scroll feed
+      if (index < 2) {
+        latestTimelineFeed.appendChild(card);
+      } else {
+        olderTimelineFeed.appendChild(card);
+      }
 
       document.getElementById(`del-${docSnap.id}`)?.addEventListener('click', async () => {
         await deleteDoc(doc(db, 'memories', docSnap.id));
