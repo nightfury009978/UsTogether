@@ -278,7 +278,6 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--glow-shadow);
-  animation: slideDown 0.4s ease-out;
 }
 
 .main-reminder-card.hidden {
@@ -333,16 +332,68 @@ body {
   box-shadow: 0 4px 12px rgba(255, 42, 141, 0.3);
 }
 
-/* Sticky Note Card (Yellow Paper Theme) */
+/* To-Do Sticky Input Row */
+.todo-input-row-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.todo-input-row-container input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.todo-input-row-container button {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  color: #fff;
+  border: none;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+/* Separate Sticky Note Cards */
+.sticky-notes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
 .sticky-note-card {
   background: linear-gradient(135deg, #fff59d 0%, #ffee58 100%);
   color: #1a1a1a;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  padding: 18px 16px 14px 16px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
   position: relative;
-  transform: rotate(-1deg);
   border: 1px solid #fdd835;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease;
+}
+
+.sticky-note-card:nth-child(even) {
+  transform: rotate(-1deg);
+}
+
+.sticky-note-card:nth-child(odd) {
+  transform: rotate(1deg);
+}
+
+.sticky-note-card.completed {
+  opacity: 0.75;
 }
 
 .sticky-pin {
@@ -350,78 +401,74 @@ body {
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
-.sticky-note-card .todo-input-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  margin-bottom: 16px;
-}
-
-.sticky-note-card .todo-input-row input {
-  flex: 1;
-  background: #ffffff;
-  border: 1px solid #e0c030;
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: #222;
-  font-size: 0.9rem;
-  outline: none;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.sticky-note-card .todo-input-row button {
-  background: #222;
-  color: #fff;
-  border: none;
-  padding: 0 18px;
-  border-radius: 10px;
-  font-weight: bold;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.sticky-todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 50vh;
-  overflow-y: auto;
-}
-
-.sticky-todo-item {
+.sticky-content {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #ffffff;
-  padding: 12px 14px;
-  border-radius: 10px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-  border-left: 4px solid var(--accent-pink);
 }
 
-.sticky-todo-item.completed .todo-text {
-  text-decoration: line-through;
-  color: #888;
+.sticky-content input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff2a8d;
+  cursor: pointer;
 }
 
-.sticky-todo-item .todo-text {
+.sticky-content .todo-text {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #222;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
-/* iOS Notification Physics Scroll History */
-.ios-notifications-wrapper {
+.sticky-note-card.completed .todo-text {
+  text-decoration: line-through;
+  color: #666;
+}
+
+.todo-del-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  cursor: pointer;
+}
+
+.sticky-footer-stamp {
+  align-self: flex-end;
+  font-size: 0.73rem;
+  color: #555;
+  text-align: right;
+  font-weight: 500;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+  padding-top: 6px;
+  width: 100%;
+}
+
+/* Timeline Split Views */
+.latest-timeline-feed {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  margin-bottom: 12px;
+}
+
+.older-timeline-feed {
+  max-height: 380px;
+}
+
+/* iOS Notification Physics Scroll Container */
+.ios-notifications-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 20px;
+  padding: 6px 4px 20px 4px;
   scroll-behavior: smooth;
 }
 
@@ -438,6 +485,13 @@ body {
 
 .ios-notification-card:active {
   transform: scale(0.97);
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 30px 0;
 }
 
 /* Friends List & Status Dot */
@@ -834,38 +888,6 @@ textarea:focus {
   font-family: 'Playfair Display', serif;
   font-size: 1.3rem;
   color: var(--accent-pink);
-}
-
-/* Watch Sheet Presence */
-.presence-status-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.presence-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  transition: 0.3s ease;
-}
-
-.presence-dot.online {
-  background-color: #2ed573;
-  box-shadow: 0 0 10px #2ed573;
-}
-
-.presence-dot.offline {
-  background-color: #ffffff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-}
-
-.presence-text {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-weight: 500;
 }
 
 .close-sheet-btn {
