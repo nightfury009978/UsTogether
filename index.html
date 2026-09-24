@@ -11,6 +11,9 @@
 </head>
 <body>
 
+  <!-- Floating Memory Bubbles Container -->
+  <div id="bubbleContainer" class="bubble-container"></div>
+
   <!-- Splash Screen -->
   <div id="splash">
     <div class="splash-content">
@@ -46,6 +49,30 @@
         <span>📖 Our Story Book</span>
         <span>&rsaquo;</span>
       </li>
+
+      <!-- Friends List Section -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">👥 Friends Status</div>
+        <div id="friendsList" class="friends-list">
+          <div class="friend-item">
+            <span class="friend-name">Loading friends...</span>
+            <span class="friend-status-dot offline"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- To-Do List Section -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">✅ Our To-Do List</div>
+        <div class="todo-input-row">
+          <input type="text" id="todoInput" placeholder="Add new task..." />
+          <button id="addTodoBtn">+</button>
+        </div>
+        <div id="todoList" class="todo-list">
+          <!-- To-Do tasks rendered here dynamically -->
+        </div>
+      </div>
+
       <li id="accountMenuItem" class="account-menu-item">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span>⚙️ Account Controls</span>
@@ -101,7 +128,7 @@
   <main class="app-container">
     <header class="app-header">
       <div class="profile-badge glowing-badge">
-        <h2>Abhay & Dhakshitha 💖</h2>
+        <h2>Our Sacred Diary 💖</h2>
       </div>
       <p class="subtitle">Capturing our special moments together</p>
     </header>
@@ -140,7 +167,7 @@
       </div>
 
       <div id="timelineFeed" class="timeline-feed">
-        <!-- Dynamic memory cards will appear here -->
+        <!-- Dynamic memory cards appear here -->
       </div>
     </section>
   </main>
@@ -167,7 +194,7 @@
       </div>
 
       <div id="storiesFeed" class="stories-feed">
-        <!-- Story chapters will appear here -->
+        <!-- Story chapters appear here -->
       </div>
     </div>
   </div>
@@ -180,18 +207,15 @@
     <div class="story-sheet-header">
       <div>
         <h2>📺 Watch Together</h2>
-        <!-- Option 2 Presence Status Indicator -->
         <div class="presence-status-bar">
           <span id="partnerPresenceDot" class="presence-dot offline"></span>
-          <span id="partnerPresenceText" class="presence-text">Checking partner status...</span>
+          <span id="partnerPresenceText" class="presence-text">Checking status...</span>
         </div>
       </div>
       <button id="closeWatchSheetBtn" class="close-sheet-btn">&times;</button>
     </div>
 
     <div class="story-sheet-content">
-      
-      <!-- Close Video Bar & Video Player Container -->
       <div id="closeYtVideoBar" class="close-yt-bar" style="display: none;">
         <button id="closeYtVideoBtn" class="close-yt-btn">✖ Close Video</button>
       </div>
@@ -199,7 +223,6 @@
         <div id="ytPlayer"></div>
       </div>
 
-      <!-- Sync Controls & Link Input -->
       <div class="yt-input-card">
         <input type="text" id="ytUrlInput" class="story-title-input" placeholder="Paste YouTube link here...">
         <div class="yt-btn-row">
@@ -208,7 +231,6 @@
         </div>
       </div>
 
-      <!-- Shared Playlist / Queue -->
       <div class="stories-feed-header" style="margin-top: 20px;">
         <h3>Our Shared Playlist</h3>
       </div>
@@ -216,7 +238,6 @@
       <div id="ytQueueFeed" class="stories-feed">
         <!-- Queued video links appear here -->
       </div>
-
     </div>
   </div>
 
