@@ -62,6 +62,12 @@
         <span class="chevron">&rsaquo;</span>
       </li>
 
+      <!-- To-Do History Sub History with > Symbol -->
+      <li id="openTodoHistoryBtn">
+        <span>📜 To-Do History</span>
+        <span class="chevron">&rsaquo;</span>
+      </li>
+
       <li id="accountMenuItem" class="account-menu-item">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span>⚙️ Account Controls</span>
@@ -127,7 +133,7 @@
       <div class="reminder-left">
         <span class="bell-icon">🔔</span>
         <div class="reminder-info">
-          <span class="reminder-title">To-Do Reminder</span>
+          <span class="reminder-title">Pending To-Do Reminders</span>
           <span id="reminderTaskText" class="reminder-task-text">Loading reminders...</span>
         </div>
       </div>
@@ -160,16 +166,18 @@
       <button id="saveBtn">Share Memory ✨</button>
     </section>
 
-    <!-- Timeline Feed (iOS Notification Physics) -->
+    <!-- Timeline Feed (2 Latest Visible + iOS Notification Physics Container) -->
     <section class="timeline-container">
       <div class="timeline-header">
         <h3>Our Memories Timeline</h3>
         <span id="entryCountBadge" class="entry-count-badge">0 memories</span>
       </div>
 
-      <div id="timelineFeed" class="timeline-feed ios-notifications-wrapper">
-        <!-- Dynamic memory cards appear here -->
-      </div>
+      <!-- Container for Top 2 Latest Memories -->
+      <div id="latestTimelineFeed" class="latest-timeline-feed"></div>
+
+      <!-- Container for Older Memories Stacked in iOS Scroll -->
+      <div id="olderTimelineFeed" class="older-timeline-feed ios-notifications-wrapper"></div>
     </section>
   </main>
 
@@ -200,16 +208,28 @@
       <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
     </div>
     <div class="story-sheet-content">
-      <!-- Yellow Sticky Note Wrapper -->
-      <div class="sticky-note-card">
-        <div class="sticky-pin">📌</div>
-        <div class="todo-input-row">
-          <input type="text" id="todoInput" placeholder="Write a sticky note reminder..." />
-          <button id="addTodoBtn">+</button>
-        </div>
-        <div id="todoList" class="sticky-todo-list">
-          <!-- To-Do tasks rendered here dynamically -->
-        </div>
+      <div class="todo-input-row-container">
+        <input type="text" id="todoInput" placeholder="Write a sticky note reminder..." />
+        <button id="addTodoBtn">+</button>
+      </div>
+      <!-- Separate Sticky Notes Wrapper -->
+      <div id="todoList" class="sticky-notes-container">
+        <!-- Sticky note cards rendered here dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- To-Do Sub-History Bottom Sheet -->
+  <div id="todoHistoryModalOverlay" class="story-modal-overlay"></div>
+  <div id="todoHistoryBottomSheet" class="story-bottom-sheet">
+    <div class="sheet-handle-bar"></div>
+    <div class="story-sheet-header">
+      <h2>📜 To-Do Sub History</h2>
+      <button id="closeTodoHistorySheetBtn" class="close-sheet-btn">&times;</button>
+    </div>
+    <div class="story-sheet-content">
+      <div id="todoHistoryList" class="ios-notifications-wrapper">
+        <!-- History items rendered here dynamically -->
       </div>
     </div>
   </div>
