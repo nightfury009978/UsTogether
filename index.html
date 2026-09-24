@@ -43,40 +43,29 @@
     <ul class="drawer-items">
       <li id="openWatchTogetherBtn">
         <span>📺 Watch Together</span>
-        <span>&rsaquo;</span>
+        <span class="chevron">&rsaquo;</span>
       </li>
       <li id="openStoriesMenuBtn">
         <span>📖 Our Story Book</span>
-        <span>&rsaquo;</span>
+        <span class="chevron">&rsaquo;</span>
       </li>
 
-      <!-- Friends List Section -->
-      <div class="drawer-section">
-        <div class="drawer-section-title">👥 Friends Status</div>
-        <div id="friendsList" class="friends-list">
-          <div class="friend-item">
-            <span class="friend-name">Loading friends...</span>
-            <span class="friend-status-dot offline"></span>
-          </div>
-        </div>
-      </div>
+      <!-- Friends Status Section with > Symbol -->
+      <li id="openFriendsBtn">
+        <span>👥 Friends Status</span>
+        <span class="chevron">&rsaquo;</span>
+      </li>
 
-      <!-- To-Do List Section -->
-      <div class="drawer-section">
-        <div class="drawer-section-title">✅ Our To-Do List</div>
-        <div class="todo-input-row">
-          <input type="text" id="todoInput" placeholder="Add new task..." />
-          <button id="addTodoBtn">+</button>
-        </div>
-        <div id="todoList" class="todo-list">
-          <!-- To-Do tasks rendered here dynamically -->
-        </div>
-      </div>
+      <!-- To-Do List Section with > Symbol -->
+      <li id="openTodoBtn">
+        <span>✅ Our To-Do List</span>
+        <span class="chevron">&rsaquo;</span>
+      </li>
 
       <li id="accountMenuItem" class="account-menu-item">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span>⚙️ Account Controls</span>
-          <span class="chevron-sm">&rsaquo;</span>
+          <span class="chevron">&rsaquo;</span>
         </div>
       </li>
       <!-- Account Submenu -->
@@ -133,6 +122,18 @@
       <p class="subtitle">Capturing our special moments together</p>
     </header>
 
+    <!-- Active To-Do Reminder Banner -->
+    <div id="mainPageReminder" class="main-reminder-card hidden">
+      <div class="reminder-left">
+        <span class="bell-icon">🔔</span>
+        <div class="reminder-info">
+          <span class="reminder-title">To-Do Reminder</span>
+          <span id="reminderTaskText" class="reminder-task-text">Loading reminders...</span>
+        </div>
+      </div>
+      <button id="openTodoFromBanner" class="reminder-action-btn">View All</button>
+    </div>
+
     <!-- Create Memory Card -->
     <section class="card glowing-card">
       <div class="active-user-bar">
@@ -159,18 +160,59 @@
       <button id="saveBtn">Share Memory ✨</button>
     </section>
 
-    <!-- Timeline Feed -->
+    <!-- Timeline Feed (iOS Notification Physics) -->
     <section class="timeline-container">
       <div class="timeline-header">
         <h3>Our Memories Timeline</h3>
         <span id="entryCountBadge" class="entry-count-badge">0 memories</span>
       </div>
 
-      <div id="timelineFeed" class="timeline-feed">
+      <div id="timelineFeed" class="timeline-feed ios-notifications-wrapper">
         <!-- Dynamic memory cards appear here -->
       </div>
     </section>
   </main>
+
+  <!-- Friends Status Bottom Sheet -->
+  <div id="friendsModalOverlay" class="story-modal-overlay"></div>
+  <div id="friendsBottomSheet" class="story-bottom-sheet">
+    <div class="sheet-handle-bar"></div>
+    <div class="story-sheet-header">
+      <h2>👥 Friends Status</h2>
+      <button id="closeFriendsSheetBtn" class="close-sheet-btn">&times;</button>
+    </div>
+    <div class="story-sheet-content">
+      <div id="friendsList" class="friends-list">
+        <div class="friend-item">
+          <span class="friend-name">Loading friends...</span>
+          <span class="friend-status-dot offline"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- To-Do Sticky Note Bottom Sheet -->
+  <div id="todoModalOverlay" class="story-modal-overlay"></div>
+  <div id="todoBottomSheet" class="story-bottom-sheet">
+    <div class="sheet-handle-bar"></div>
+    <div class="story-sheet-header">
+      <h2>📌 Our Sticky To-Do List</h2>
+      <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
+    </div>
+    <div class="story-sheet-content">
+      <!-- Yellow Sticky Note Wrapper -->
+      <div class="sticky-note-card">
+        <div class="sticky-pin">📌</div>
+        <div class="todo-input-row">
+          <input type="text" id="todoInput" placeholder="Write a sticky note reminder..." />
+          <button id="addTodoBtn">+</button>
+        </div>
+        <div id="todoList" class="sticky-todo-list">
+          <!-- To-Do tasks rendered here dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Story Book Sheet -->
   <div id="storyModalOverlay" class="story-modal-overlay"></div>
