@@ -80,6 +80,23 @@ const timelineFeed = document.getElementById('timelineFeed');
 const entryCountBadge = document.getElementById('entryCountBadge');
 let moodBtns = document.querySelectorAll('.mood-btn');
 
+// Friends Modal Controls
+const openFriendsBtn = document.getElementById('openFriendsBtn');
+const friendsModalOverlay = document.getElementById('friendsModalOverlay');
+const friendsBottomSheet = document.getElementById('friendsBottomSheet');
+const closeFriendsSheetBtn = document.getElementById('closeFriendsSheetBtn');
+
+// To-Do Sticky Modal Controls
+const openTodoBtn = document.getElementById('openTodoBtn');
+const todoModalOverlay = document.getElementById('todoModalOverlay');
+const todoBottomSheet = document.getElementById('todoBottomSheet');
+const closeTodoSheetBtn = document.getElementById('closeTodoSheetBtn');
+
+// Main Page Reminder Elements
+const mainPageReminder = document.getElementById('mainPageReminder');
+const reminderTaskText = document.getElementById('reminderTaskText');
+const openTodoFromBanner = document.getElementById('openTodoFromBanner');
+
 const openStoriesMenuBtn = document.getElementById('openStoriesMenuBtn');
 const storyModalOverlay = document.getElementById('storyModalOverlay');
 const storyBottomSheet = document.getElementById('storyBottomSheet');
@@ -192,12 +209,45 @@ function listenFriendsList() {
     if (friendsCount === 0) {
       friendsList.innerHTML = `
         <div class="friend-item">
-          <span class="friend-name" style="font-size:0.8rem; color:#888;">No other friends found</span>
+          <span class="friend-name" style="font-size:0.85rem; color:#aaa;">No other friends found</span>
         </div>
       `;
     }
   });
 }
+
+// Friends Bottom Sheet Trigger
+openFriendsBtn?.addEventListener('click', () => {
+  closeDrawer();
+  friendsBottomSheet?.classList.add('active');
+  friendsModalOverlay?.classList.add('active');
+});
+
+const closeFriendsSheet = () => {
+  friendsBottomSheet?.classList.remove('active');
+  friendsModalOverlay?.classList.remove('active');
+};
+
+closeFriendsSheetBtn?.addEventListener('click', closeFriendsSheet);
+friendsModalOverlay?.addEventListener('click', closeFriendsSheet);
+
+// To-Do Bottom Sheet Trigger
+const openTodoModal = () => {
+  closeDrawer();
+  todoBottomSheet?.classList.add('active');
+  todoModalOverlay?.classList.add('active');
+};
+
+openTodoBtn?.addEventListener('click', openTodoModal);
+openTodoFromBanner?.addEventListener('click', openTodoModal);
+
+const closeTodoSheet = () => {
+  todoBottomSheet?.classList.remove('active');
+  todoModalOverlay?.classList.remove('active');
+};
+
+closeTodoSheetBtn?.addEventListener('click', closeTodoSheet);
+todoModalOverlay?.addEventListener('click', closeTodoSheet);
 
 // Realtime Presence Listener for Watch Together
 function listenPartnerPresence() {
@@ -237,7 +287,7 @@ function listenPartnerPresence() {
   });
 }
 
-// Realtime To-Do List Implementation
+// Realtime To-Do List Implementation with Main Page Reminder Sync
 if (addTodoBtn) {
   addTodoBtn.addEventListener('click', async () => {
     const text = todoInput.value.trim();
@@ -262,10 +312,16 @@ function listenTodoList() {
   const q = query(collection(db, "todos"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     todoList.innerHTML = '';
+    const pendingTasks = [];
+
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
+      if (!data.completed) {
+        pendingTasks.push(data.task);
+      }
+
       const item = document.createElement('div');
-      item.className = `todo-item ${data.completed ? 'completed' : ''}`;
+      item.className = `sticky-todo-item ${data.completed ? 'completed' : ''}`;
 
       item.innerHTML = `
         <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docSnap.id}">
@@ -285,6 +341,16 @@ function listenTodoList() {
         await deleteDoc(doc(db, "todos", docSnap.id));
       });
     });
+
+    // Update Main Page Reminder Banner dynamically
+    if (mainPageReminder && reminderTaskText) {
+      if (pendingTasks.length > 0) {
+        mainPageReminder.classList.remove('hidden');
+        reminderTaskText.textContent = `${pendingTasks[0]} ${pendingTasks.length > 1 ? `(+${pendingTasks.length - 1} more)` : ''}`;
+      } else {
+        mainPageReminder.classList.add('hidden');
+      }
+    }
   });
 }
 
@@ -658,7 +724,7 @@ function loadMemories() {
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
       const card = document.createElement('div');
-      card.className = 'entry-card';
+      card.className = 'entry-card ios-notification-card';
       
       const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
 
@@ -727,7 +793,7 @@ function loadStories() {
             <div class="story-accordion-title glowing-story-title">${data.title}</div>
             <div class="story-by-sub">By: ${data.author} • ${dateStr}</div>
           </div>
-          <span style="color:#ffb6c1; font-size: 1.2rem;">&rsaquo;</span>
+          <span class="chevron">&rsaquo;</span>
         </div>
         <div class="story-accordion-body">
           <div class="story-book-author-bar">
