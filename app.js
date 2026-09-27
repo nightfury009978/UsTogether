@@ -46,6 +46,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ---------- Toast Notification Helper ----------
+const toastContainer = document.getElementById('toastContainer');
+function toast(message, type = 'info') {
+  if (!toastContainer) { console.log(message); return; }
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  toastContainer.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
 // DOM Elements
 const authOverlay = document.getElementById('authOverlay');
 const authTitle = document.getElementById('authTitle');
@@ -67,8 +78,13 @@ const permDeleteSubBtn = document.getElementById('permDeleteSubBtn');
 
 const friendsList = document.getElementById('friendsList');
 const todoInput = document.getElementById('todoInput');
+const todoPriority = document.getElementById('todoPriority');
+const todoDueDate = document.getElementById('todoDueDate');
 const addTodoBtn = document.getElementById('addTodoBtn');
 const todoList = document.getElementById('todoList');
+const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+const todoProgressFill = document.getElementById('todoProgressFill');
+const todoProgressText = document.getElementById('todoProgressText');
 const bubbleContainer = document.getElementById('bubbleContainer');
 
 const deleteModal = document.getElementById('deleteConfirmModal');
@@ -81,6 +97,8 @@ const saveBtn = document.getElementById('saveBtn');
 const latestTimelineFeed = document.getElementById('latestTimelineFeed');
 const olderTimelineFeed = document.getElementById('olderTimelineFeed');
 const entryCountBadge = document.getElementById('entryCountBadge');
+const memorySearchInput = document.getElementById('memorySearchInput');
+const moodFilterSelect = document.getElementById('moodFilterSelect');
 let moodBtns = document.querySelectorAll('.mood-btn');
 
 // Friends Modal Controls
@@ -135,6 +153,7 @@ let isSignUpMode = false;
 let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
+let allMemories = []; // cache for client-side search/filter
 
 // Helper: Clean Username
 function getCleanUsername(user) {
@@ -224,8 +243,9 @@ function listenFriendsList() {
 
     if (friendsCount === 0) {
       friendsList.innerHTML = `
-        <div class="friend-item">
-          <span class="friend-name" style="font-size:0.85rem; color:#aaa;">No other friends found</span>
+        <div class="empty-state">
+          <span class="empty-emoji">👥</span>
+          No other friends found yet.
         </div>
       `;
     }
@@ -332,6 +352,8 @@ async function checkAndResetDailyTodos() {
       await addDoc(collection(db, "todo_history"), {
         task: data.task,
         completed: data.completed,
+        priority: data.priority || 'medium',
+        dueDate: data.dueDate || '',
         createdBy: data.createdBy,
         createdAt: data.createdAt || serverTimestamp(),
         dateKey: data.dateKey,
@@ -343,25 +365,125 @@ async function checkAndResetDailyTodos() {
   });
 }
 
-// Realtime To-Do List Implementation (Separate Sticky Note Cards per Task)
+// Priority sort weight (high first)
+const priorityWeight = { high: 0, medium: 1, low: 2 };
+
+// Add To-Do (with priority + optional due date)
 if (addTodoBtn) {
   addTodoBtn.addEventListener('click', async () => {
     const text = todoInput.value.trim();
-    if (!text || !currentUser) return;
+    if (!text) {
+      toast("Write a task first.", "error");
+      return;
+    }
+    if (!currentUser) return;
+
+    const priority = todoPriority?.value || 'medium';
+    const dueDate = todoDueDate?.value || '';
 
     try {
       await addDoc(collection(db, "todos"), {
         task: text,
         completed: false,
+        priority: priority,
+        dueDate: dueDate,
         createdBy: getCleanUsername(currentUser),
         createdAt: serverTimestamp(),
         dateKey: getTodayDateKey()
       });
       todoInput.value = '';
+      if (todoDueDate) todoDueDate.value = '';
+      if (todoPriority) todoPriority.value = 'medium';
+      toast("Task added ✅", "success");
     } catch (e) {
       console.error("Error adding todo:", e);
+      toast("Couldn't add task. Try again.", "error");
     }
   });
+}
+
+// Format a due date string (YYYY-MM-DD) into a friendly badge label + overdue flag
+function formatDueDate(dueDateStr) {
+  if (!dueDateStr) return null;
+  const due = new Date(dueDateStr + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
+
+  let label;
+  if (diffDays === 0) label = 'Due today';
+  else if (diffDays === 1) label = 'Due tomorrow';
+  else if (diffDays < 0) label = `Overdue · ${due.toLocaleDateString()}`;
+  else label = `Due ${due.toLocaleDateString()}`;
+
+  return { label, overdue: diffDays < 0 };
+}
+
+function buildTaskCard(docId, data) {
+  const stickyCard = document.createElement('div');
+  stickyCard.className = `sticky-note-card ${data.completed ? 'completed' : ''}`;
+
+  const priority = data.priority || 'medium';
+  const dueInfo = formatDueDate(data.dueDate);
+
+  let dateTimeStr = 'Just now';
+  if (data.createdAt) {
+    const d = new Date(data.createdAt.seconds * 1000);
+    dateTimeStr = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  stickyCard.innerHTML = `
+    <div class="sticky-content">
+      <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docId}">
+      <span class="todo-text" id="text-${docId}">${data.task}</span>
+      <button class="todo-icon-btn" id="edit-todo-${docId}" title="Edit">✏️</button>
+      <button class="todo-icon-btn" id="del-todo-${docId}" title="Delete">&times;</button>
+    </div>
+    <div class="todo-badges">
+      <span class="priority-badge ${priority}">${priority}</span>
+      ${dueInfo ? `<span class="due-date-badge ${dueInfo.overdue && !data.completed ? 'overdue' : ''}">${dueInfo.label}</span>` : ''}
+    </div>
+    <div class="sticky-footer-stamp">
+      <strong>${data.createdBy || 'User'}</strong> • ${dateTimeStr}
+    </div>
+  `;
+
+  stickyCard.querySelector(`#check-${docId}`)?.addEventListener('change', async (e) => {
+    await updateDoc(doc(db, "todos", docId), { completed: e.target.checked });
+  });
+
+  stickyCard.querySelector(`#del-todo-${docId}`)?.addEventListener('click', async () => {
+    await deleteDoc(doc(db, "todos", docId));
+    toast("Task deleted", "info");
+  });
+
+  stickyCard.querySelector(`#edit-todo-${docId}`)?.addEventListener('click', () => {
+    const textSpan = stickyCard.querySelector(`#text-${docId}`);
+    if (!textSpan) return;
+    const currentText = textSpan.textContent;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'todo-text-input';
+    input.value = currentText;
+    textSpan.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const commit = async () => {
+      const newText = input.value.trim();
+      if (newText && newText !== currentText) {
+        await updateDoc(doc(db, "todos", docId), { task: newText });
+      }
+    };
+
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    });
+  });
+
+  return stickyCard;
 }
 
 function listenTodoList() {
@@ -371,63 +493,76 @@ function listenTodoList() {
   const q = query(collection(db, "todos"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     todoList.innerHTML = '';
-    const pendingTasks = [];
+
+    const pending = [];
+    const completed = [];
+    const pendingReminders = [];
 
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
-      if (!data.completed) {
-        pendingTasks.push({
-          task: data.task,
-          author: data.createdBy || "User"
-        });
+      if (data.completed) {
+        completed.push({ id: docSnap.id, data });
+      } else {
+        pending.push({ id: docSnap.id, data });
+        pendingReminders.push({ task: data.task, author: data.createdBy || "User" });
       }
-
-      let dateTimeStr = 'Just now';
-      if (data.createdAt) {
-        const d = new Date(data.createdAt.seconds * 1000);
-        dateTimeStr = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      }
-
-      const stickyCard = document.createElement('div');
-      stickyCard.className = `sticky-note-card ${data.completed ? 'completed' : ''}`;
-
-      stickyCard.innerHTML = `
-        <div class="sticky-pin">📌</div>
-        <div class="sticky-content">
-          <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docSnap.id}">
-          <span class="todo-text">${data.task}</span>
-          <button class="todo-del-btn" id="del-todo-${docSnap.id}">&times;</button>
-        </div>
-        <div class="sticky-footer-stamp">
-          <strong>${data.createdBy || 'User'}</strong> • ${dateTimeStr}
-        </div>
-      `;
-
-      todoList.appendChild(stickyCard);
-
-      document.getElementById(`check-${docSnap.id}`)?.addEventListener('change', async (e) => {
-        await updateDoc(doc(db, "todos", docSnap.id), {
-          completed: e.target.checked
-        });
-      });
-
-      document.getElementById(`del-todo-${docSnap.id}`)?.addEventListener('click', async () => {
-        await deleteDoc(doc(db, "todos", docSnap.id));
-      });
     });
 
-    // Update Main Page Reminder Banner with Name
+    // Sort pending by priority (high first), then most recent
+    pending.sort((a, b) => {
+      const pw = priorityWeight[a.data.priority || 'medium'] - priorityWeight[b.data.priority || 'medium'];
+      if (pw !== 0) return pw;
+      return (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0);
+    });
+
+    if (pending.length === 0 && completed.length === 0) {
+      todoList.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-emoji">📝</span>
+          No tasks yet — add your first one above.
+        </div>
+      `;
+    } else {
+      pending.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
+
+      if (completed.length > 0) {
+        const label = document.createElement('div');
+        label.className = 'todo-section-label';
+        label.textContent = `Completed (${completed.length})`;
+        todoList.appendChild(label);
+        completed.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
+      }
+    }
+
+    // Progress bar
+    const totalCount = pending.length + completed.length;
+    const pct = totalCount === 0 ? 0 : Math.round((completed.length / totalCount) * 100);
+    if (todoProgressFill) todoProgressFill.style.width = `${pct}%`;
+    if (todoProgressText) todoProgressText.textContent = `${completed.length} of ${totalCount} done today`;
+
+    // Update Main Page Reminder Banner
     if (mainPageReminder && reminderTaskText) {
-      if (pendingTasks.length > 0) {
+      if (pendingReminders.length > 0) {
         mainPageReminder.classList.remove('hidden');
-        const first = pendingTasks[0];
-        reminderTaskText.textContent = `${first.author}: "${first.task}" ${pendingTasks.length > 1 ? `(+${pendingTasks.length - 1} more)` : ''}`;
+        const first = pendingReminders[0];
+        reminderTaskText.textContent = `${first.author}: "${first.task}" ${pendingReminders.length > 1 ? `(+${pendingReminders.length - 1} more)` : ''}`;
       } else {
         mainPageReminder.classList.add('hidden');
       }
     }
   });
 }
+
+clearCompletedBtn?.addEventListener('click', async () => {
+  const q = query(collection(db, "todos"), where("completed", "==", true));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) {
+    toast("No completed tasks to clear.", "info");
+    return;
+  }
+  await Promise.all(snapshot.docs.map((d) => deleteDoc(doc(db, "todos", d.id))));
+  toast("Cleared completed tasks", "success");
+});
 
 // Load Sub-History of Past To-Do Items with iOS Notification Scroll
 function loadTodoHistory() {
@@ -437,7 +572,12 @@ function loadTodoHistory() {
   onSnapshot(q, (snapshot) => {
     todoHistoryList.innerHTML = '';
     if (snapshot.empty) {
-      todoHistoryList.innerHTML = `<div class="history-empty">No past to-do records found.</div>`;
+      todoHistoryList.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-emoji">📜</span>
+          No past to-do records found.
+        </div>
+      `;
       return;
     }
 
@@ -448,6 +588,8 @@ function loadTodoHistory() {
         const d = new Date(data.createdAt.seconds * 1000);
         dateTimeStr = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
       }
+
+      const priority = data.priority || 'medium';
 
       const card = document.createElement('div');
       card.className = 'entry-card ios-notification-card';
@@ -460,6 +602,9 @@ function loadTodoHistory() {
         <p class="entry-text" style="${data.completed ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
           ${data.task} ${data.completed ? '✅' : '⏳'}
         </p>
+        <div class="todo-badges">
+          <span class="priority-badge ${priority}">${priority}</span>
+        </div>
       `;
 
       todoHistoryList.appendChild(card);
@@ -518,7 +663,7 @@ if (loadYtBtn) {
     const vidId = extractVideoId(url);
 
     if (!vidId) {
-      alert("Please paste a valid YouTube video or Shorts link!");
+      toast("Please paste a valid YouTube video or Shorts link!", "error");
       return;
     }
 
@@ -545,7 +690,7 @@ if (addToQueueBtn) {
     const vidId = extractVideoId(url);
 
     if (!vidId) {
-      alert("Please paste a valid YouTube link!");
+      toast("Please paste a valid YouTube link!", "error");
       return;
     }
 
@@ -560,8 +705,10 @@ if (addToQueueBtn) {
         createdAt: serverTimestamp()
       });
       ytUrlInput.value = '';
+      toast("Added to playlist", "success");
     } catch (err) {
       console.error("Error adding to queue:", err);
+      toast("Couldn't add to playlist.", "error");
     }
   });
 }
@@ -583,6 +730,16 @@ function loadYtQueue() {
   const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     ytQueueFeed.innerHTML = '';
+
+    if (snapshot.empty) {
+      ytQueueFeed.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-emoji">🎬</span>
+          No saved videos yet.
+        </div>
+      `;
+      return;
+    }
 
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
@@ -667,7 +824,7 @@ authSubmitBtn?.addEventListener('click', async () => {
   const password = authPassword.value.trim();
 
   if (!inputVal || !password) {
-    alert("Please enter both username and password.");
+    toast("Please enter both username and password.", "error");
     return;
   }
 
@@ -680,7 +837,7 @@ authSubmitBtn?.addEventListener('click', async () => {
       await signInWithEmailAndPassword(auth, email, password);
     }
   } catch (error) {
-    alert(error.message);
+    toast(error.message, "error");
   }
 });
 
@@ -784,10 +941,10 @@ confirmBtn?.addEventListener('click', async () => {
   try {
     await updateMyPresence('offline');
     await deleteUser(auth.currentUser);
-    alert("Account permanently deleted.");
+    toast("Account permanently deleted.", "success");
     deleteModal?.classList.remove('active');
   } catch (error) {
-    alert("Security limit: Please log out and log back in before deleting your account.");
+    toast("Security limit: Please log out and log back in before deleting your account.", "error");
   }
 });
 
@@ -808,7 +965,10 @@ storyModalOverlay?.addEventListener('click', closeStorySheet);
 // Share Memory with Memory Bubble Trigger
 saveBtn?.addEventListener('click', async () => {
   const text = memoryInput.value.trim();
-  if (!text) return;
+  if (!text) {
+    toast("Write a memory first.", "error");
+    return;
+  }
 
   const displayName = getCleanUsername(currentUser);
 
@@ -822,61 +982,92 @@ saveBtn?.addEventListener('click', async () => {
 
     spawnMemoryBubble(selectedMood, text);
     memoryInput.value = '';
+    toast("Memory shared 💖", "success");
   } catch (err) {
     console.error("Error saving memory:", err);
+    toast("Couldn't save memory. Try again.", "error");
   }
 });
+
+// Render the timeline feed from the current cache + active filters
+function renderMemoryFeed() {
+  if (!latestTimelineFeed || !olderTimelineFeed) return;
+
+  const searchTerm = (memorySearchInput?.value || '').trim().toLowerCase();
+  const moodFilter = moodFilterSelect?.value || 'all';
+
+  const filtered = allMemories.filter(({ data }) => {
+    const matchesSearch = !searchTerm || data.text.toLowerCase().includes(searchTerm);
+    const matchesMood = moodFilter === 'all' || data.mood === moodFilter;
+    return matchesSearch && matchesMood;
+  });
+
+  latestTimelineFeed.innerHTML = '';
+  olderTimelineFeed.innerHTML = '';
+
+  if (entryCountBadge) entryCountBadge.textContent = `${allMemories.length} memories`;
+
+  if (filtered.length === 0) {
+    latestTimelineFeed.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-emoji">🔍</span>
+        ${allMemories.length === 0 ? 'No memories yet — share your first one above.' : 'No memories match your search.'}
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(({ id, data }, index) => {
+    const card = document.createElement('div');
+    card.className = 'entry-card ios-notification-card';
+
+    const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
+
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="entry-author">${data.author}</span>
+        <span class="entry-date">${dateStr}</span>
+      </div>
+      <p class="entry-text">${data.text}</p>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:1.3rem;">${data.mood || '💖'}</span>
+        <button class="story-delete-btn" id="del-${id}" style="background:none; border:none; cursor:pointer;">🗑️</button>
+      </div>
+    `;
+
+    if (index < 2) {
+      latestTimelineFeed.appendChild(card);
+    } else {
+      olderTimelineFeed.appendChild(card);
+    }
+
+    document.getElementById(`del-${id}`)?.addEventListener('click', async () => {
+      await deleteDoc(doc(db, 'memories', id));
+      toast("Memory deleted", "info");
+    });
+  });
+}
 
 // Load Memories (2 Latest Top + iOS Notification Scroll Container below)
 function loadMemories() {
   if (!latestTimelineFeed || !olderTimelineFeed) return;
   const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
-  
+
   onSnapshot(q, (snapshot) => {
-    latestTimelineFeed.innerHTML = '';
-    olderTimelineFeed.innerHTML = '';
-    
-    if (entryCountBadge) entryCountBadge.textContent = `${snapshot.docs.length} memories`;
-
-    snapshot.docs.forEach((docSnap, index) => {
-      const data = docSnap.data();
-      const card = document.createElement('div');
-      card.className = 'entry-card ios-notification-card';
-      
-      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
-
-      card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span class="entry-author">${data.author}</span>
-          <span class="entry-date">${dateStr}</span>
-        </div>
-        <p class="entry-text">${data.text}</p>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:1.3rem;">${data.mood || '💖'}</span>
-          <button class="story-delete-btn" id="del-${docSnap.id}" style="background:none; border:none; cursor:pointer;">🗑️</button>
-        </div>
-      `;
-      
-      // Top 2 items go to latest feed, rest go into iOS scroll feed
-      if (index < 2) {
-        latestTimelineFeed.appendChild(card);
-      } else {
-        olderTimelineFeed.appendChild(card);
-      }
-
-      document.getElementById(`del-${docSnap.id}`)?.addEventListener('click', async () => {
-        await deleteDoc(doc(db, 'memories', docSnap.id));
-      });
-    });
+    allMemories = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
+    renderMemoryFeed();
   });
 }
+
+memorySearchInput?.addEventListener('input', renderMemoryFeed);
+moodFilterSelect?.addEventListener('change', renderMemoryFeed);
 
 publishStoryBtn?.addEventListener('click', async () => {
   const title = storyTitleInput.value.trim();
   const text = storyTextInput.value.trim();
 
   if (!title || !text) {
-    alert("Please write a title and story content!");
+    toast("Please write a title and story content!", "error");
     return;
   }
 
@@ -891,8 +1082,10 @@ publishStoryBtn?.addEventListener('click', async () => {
     });
     storyTitleInput.value = '';
     storyTextInput.value = '';
+    toast("Chapter added 📖", "success");
   } catch (err) {
     console.error("Error adding story chapter:", err);
+    toast("Couldn't add chapter.", "error");
   }
 });
 
@@ -901,6 +1094,16 @@ function loadStories() {
   const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     storiesFeed.innerHTML = '';
+
+    if (snapshot.empty) {
+      storiesFeed.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-emoji">📖</span>
+          No chapters yet — write your first one above.
+        </div>
+      `;
+      return;
+    }
 
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
