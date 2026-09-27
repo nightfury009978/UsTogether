@@ -57,6 +57,11 @@ function toast(message, type = 'info') {
   setTimeout(() => el.remove(), 3000);
 }
 
+// ---------- Shine-name helper (used everywhere a username is shown) ----------
+function shineName(name) {
+  return `<span class="shine-name">${name}</span>`;
+}
+
 // DOM Elements
 const authOverlay = document.getElementById('authOverlay');
 const authTitle = document.getElementById('authTitle');
@@ -76,16 +81,15 @@ const accountSubmenu = document.getElementById('accountSubmenu');
 const logoutBtn = document.getElementById('logoutBtn');
 const permDeleteSubBtn = document.getElementById('permDeleteSubBtn');
 
-const friendsList = document.getElementById('friendsList');
 const todoInput = document.getElementById('todoInput');
 const todoPriority = document.getElementById('todoPriority');
 const todoDueDate = document.getElementById('todoDueDate');
+const todoSearchInput = document.getElementById('todoSearchInput');
 const addTodoBtn = document.getElementById('addTodoBtn');
 const todoList = document.getElementById('todoList');
 const clearCompletedBtn = document.getElementById('clearCompletedBtn');
 const todoProgressFill = document.getElementById('todoProgressFill');
 const todoProgressText = document.getElementById('todoProgressText');
-const bubbleContainer = document.getElementById('bubbleContainer');
 
 const deleteModal = document.getElementById('deleteConfirmModal');
 const timerBadge = document.getElementById('deleteTimerBadge');
@@ -94,18 +98,24 @@ const cancelBtn = document.getElementById('cancelDeleteBtn');
 
 const memoryInput = document.getElementById('memoryInput');
 const saveBtn = document.getElementById('saveBtn');
-const latestTimelineFeed = document.getElementById('latestTimelineFeed');
-const olderTimelineFeed = document.getElementById('olderTimelineFeed');
+const memoryBubbleField = document.getElementById('memoryBubbleField');
 const entryCountBadge = document.getElementById('entryCountBadge');
 const memorySearchInput = document.getElementById('memorySearchInput');
 const moodFilterSelect = document.getElementById('moodFilterSelect');
+
+// Mood picker popup
+const moodTriggerBtn = document.getElementById('moodTriggerBtn');
+const moodTriggerEmoji = document.getElementById('moodTriggerEmoji');
+const moodPickerOverlay = document.getElementById('moodPickerOverlay');
+const moodPickerPopup = document.getElementById('moodPickerPopup');
 let moodBtns = document.querySelectorAll('.mood-btn');
 
-// Friends Modal Controls
-const openFriendsBtn = document.getElementById('openFriendsBtn');
-const friendsModalOverlay = document.getElementById('friendsModalOverlay');
-const friendsBottomSheet = document.getElementById('friendsBottomSheet');
-const closeFriendsSheetBtn = document.getElementById('closeFriendsSheetBtn');
+// Memory reveal overlay
+const memoryRevealOverlay = document.getElementById('memoryRevealOverlay');
+const memoryRevealBubble = document.getElementById('memoryRevealBubble');
+const memoryRevealMood = document.getElementById('memoryRevealMood');
+const memoryRevealText = document.getElementById('memoryRevealText');
+const memoryRevealMeta = document.getElementById('memoryRevealMeta');
 
 // To-Do Sticky Modal Controls
 const openTodoBtn = document.getElementById('openTodoBtn');
@@ -154,6 +164,7 @@ let selectedMood = '💖';
 let currentUser = null;
 let deleteTimerInterval = null;
 let allMemories = []; // cache for client-side search/filter
+let revealAutoCloseTimer = null;
 
 // Helper: Clean Username
 function getCleanUsername(user) {
@@ -166,33 +177,6 @@ function getCleanUsername(user) {
 function getTodayDateKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-// Memory Bubbles Generator
-function spawnMemoryBubble(moodSymbol = '💖', textSnippet = '') {
-  if (!bubbleContainer) return;
-  const bubble = document.createElement('div');
-  bubble.className = 'memory-bubble';
-  
-  const randomLeft = Math.floor(Math.random() * 80) + 10; 
-  bubble.style.left = `${randomLeft}%`;
-
-  const size = Math.floor(Math.random() * 20) + 45; 
-  bubble.style.width = `${size}px`;
-  bubble.style.height = `${size}px`;
-
-  bubble.innerHTML = `<span>${moodSymbol}</span>`;
-
-  bubble.addEventListener('click', () => {
-    bubble.classList.add('pop');
-    setTimeout(() => bubble.remove(), 300);
-  });
-
-  bubbleContainer.appendChild(bubble);
-
-  setTimeout(() => {
-    if (bubble.parentNode) bubble.remove();
-  }, 7000);
 }
 
 // Presence Updates Function
@@ -211,96 +195,6 @@ async function updateMyPresence(statusState, actionDetail = "") {
   }
 }
 
-// Realtime Friends List Listener with Online/Offline Indicators
-function listenFriendsList() {
-  if (!currentUser) return;
-  const currentUsername = getCleanUsername(currentUser).toLowerCase();
-
-  onSnapshot(collection(db, "presence"), (snapshot) => {
-    if (!friendsList) return;
-    friendsList.innerHTML = '';
-
-    let friendsCount = 0;
-
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      const fName = data.username || docSnap.id;
-      
-      if (docSnap.id.toLowerCase() !== currentUsername) {
-        friendsCount++;
-        const state = data.state || 'offline';
-        const isOnline = (state === 'online' || state === 'watching' || state === 'opened');
-
-        const friendCard = document.createElement('div');
-        friendCard.className = 'friend-item';
-        friendCard.innerHTML = `
-          <span class="friend-name">👤 ${fName}</span>
-          <span class="friend-status-dot ${isOnline ? 'online' : 'offline'}" title="${isOnline ? 'Online' : 'Offline'}"></span>
-        `;
-        friendsList.appendChild(friendCard);
-      }
-    });
-
-    if (friendsCount === 0) {
-      friendsList.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-emoji">👥</span>
-          No other friends found yet.
-        </div>
-      `;
-    }
-  });
-}
-
-// Friends Bottom Sheet Trigger
-openFriendsBtn?.addEventListener('click', () => {
-  closeDrawer();
-  friendsBottomSheet?.classList.add('active');
-  friendsModalOverlay?.classList.add('active');
-});
-
-const closeFriendsSheet = () => {
-  friendsBottomSheet?.classList.remove('active');
-  friendsModalOverlay?.classList.remove('active');
-};
-
-closeFriendsSheetBtn?.addEventListener('click', closeFriendsSheet);
-friendsModalOverlay?.addEventListener('click', closeFriendsSheet);
-
-// To-Do Bottom Sheet Trigger
-const openTodoModal = () => {
-  closeDrawer();
-  todoBottomSheet?.classList.add('active');
-  todoModalOverlay?.classList.add('active');
-};
-
-openTodoBtn?.addEventListener('click', openTodoModal);
-openTodoFromBanner?.addEventListener('click', openTodoModal);
-
-const closeTodoSheet = () => {
-  todoBottomSheet?.classList.remove('active');
-  todoModalOverlay?.classList.remove('active');
-};
-
-closeTodoSheetBtn?.addEventListener('click', closeTodoSheet);
-todoModalOverlay?.addEventListener('click', closeTodoSheet);
-
-// To-Do History Trigger
-openTodoHistoryBtn?.addEventListener('click', () => {
-  closeDrawer();
-  todoHistoryBottomSheet?.classList.add('active');
-  todoHistoryModalOverlay?.classList.add('active');
-  loadTodoHistory();
-});
-
-const closeTodoHistorySheet = () => {
-  todoHistoryBottomSheet?.classList.remove('active');
-  todoHistoryModalOverlay?.classList.remove('active');
-};
-
-closeTodoHistorySheetBtn?.addEventListener('click', closeTodoHistorySheet);
-todoHistoryModalOverlay?.addEventListener('click', closeTodoHistorySheet);
-
 // Realtime Presence Listener for Watch Together
 function listenPartnerPresence() {
   if (!currentUser) return;
@@ -318,15 +212,15 @@ function listenPartnerPresence() {
         if (state === 'watching') {
           partnerPresenceDot?.classList.remove('offline');
           partnerPresenceDot?.classList.add('online');
-          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is watching 🎬`;
+          if (partnerPresenceText) partnerPresenceText.innerHTML = `${shineName(pName)} is watching 🎬`;
         } else if (state === 'opened' || state === 'online') {
           partnerPresenceDot?.classList.remove('offline');
           partnerPresenceDot?.classList.add('online');
-          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is online 🟢`;
+          if (partnerPresenceText) partnerPresenceText.innerHTML = `${shineName(pName)} is online 🟢`;
         } else {
           partnerPresenceDot?.classList.remove('online');
           partnerPresenceDot?.classList.add('offline');
-          if (partnerPresenceText) partnerPresenceText.textContent = `${pName} is offline`;
+          if (partnerPresenceText) partnerPresenceText.innerHTML = `${shineName(pName)} is offline`;
         }
       }
     });
@@ -339,7 +233,166 @@ function listenPartnerPresence() {
   });
 }
 
-// Check & Reset Active To-Do List at 12:00 AM Midnight
+// ============================================================
+// MOOD PICKER POPUP
+// ============================================================
+function openMoodPicker() {
+  moodPickerOverlay?.classList.add('active');
+  moodPickerPopup?.classList.add('active');
+}
+function closeMoodPicker() {
+  moodPickerOverlay?.classList.remove('active');
+  moodPickerPopup?.classList.remove('active');
+}
+moodTriggerBtn?.addEventListener('click', openMoodPicker);
+moodPickerOverlay?.addEventListener('click', closeMoodPicker);
+
+function setupMoodPickers() {
+  moodBtns = document.querySelectorAll('.mood-btn');
+  moodBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      moodBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedMood = btn.getAttribute('data-mood');
+      if (moodTriggerEmoji) moodTriggerEmoji.textContent = selectedMood;
+      closeMoodPicker();
+    });
+  });
+}
+
+// ============================================================
+// MEMORY REVEAL OVERLAY (posting animation + tap-to-view)
+// ============================================================
+function showMemoryReveal({ mood, text, author, dateStr }, mode) {
+  clearTimeout(revealAutoCloseTimer);
+  memoryRevealMood.textContent = mood || '💖';
+  memoryRevealText.textContent = text || '';
+  memoryRevealMeta.innerHTML = `${shineName(author || 'User')} · ${dateStr || ''}`;
+
+  memoryRevealOverlay.classList.remove('posting');
+  // force reflow so re-triggering the animation works on consecutive posts
+  void memoryRevealBubble.offsetWidth;
+
+  if (mode === 'post') {
+    memoryRevealOverlay.classList.add('posting');
+    memoryRevealOverlay.classList.add('active');
+    revealAutoCloseTimer = setTimeout(closeMemoryReveal, 2100);
+  } else {
+    memoryRevealOverlay.classList.add('active');
+  }
+}
+
+function closeMemoryReveal() {
+  clearTimeout(revealAutoCloseTimer);
+  memoryRevealOverlay.classList.remove('active');
+  memoryRevealOverlay.classList.remove('posting');
+}
+
+memoryRevealOverlay?.addEventListener('click', closeMemoryReveal);
+
+// ============================================================
+// MEMORY BUBBLE FIELD (floating timeline)
+// ============================================================
+function renderMemoryBubbles() {
+  if (!memoryBubbleField) return;
+
+  const searchTerm = (memorySearchInput?.value || '').trim().toLowerCase();
+  const moodFilter = moodFilterSelect?.value || 'all';
+
+  const filtered = allMemories.filter(({ data }) => {
+    const matchesSearch = !searchTerm || data.text.toLowerCase().includes(searchTerm);
+    const matchesMood = moodFilter === 'all' || data.mood === moodFilter;
+    return matchesSearch && matchesMood;
+  });
+
+  if (entryCountBadge) entryCountBadge.textContent = `${allMemories.length} memories`;
+
+  memoryBubbleField.innerHTML = '';
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'field-empty';
+    empty.textContent = allMemories.length === 0
+      ? 'No memories yet — share your first one above.'
+      : 'No memories match your search.';
+    memoryBubbleField.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(({ id, data }) => {
+    const bubble = document.createElement('div');
+    bubble.className = 'field-bubble';
+    bubble.textContent = data.mood || '💖';
+
+    // randomized organic position + drift
+    const top = Math.floor(Math.random() * 75);
+    const left = Math.floor(Math.random() * 80);
+    const dx = (Math.random() * 30 - 15).toFixed(0);
+    const dy = (Math.random() * 30 - 15).toFixed(0);
+    const duration = (3 + Math.random() * 3).toFixed(1);
+
+    bubble.style.top = `${top}%`;
+    bubble.style.left = `${left}%`;
+    bubble.style.setProperty('--dx', `${dx}px`);
+    bubble.style.setProperty('--dy', `${dy}px`);
+    bubble.style.animationDuration = `${duration}s`;
+
+    bubble.addEventListener('click', () => {
+      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
+      showMemoryReveal({ mood: data.mood, text: data.text, author: data.author, dateStr }, 'view');
+    });
+
+    memoryBubbleField.appendChild(bubble);
+  });
+}
+
+function loadMemories() {
+  if (!memoryBubbleField) return;
+  const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
+
+  onSnapshot(q, (snapshot) => {
+    allMemories = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
+    renderMemoryBubbles();
+  });
+}
+
+memorySearchInput?.addEventListener('input', renderMemoryBubbles);
+moodFilterSelect?.addEventListener('change', renderMemoryBubbles);
+
+// Share Memory -> triggers the full-screen rise & pop animation
+saveBtn?.addEventListener('click', async () => {
+  const text = memoryInput.value.trim();
+  if (!text) {
+    toast("Write a memory first.", "error");
+    return;
+  }
+
+  const displayName = getCleanUsername(currentUser);
+
+  try {
+    await addDoc(collection(db, "memories"), {
+      text: text,
+      mood: selectedMood,
+      author: displayName,
+      createdAt: serverTimestamp()
+    });
+
+    showMemoryReveal({ mood: selectedMood, text, author: displayName, dateStr: 'Just now' }, 'post');
+    memoryInput.value = '';
+  } catch (err) {
+    console.error("Error saving memory:", err);
+    toast("Couldn't save memory. Try again.", "error");
+  }
+});
+
+// ============================================================
+// TO-DO LIST
+// ============================================================
+const priorityWeight = { high: 0, medium: 1, low: 2 };
+let allTodos = []; // cache for search
+
+// Check & Reset Active To-Do List at 12:00 AM Midnight.
+// Tasks already logged to history on completion are skipped to avoid duplicates.
 async function checkAndResetDailyTodos() {
   const todayKey = getTodayDateKey();
   const q = query(collection(db, "todos"));
@@ -348,27 +401,25 @@ async function checkAndResetDailyTodos() {
   snapshot.docs.forEach(async (docSnap) => {
     const data = docSnap.data();
     if (data.dateKey && data.dateKey !== todayKey) {
-      // Move past items to todo_history collection
-      await addDoc(collection(db, "todo_history"), {
-        task: data.task,
-        completed: data.completed,
-        priority: data.priority || 'medium',
-        dueDate: data.dueDate || '',
-        createdBy: data.createdBy,
-        createdAt: data.createdAt || serverTimestamp(),
-        dateKey: data.dateKey,
-        archivedAt: serverTimestamp()
-      });
-      // Delete from active list
+      if (!data.historyLogged) {
+        await addDoc(collection(db, "todo_history"), {
+          task: data.task,
+          completed: data.completed,
+          priority: data.priority || 'medium',
+          dueDate: data.dueDate || '',
+          createdBy: data.createdBy,
+          createdAt: data.createdAt || serverTimestamp(),
+          completedAt: data.completedAt || null,
+          dateKey: data.dateKey,
+          archivedAt: serverTimestamp()
+        });
+      }
       await deleteDoc(doc(db, "todos", docSnap.id));
     }
   });
 }
 
-// Priority sort weight (high first)
-const priorityWeight = { high: 0, medium: 1, low: 2 };
-
-// Add To-Do (with priority + optional due date)
+// Add To-Do
 if (addTodoBtn) {
   addTodoBtn.addEventListener('click', async () => {
     const text = todoInput.value.trim();
@@ -387,6 +438,7 @@ if (addTodoBtn) {
         completed: false,
         priority: priority,
         dueDate: dueDate,
+        historyLogged: false,
         createdBy: getCleanUsername(currentUser),
         createdAt: serverTimestamp(),
         dateKey: getTodayDateKey()
@@ -402,7 +454,6 @@ if (addTodoBtn) {
   });
 }
 
-// Format a due date string (YYYY-MM-DD) into a friendly badge label + overdue flag
 function formatDueDate(dueDateStr) {
   if (!dueDateStr) return null;
   const due = new Date(dueDateStr + 'T00:00:00');
@@ -432,6 +483,12 @@ function buildTaskCard(docId, data) {
     dateTimeStr = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   }
 
+  let completedBadge = '';
+  if (data.completed && data.completedAt) {
+    const c = new Date(data.completedAt.seconds * 1000);
+    completedBadge = `<span class="completed-badge">Done ${c.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+  }
+
   stickyCard.innerHTML = `
     <div class="sticky-content">
       <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docId}">
@@ -442,14 +499,43 @@ function buildTaskCard(docId, data) {
     <div class="todo-badges">
       <span class="priority-badge ${priority}">${priority}</span>
       ${dueInfo ? `<span class="due-date-badge ${dueInfo.overdue && !data.completed ? 'overdue' : ''}">${dueInfo.label}</span>` : ''}
+      ${completedBadge}
     </div>
     <div class="sticky-footer-stamp">
-      <strong>${data.createdBy || 'User'}</strong> • ${dateTimeStr}
+      ${shineName(data.createdBy || 'User')} • ${dateTimeStr}
     </div>
   `;
 
   stickyCard.querySelector(`#check-${docId}`)?.addEventListener('change', async (e) => {
-    await updateDoc(doc(db, "todos", docId), { completed: e.target.checked });
+    const isNowCompleted = e.target.checked;
+    const updates = { completed: isNowCompleted };
+
+    if (isNowCompleted) {
+      updates.completedAt = serverTimestamp();
+      stickyCard.classList.add('just-completed');
+
+      // Log to history immediately (only once per task)
+      if (!data.historyLogged) {
+        try {
+          await addDoc(collection(db, "todo_history"), {
+            task: data.task,
+            completed: true,
+            priority: data.priority || 'medium',
+            dueDate: data.dueDate || '',
+            createdBy: data.createdBy,
+            createdAt: data.createdAt || serverTimestamp(),
+            completedAt: serverTimestamp(),
+            dateKey: data.dateKey || getTodayDateKey(),
+            archivedAt: serverTimestamp()
+          });
+          updates.historyLogged = true;
+        } catch (err) {
+          console.error("Error logging to history:", err);
+        }
+      }
+    }
+
+    await updateDoc(doc(db, "todos", docId), updates);
   });
 
   stickyCard.querySelector(`#del-todo-${docId}`)?.addEventListener('click', async () => {
@@ -486,72 +572,75 @@ function buildTaskCard(docId, data) {
   return stickyCard;
 }
 
+function renderTodoList() {
+  if (!todoList) return;
+
+  const searchTerm = (todoSearchInput?.value || '').trim().toLowerCase();
+  const visible = allTodos.filter(({ data }) => !searchTerm || data.task.toLowerCase().includes(searchTerm));
+
+  const pending = visible.filter(t => !t.data.completed);
+  const completed = visible.filter(t => t.data.completed);
+
+  pending.sort((a, b) => {
+    const pw = priorityWeight[a.data.priority || 'medium'] - priorityWeight[b.data.priority || 'medium'];
+    if (pw !== 0) return pw;
+    return (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0);
+  });
+
+  todoList.innerHTML = '';
+
+  if (pending.length === 0 && completed.length === 0) {
+    todoList.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-emoji">📝</span>
+        ${allTodos.length === 0 ? 'No tasks yet — add your first one above.' : 'No tasks match your search.'}
+      </div>
+    `;
+  } else {
+    pending.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
+
+    if (completed.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'todo-section-label';
+      label.textContent = `Completed (${completed.length})`;
+      todoList.appendChild(label);
+      completed.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
+    }
+  }
+
+  // Progress bar always reflects the FULL list, not the filtered view
+  const allPending = allTodos.filter(t => !t.data.completed).length;
+  const allCompleted = allTodos.filter(t => t.data.completed).length;
+  const totalCount = allPending + allCompleted;
+  const pct = totalCount === 0 ? 0 : Math.round((allCompleted / totalCount) * 100);
+  if (todoProgressFill) todoProgressFill.style.width = `${pct}%`;
+  if (todoProgressText) todoProgressText.textContent = `${allCompleted} of ${totalCount} done today`;
+
+  // Reminder banner
+  const pendingReminders = allTodos.filter(t => !t.data.completed);
+  if (mainPageReminder && reminderTaskText) {
+    if (pendingReminders.length > 0) {
+      mainPageReminder.classList.remove('hidden');
+      const first = pendingReminders[0].data;
+      reminderTaskText.innerHTML = `${shineName(first.createdBy || 'User')}: "${first.task}" ${pendingReminders.length > 1 ? `(+${pendingReminders.length - 1} more)` : ''}`;
+    } else {
+      mainPageReminder.classList.add('hidden');
+    }
+  }
+}
+
 function listenTodoList() {
   if (!todoList) return;
   checkAndResetDailyTodos();
 
   const q = query(collection(db, "todos"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
-    todoList.innerHTML = '';
-
-    const pending = [];
-    const completed = [];
-    const pendingReminders = [];
-
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (data.completed) {
-        completed.push({ id: docSnap.id, data });
-      } else {
-        pending.push({ id: docSnap.id, data });
-        pendingReminders.push({ task: data.task, author: data.createdBy || "User" });
-      }
-    });
-
-    // Sort pending by priority (high first), then most recent
-    pending.sort((a, b) => {
-      const pw = priorityWeight[a.data.priority || 'medium'] - priorityWeight[b.data.priority || 'medium'];
-      if (pw !== 0) return pw;
-      return (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0);
-    });
-
-    if (pending.length === 0 && completed.length === 0) {
-      todoList.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-emoji">📝</span>
-          No tasks yet — add your first one above.
-        </div>
-      `;
-    } else {
-      pending.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
-
-      if (completed.length > 0) {
-        const label = document.createElement('div');
-        label.className = 'todo-section-label';
-        label.textContent = `Completed (${completed.length})`;
-        todoList.appendChild(label);
-        completed.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
-      }
-    }
-
-    // Progress bar
-    const totalCount = pending.length + completed.length;
-    const pct = totalCount === 0 ? 0 : Math.round((completed.length / totalCount) * 100);
-    if (todoProgressFill) todoProgressFill.style.width = `${pct}%`;
-    if (todoProgressText) todoProgressText.textContent = `${completed.length} of ${totalCount} done today`;
-
-    // Update Main Page Reminder Banner
-    if (mainPageReminder && reminderTaskText) {
-      if (pendingReminders.length > 0) {
-        mainPageReminder.classList.remove('hidden');
-        const first = pendingReminders[0];
-        reminderTaskText.textContent = `${first.author}: "${first.task}" ${pendingReminders.length > 1 ? `(+${pendingReminders.length - 1} more)` : ''}`;
-      } else {
-        mainPageReminder.classList.add('hidden');
-      }
-    }
+    allTodos = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
+    renderTodoList();
   });
 }
+
+todoSearchInput?.addEventListener('input', renderTodoList);
 
 clearCompletedBtn?.addEventListener('click', async () => {
   const q = query(collection(db, "todos"), where("completed", "==", true));
@@ -564,10 +653,44 @@ clearCompletedBtn?.addEventListener('click', async () => {
   toast("Cleared completed tasks", "success");
 });
 
-// Load Sub-History of Past To-Do Items with iOS Notification Scroll
+// To-Do Bottom Sheet Trigger
+const openTodoModal = () => {
+  closeDrawer();
+  todoBottomSheet?.classList.add('active');
+  todoModalOverlay?.classList.add('active');
+};
+
+openTodoBtn?.addEventListener('click', openTodoModal);
+openTodoFromBanner?.addEventListener('click', openTodoModal);
+
+const closeTodoSheet = () => {
+  todoBottomSheet?.classList.remove('active');
+  todoModalOverlay?.classList.remove('active');
+};
+
+closeTodoSheetBtn?.addEventListener('click', closeTodoSheet);
+todoModalOverlay?.addEventListener('click', closeTodoSheet);
+
+// To-Do History Trigger
+openTodoHistoryBtn?.addEventListener('click', () => {
+  closeDrawer();
+  todoHistoryBottomSheet?.classList.add('active');
+  todoHistoryModalOverlay?.classList.add('active');
+  loadTodoHistory();
+});
+
+const closeTodoHistorySheet = () => {
+  todoHistoryBottomSheet?.classList.remove('active');
+  todoHistoryModalOverlay?.classList.remove('active');
+};
+
+closeTodoHistorySheetBtn?.addEventListener('click', closeTodoHistorySheet);
+todoHistoryModalOverlay?.addEventListener('click', closeTodoHistorySheet);
+
+// Load To-Do History - now populated the moment a task is completed
 function loadTodoHistory() {
   if (!todoHistoryList) return;
-  const q = query(collection(db, "todo_history"), orderBy("createdAt", "desc"));
+  const q = query(collection(db, "todo_history"), orderBy("archivedAt", "desc"));
   
   onSnapshot(q, (snapshot) => {
     todoHistoryList.innerHTML = '';
@@ -583,8 +706,12 @@ function loadTodoHistory() {
 
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
+
       let dateTimeStr = 'Past Task';
-      if (data.createdAt) {
+      if (data.completedAt) {
+        const d = new Date(data.completedAt.seconds * 1000);
+        dateTimeStr = `Completed ${d.toLocaleDateString()} at ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      } else if (data.createdAt) {
         const d = new Date(data.createdAt.seconds * 1000);
         dateTimeStr = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
       }
@@ -596,7 +723,7 @@ function loadTodoHistory() {
       
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span class="entry-author">👤 ${data.createdBy || 'User'}</span>
+          <span>${shineName(data.createdBy || 'User')}</span>
           <span class="entry-date">${dateTimeStr}</span>
         </div>
         <p class="entry-text" style="${data.completed ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
@@ -612,7 +739,109 @@ function loadTodoHistory() {
   });
 }
 
-// Extract Video ID
+// ============================================================
+// STORY BOOK
+// ============================================================
+openStoriesMenuBtn?.addEventListener('click', () => {
+  closeDrawer();
+  storyBottomSheet?.classList.add('active');
+  storyModalOverlay?.classList.add('active');
+});
+
+const closeStorySheet = () => {
+  storyBottomSheet?.classList.remove('active');
+  storyModalOverlay?.classList.remove('active');
+};
+
+closeStorySheetBtn?.addEventListener('click', closeStorySheet);
+storyModalOverlay?.addEventListener('click', closeStorySheet);
+
+publishStoryBtn?.addEventListener('click', async () => {
+  const title = storyTitleInput.value.trim();
+  const text = storyTextInput.value.trim();
+
+  if (!title || !text) {
+    toast("Please write a title and story content!", "error");
+    return;
+  }
+
+  const displayName = getCleanUsername(currentUser);
+
+  try {
+    await addDoc(collection(db, "stories"), {
+      title: title,
+      text: text,
+      author: displayName,
+      createdAt: serverTimestamp()
+    });
+    storyTitleInput.value = '';
+    storyTextInput.value = '';
+    toast("Chapter added 📖", "success");
+  } catch (err) {
+    console.error("Error adding story chapter:", err);
+    toast("Couldn't add chapter.", "error");
+  }
+});
+
+function loadStories() {
+  if (!storiesFeed) return;
+  const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    storiesFeed.innerHTML = '';
+
+    if (snapshot.empty) {
+      storiesFeed.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-emoji">📖</span>
+          No chapters yet — write your first one above.
+        </div>
+      `;
+      return;
+    }
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const accordion = document.createElement('div');
+      accordion.className = 'story-accordion-card';
+
+      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Recently';
+
+      accordion.innerHTML = `
+        <div class="story-accordion-header">
+          <div>
+            <div class="story-accordion-title glowing-story-title">${data.title}</div>
+            <div class="story-by-sub">By: ${shineName(data.author)} • ${dateStr}</div>
+          </div>
+          <span class="chevron">&rsaquo;</span>
+        </div>
+        <div class="story-accordion-body">
+          <div class="story-book-author-bar">
+            <span>By: ${shineName(data.author)}</span>
+            <button id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+          </div>
+          <p class="story-book-text">${data.text}</p>
+        </div>
+      `;
+
+      accordion.querySelector('.story-accordion-header').addEventListener('click', () => {
+        accordion.classList.toggle('open');
+      });
+
+      storiesFeed.appendChild(accordion);
+
+      document.getElementById(`del-story-${docSnap.id}`)?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (confirm("Are you sure you want to delete this story chapter?")) {
+          await deleteDoc(doc(db, 'stories', docSnap.id));
+        }
+      });
+    });
+  });
+}
+
+// ============================================================
+// WATCH TOGETHER
+// ============================================================
 function extractVideoId(url) {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -620,7 +849,6 @@ function extractVideoId(url) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// Render/Play YouTube Video
 function renderYtVideo(videoId) {
   if (!ytPlayerContainer) return;
   if (!videoId) {
@@ -640,7 +868,6 @@ function renderYtVideo(videoId) {
   `;
 }
 
-// Video Controls
 if (closeYtVideoBtn) {
   closeYtVideoBtn.addEventListener('click', async () => {
     renderYtVideo(null);
@@ -793,17 +1020,9 @@ const closeWatchSheet = () => {
 closeWatchSheetBtn?.addEventListener('click', closeWatchSheet);
 watchModalOverlay?.addEventListener('click', closeWatchSheet);
 
-function setupMoodPickers() {
-  moodBtns = document.querySelectorAll('.mood-btn');
-  moodBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      moodBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedMood = btn.getAttribute('data-mood');
-    });
-  });
-}
-
+// ============================================================
+// AUTH
+// ============================================================
 authToggleBtn?.addEventListener('click', () => {
   isSignUpMode = !isSignUpMode;
   if (isSignUpMode) {
@@ -848,7 +1067,7 @@ onAuthStateChanged(auth, (user) => {
     
     const displayName = getCleanUsername(user);
     if (currentUserLabel) {
-      currentUserLabel.textContent = displayName;
+      currentUserLabel.innerHTML = shineName(displayName);
     }
     
     updateMyPresence('online');
@@ -858,7 +1077,6 @@ onAuthStateChanged(auth, (user) => {
     loadYtQueue();
     listenWatchSync();
     listenPartnerPresence();
-    listenFriendsList();
     listenTodoList();
   } else {
     currentUser = null;
@@ -866,14 +1084,15 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Window BeforeUnload to Set Offline
 window.addEventListener('beforeunload', () => {
   if (currentUser) {
     updateMyPresence('offline');
   }
 });
 
-// Drawer Navigation Controls
+// ============================================================
+// DRAWER / ACCOUNT
+// ============================================================
 hamburgerBtn?.addEventListener('click', () => {
   menuDrawer?.classList.add('active');
   menuOverlay?.classList.add('active');
@@ -947,200 +1166,3 @@ confirmBtn?.addEventListener('click', async () => {
     toast("Security limit: Please log out and log back in before deleting your account.", "error");
   }
 });
-
-openStoriesMenuBtn?.addEventListener('click', () => {
-  closeDrawer();
-  storyBottomSheet?.classList.add('active');
-  storyModalOverlay?.classList.add('active');
-});
-
-const closeStorySheet = () => {
-  storyBottomSheet?.classList.remove('active');
-  storyModalOverlay?.classList.remove('active');
-};
-
-closeStorySheetBtn?.addEventListener('click', closeStorySheet);
-storyModalOverlay?.addEventListener('click', closeStorySheet);
-
-// Share Memory with Memory Bubble Trigger
-saveBtn?.addEventListener('click', async () => {
-  const text = memoryInput.value.trim();
-  if (!text) {
-    toast("Write a memory first.", "error");
-    return;
-  }
-
-  const displayName = getCleanUsername(currentUser);
-
-  try {
-    await addDoc(collection(db, "memories"), {
-      text: text,
-      mood: selectedMood,
-      author: displayName,
-      createdAt: serverTimestamp()
-    });
-
-    spawnMemoryBubble(selectedMood, text);
-    memoryInput.value = '';
-    toast("Memory shared 💖", "success");
-  } catch (err) {
-    console.error("Error saving memory:", err);
-    toast("Couldn't save memory. Try again.", "error");
-  }
-});
-
-// Render the timeline feed from the current cache + active filters
-function renderMemoryFeed() {
-  if (!latestTimelineFeed || !olderTimelineFeed) return;
-
-  const searchTerm = (memorySearchInput?.value || '').trim().toLowerCase();
-  const moodFilter = moodFilterSelect?.value || 'all';
-
-  const filtered = allMemories.filter(({ data }) => {
-    const matchesSearch = !searchTerm || data.text.toLowerCase().includes(searchTerm);
-    const matchesMood = moodFilter === 'all' || data.mood === moodFilter;
-    return matchesSearch && matchesMood;
-  });
-
-  latestTimelineFeed.innerHTML = '';
-  olderTimelineFeed.innerHTML = '';
-
-  if (entryCountBadge) entryCountBadge.textContent = `${allMemories.length} memories`;
-
-  if (filtered.length === 0) {
-    latestTimelineFeed.innerHTML = `
-      <div class="empty-state">
-        <span class="empty-emoji">🔍</span>
-        ${allMemories.length === 0 ? 'No memories yet — share your first one above.' : 'No memories match your search.'}
-      </div>
-    `;
-    return;
-  }
-
-  filtered.forEach(({ id, data }, index) => {
-    const card = document.createElement('div');
-    card.className = 'entry-card ios-notification-card';
-
-    const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
-
-    card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span class="entry-author">${data.author}</span>
-        <span class="entry-date">${dateStr}</span>
-      </div>
-      <p class="entry-text">${data.text}</p>
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:1.3rem;">${data.mood || '💖'}</span>
-        <button class="story-delete-btn" id="del-${id}" style="background:none; border:none; cursor:pointer;">🗑️</button>
-      </div>
-    `;
-
-    if (index < 2) {
-      latestTimelineFeed.appendChild(card);
-    } else {
-      olderTimelineFeed.appendChild(card);
-    }
-
-    document.getElementById(`del-${id}`)?.addEventListener('click', async () => {
-      await deleteDoc(doc(db, 'memories', id));
-      toast("Memory deleted", "info");
-    });
-  });
-}
-
-// Load Memories (2 Latest Top + iOS Notification Scroll Container below)
-function loadMemories() {
-  if (!latestTimelineFeed || !olderTimelineFeed) return;
-  const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
-
-  onSnapshot(q, (snapshot) => {
-    allMemories = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
-    renderMemoryFeed();
-  });
-}
-
-memorySearchInput?.addEventListener('input', renderMemoryFeed);
-moodFilterSelect?.addEventListener('change', renderMemoryFeed);
-
-publishStoryBtn?.addEventListener('click', async () => {
-  const title = storyTitleInput.value.trim();
-  const text = storyTextInput.value.trim();
-
-  if (!title || !text) {
-    toast("Please write a title and story content!", "error");
-    return;
-  }
-
-  const displayName = getCleanUsername(currentUser);
-
-  try {
-    await addDoc(collection(db, "stories"), {
-      title: title,
-      text: text,
-      author: displayName,
-      createdAt: serverTimestamp()
-    });
-    storyTitleInput.value = '';
-    storyTextInput.value = '';
-    toast("Chapter added 📖", "success");
-  } catch (err) {
-    console.error("Error adding story chapter:", err);
-    toast("Couldn't add chapter.", "error");
-  }
-});
-
-function loadStories() {
-  if (!storiesFeed) return;
-  const q = query(collection(db, "stories"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snapshot) => {
-    storiesFeed.innerHTML = '';
-
-    if (snapshot.empty) {
-      storiesFeed.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-emoji">📖</span>
-          No chapters yet — write your first one above.
-        </div>
-      `;
-      return;
-    }
-
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      const accordion = document.createElement('div');
-      accordion.className = 'story-accordion-card';
-
-      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Recently';
-
-      accordion.innerHTML = `
-        <div class="story-accordion-header">
-          <div>
-            <div class="story-accordion-title glowing-story-title">${data.title}</div>
-            <div class="story-by-sub">By: ${data.author} • ${dateStr}</div>
-          </div>
-          <span class="chevron">&rsaquo;</span>
-        </div>
-        <div class="story-accordion-body">
-          <div class="story-book-author-bar">
-            <span>By: ${data.author}</span>
-            <button id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
-          </div>
-          <p class="story-book-text">${data.text}</p>
-        </div>
-      `;
-
-      accordion.querySelector('.story-accordion-header').addEventListener('click', () => {
-        accordion.classList.toggle('open');
-      });
-
-      storiesFeed.appendChild(accordion);
-
-      document.getElementById(`del-story-${docSnap.id}`)?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (confirm("Are you sure you want to delete this story chapter?")) {
-          await deleteDoc(doc(db, 'stories', docSnap.id));
-        }
-      });
-    });
-  });
-}
