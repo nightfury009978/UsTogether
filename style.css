@@ -7,18 +7,18 @@
 }
 
 :root {
-  --bg-page: linear-gradient(180deg, #fdf2f7 0%, #f3ecfb 100%);
+  --bg-page: linear-gradient(180deg, #eef7fa 0%, #e4eff7 100%);
   --surface: #ffffff;
-  --surface-soft: #faf7fd;
-  --card-border: #ecdff5;
-  --accent: #a97fd6;
-  --accent-dark: #7a4fae;
-  --accent-light: #f3e3fb;
-  --text-primary: #3a2e42;
-  --text-muted: #a08cb5;
-  --text-faint: #c3b3d2;
-  --shadow-soft: 0 10px 26px rgba(159, 122, 197, 0.15);
-  --shadow-card: 0 4px 14px rgba(159, 122, 197, 0.12);
+  --surface-soft: #f4fafc;
+  --card-border: #d9ecf2;
+  --accent: #4fa3b8;
+  --accent-dark: #317589;
+  --accent-light: #dcf0f5;
+  --text-primary: #233c42;
+  --text-muted: #7fa3ad;
+  --text-faint: #b6d3db;
+  --shadow-soft: 0 10px 26px rgba(79, 163, 184, 0.15);
+  --shadow-card: 0 4px 14px rgba(79, 163, 184, 0.12);
   --danger: #e2718a;
   --success: #6fb98f;
   --warning: #e0a63c;
@@ -98,7 +98,7 @@ body {
   border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--accent-light);
-  box-shadow: 0 6px 18px rgba(159, 122, 197, 0.3);
+  box-shadow: 0 6px 18px rgba(79, 163, 184, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -218,7 +218,7 @@ body {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(58, 46, 66, 0.35);
+  background: rgba(35, 60, 66, 0.35);
   backdrop-filter: blur(6px);
   opacity: 0;
   visibility: hidden;
@@ -236,7 +236,7 @@ body {
   height: 100%;
   background: var(--surface);
   z-index: 201;
-  box-shadow: -8px 0 30px rgba(159, 122, 197, 0.2);
+  box-shadow: -8px 0 30px rgba(79, 163, 184, 0.2);
   border-left: 1px solid var(--card-border);
   transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -651,7 +651,7 @@ body {
 .friend-status-dot { width: 11px; height: 11px; border-radius: 50%; }
 
 .friend-status-dot.online { background-color: var(--success); }
-.friend-status-dot.offline { background-color: #d9cfe3; }
+.friend-status-dot.offline { background-color: #cfe3e8; }
 
 /* Account Submenu */
 .account-submenu {
@@ -683,7 +683,7 @@ body {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(253, 242, 247, 0.92);
+  background: rgba(238, 247, 250, 0.92);
   backdrop-filter: blur(16px);
   display: flex;
   justify-content: center;
@@ -741,7 +741,7 @@ body {
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(169, 127, 214, 0.4);
+  box-shadow: 0 8px 18px rgba(79, 163, 184, 0.4);
 }
 
 .auth-toggle { margin-top: 18px; font-size: 0.85rem; color: var(--text-muted); }
@@ -767,7 +767,7 @@ body {
 
 .confirm-delete-btn {
   width: 100%;
-  background: #d9d3de;
+  background: #cfe0e5;
   color: #fff;
   border: none;
   padding: 14px;
@@ -877,7 +877,7 @@ textarea:focus { border-color: var(--accent); }
   background: var(--accent-light);
   border-color: var(--accent);
   transform: translateY(-2px) scale(1.08);
-  box-shadow: 0 4px 12px rgba(169, 127, 214, 0.35);
+  box-shadow: 0 4px 12px rgba(79, 163, 184, 0.35);
 }
 
 #saveBtn {
@@ -889,7 +889,7 @@ textarea:focus { border-color: var(--accent); }
   border-radius: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(169, 127, 214, 0.35);
+  box-shadow: 0 8px 18px rgba(79, 163, 184, 0.35);
   transition: transform 0.15s ease;
 }
 
@@ -933,7 +933,7 @@ textarea:focus { border-color: var(--accent); }
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(58, 46, 66, 0.4);
+  background: rgba(35, 60, 66, 0.4);
   backdrop-filter: blur(6px);
   opacity: 0;
   visibility: hidden;
@@ -957,7 +957,7 @@ textarea:focus { border-color: var(--accent); }
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--card-border);
-  box-shadow: 0 -10px 30px rgba(159, 122, 197, 0.18);
+  box-shadow: 0 -10px 30px rgba(79, 163, 184, 0.18);
 }
 
 .story-bottom-sheet.active { bottom: 0; }
