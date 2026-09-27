@@ -26,7 +26,6 @@ import {
   serverTimestamp, 
   deleteDoc, 
   doc,
-  setDoc,
   updateDoc,
   getDocs,
   where
@@ -61,6 +60,34 @@ function toast(message, type = 'info') {
 function shineName(name) {
   return `<span class="shine-name">${name}</span>`;
 }
+
+// ---------- Date helpers ----------
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function formatDMY(dateObj) {
+  return `${pad2(dateObj.getDate())}/${pad2(dateObj.getMonth() + 1)}/${dateObj.getFullYear()}`;
+}
+
+function formatDMYShort(dateObj) {
+  return `${pad2(dateObj.getDate())}/${pad2(dateObj.getMonth() + 1)}`;
+}
+
+function formatTimeHM(dateObj) {
+  return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function getTodayDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+// ---------- Mood list: original 9 + 25 more ----------
+const ALL_MOODS = [
+  '💖', '✨', '🥰', '🌙', '🌸', '📚', '💌', '🔥', '🥹',
+  '😊', '😍', '😘', '🥲', '😴', '😇', '🤗', '😌', '😢',
+  '😭', '😡', '😱', '🥳', '🤔', '😅', '🙈', '💫', '🌟',
+  '🌈', '☕', '🍫', '🎶', '🌺', '🍀', '🦋'
+];
 
 // DOM Elements
 const authOverlay = document.getElementById('authOverlay');
@@ -108,7 +135,7 @@ const moodTriggerBtn = document.getElementById('moodTriggerBtn');
 const moodTriggerEmoji = document.getElementById('moodTriggerEmoji');
 const moodPickerOverlay = document.getElementById('moodPickerOverlay');
 const moodPickerPopup = document.getElementById('moodPickerPopup');
-let moodBtns = document.querySelectorAll('.mood-btn');
+const moodOptionsContainer = document.getElementById('moodOptionsContainer');
 
 // Memory reveal overlay
 const memoryRevealOverlay = document.getElementById('memoryRevealOverlay');
@@ -116,6 +143,13 @@ const memoryRevealBubble = document.getElementById('memoryRevealBubble');
 const memoryRevealMood = document.getElementById('memoryRevealMood');
 const memoryRevealText = document.getElementById('memoryRevealText');
 const memoryRevealMeta = document.getElementById('memoryRevealMeta');
+
+// History of Memories sheet
+const openMemoryHistoryBtn = document.getElementById('openMemoryHistoryBtn');
+const memoryHistoryModalOverlay = document.getElementById('memoryHistoryModalOverlay');
+const memoryHistoryBottomSheet = document.getElementById('memoryHistoryBottomSheet');
+const closeMemoryHistorySheetBtn = document.getElementById('closeMemoryHistorySheetBtn');
+const memoryHistoryField = document.getElementById('memoryHistoryField');
 
 // To-Do Sticky Modal Controls
 const openTodoBtn = document.getElementById('openTodoBtn');
@@ -144,21 +178,6 @@ const storyTextInput = document.getElementById('storyTextInput');
 const publishStoryBtn = document.getElementById('publishStoryBtn');
 const storiesFeed = document.getElementById('storiesFeed');
 
-const openWatchTogetherBtn = document.getElementById('openWatchTogetherBtn');
-const watchModalOverlay = document.getElementById('watchModalOverlay');
-const watchBottomSheet = document.getElementById('watchBottomSheet');
-const closeWatchSheetBtn = document.getElementById('closeWatchSheetBtn');
-const ytUrlInput = document.getElementById('ytUrlInput');
-const loadYtBtn = document.getElementById('loadYtBtn');
-const addToQueueBtn = document.getElementById('addToQueueBtn');
-const ytQueueFeed = document.getElementById('ytQueueFeed');
-const ytPlayerContainer = document.getElementById('ytPlayer');
-const closeYtVideoBar = document.getElementById('closeYtVideoBar');
-const closeYtVideoBtn = document.getElementById('closeYtVideoBtn');
-
-const partnerPresenceDot = document.getElementById('partnerPresenceDot');
-const partnerPresenceText = document.getElementById('partnerPresenceText');
-
 let isSignUpMode = false;
 let selectedMood = '💖';
 let currentUser = null;
@@ -173,69 +192,31 @@ function getCleanUsername(user) {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
-// Helper: Format Date Key (YYYY-MM-DD)
-function getTodayDateKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-// Presence Updates Function
-async function updateMyPresence(statusState, actionDetail = "") {
-  if (!currentUser) return;
-  const username = getCleanUsername(currentUser);
-  try {
-    await setDoc(doc(db, "presence", username.toLowerCase()), {
-      username: username,
-      state: statusState, 
-      detail: actionDetail,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-  } catch (e) {
-    console.error("Presence update error:", e);
-  }
-}
-
-// Realtime Presence Listener for Watch Together
-function listenPartnerPresence() {
-  if (!currentUser) return;
-  const currentUsername = getCleanUsername(currentUser).toLowerCase();
-
-  onSnapshot(collection(db, "presence"), (snapshot) => {
-    let partnerFound = false;
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (docSnap.id.toLowerCase() !== currentUsername) {
-        partnerFound = true;
-        const pName = data.username || "Partner";
-        const state = data.state || "offline";
-
-        if (state === 'watching') {
-          partnerPresenceDot?.classList.remove('offline');
-          partnerPresenceDot?.classList.add('online');
-          if (partnerPresenceText) partnerPresenceText.innerHTML = `${shineName(pName)} is watching 🎬`;
-        } else if (state === 'opened' || state === 'online') {
-          partnerPresenceDot?.classList.remove('offline');
-          partnerPresenceDot?.classList.add('online');
-          if (partnerPresenceText) partnerPresenceText.innerHTML = `${shineName(pName)} is online 🟢`;
-        } else {
-          partnerPresenceDot?.classList.remove('online');
-          partnerPresenceDot?.classList.add('offline');
-          if (partnerPresenceText) partnerPresenceText.innerHTML = `${shineName(pName)} is offline`;
-        }
-      }
-    });
-
-    if (!partnerFound && partnerPresenceText) {
-      partnerPresenceDot?.classList.remove('online');
-      partnerPresenceDot?.classList.add('offline');
-      partnerPresenceText.textContent = "Waiting for friends...";
-    }
+// ============================================================
+// MOOD PICKER POPUP (34 total moods)
+// ============================================================
+function renderMoodOptions() {
+  if (!moodOptionsContainer) return;
+  moodOptionsContainer.innerHTML = '';
+  ALL_MOODS.forEach((emoji, i) => {
+    const btn = document.createElement('button');
+    btn.className = `mood-btn ${i === 0 ? 'active' : ''}`;
+    btn.setAttribute('data-mood', emoji);
+    btn.textContent = emoji;
+    moodOptionsContainer.appendChild(btn);
   });
 }
 
-// ============================================================
-// MOOD PICKER POPUP
-// ============================================================
+function populateMoodFilterSelect() {
+  if (!moodFilterSelect) return;
+  ALL_MOODS.forEach((emoji) => {
+    const opt = document.createElement('option');
+    opt.value = emoji;
+    opt.textContent = emoji;
+    moodFilterSelect.appendChild(opt);
+  });
+}
+
 function openMoodPicker() {
   moodPickerOverlay?.classList.add('active');
   moodPickerPopup?.classList.add('active');
@@ -248,7 +229,7 @@ moodTriggerBtn?.addEventListener('click', openMoodPicker);
 moodPickerOverlay?.addEventListener('click', closeMoodPicker);
 
 function setupMoodPickers() {
-  moodBtns = document.querySelectorAll('.mood-btn');
+  const moodBtns = document.querySelectorAll('.mood-btn');
   moodBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       moodBtns.forEach(b => b.classList.remove('active'));
@@ -270,7 +251,6 @@ function showMemoryReveal({ mood, text, author, dateStr }, mode) {
   memoryRevealMeta.innerHTML = `${shineName(author || 'User')} · ${dateStr || ''}`;
 
   memoryRevealOverlay.classList.remove('posting');
-  // force reflow so re-triggering the animation works on consecutive posts
   void memoryRevealBubble.offsetWidth;
 
   if (mode === 'post') {
@@ -291,8 +271,48 @@ function closeMemoryReveal() {
 memoryRevealOverlay?.addEventListener('click', closeMemoryReveal);
 
 // ============================================================
-// MEMORY BUBBLE FIELD (floating timeline)
+// MEMORY BUBBLE FIELD (shared renderer for main timeline + history sheet)
 // ============================================================
+function createBubbleEl(data) {
+  const bubble = document.createElement('div');
+  bubble.className = 'field-bubble';
+
+  const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
+
+  bubble.innerHTML = `
+    <span class="field-bubble-emoji">${data.mood || '💖'}</span>
+    <span class="field-bubble-date">${formatDMYShort(dateObj)} ${formatTimeHM(dateObj)}</span>
+  `;
+
+  const top = Math.floor(Math.random() * 75);
+  const left = Math.floor(Math.random() * 80);
+  const dx = (Math.random() * 30 - 15).toFixed(0);
+  const dy = (Math.random() * 30 - 15).toFixed(0);
+  const duration = (3 + Math.random() * 3).toFixed(1);
+
+  bubble.style.top = `${top}%`;
+  bubble.style.left = `${left}%`;
+  bubble.style.setProperty('--dx', `${dx}px`);
+  bubble.style.setProperty('--dy', `${dy}px`);
+  bubble.style.animationDuration = `${duration}s`;
+
+  bubble.addEventListener('click', () => {
+    const dStr = formatDMY(dateObj);
+    showMemoryReveal({ mood: data.mood, text: data.text, author: data.author, dateStr: dStr }, 'view');
+  });
+
+  return bubble;
+}
+
+function renderFieldEmpty(container, message) {
+  container.innerHTML = '';
+  const empty = document.createElement('div');
+  empty.className = 'field-empty';
+  empty.textContent = message;
+  container.appendChild(empty);
+}
+
+// Main timeline: most recent 15, filterable by date + mood
 function renderMemoryBubbles() {
   if (!memoryBubbleField) return;
 
@@ -300,64 +320,70 @@ function renderMemoryBubbles() {
   const moodFilter = moodFilterSelect?.value || 'all';
 
   const filtered = allMemories.filter(({ data }) => {
-    const matchesSearch = !searchTerm || data.text.toLowerCase().includes(searchTerm);
+    const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
+    const dStr = formatDMY(dateObj).toLowerCase();
+    const matchesSearch = !searchTerm || dStr.includes(searchTerm);
     const matchesMood = moodFilter === 'all' || data.mood === moodFilter;
     return matchesSearch && matchesMood;
   });
 
   if (entryCountBadge) entryCountBadge.textContent = `${allMemories.length} memories`;
 
-  memoryBubbleField.innerHTML = '';
+  const recent15 = filtered.slice(0, 15);
 
-  if (filtered.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'field-empty';
-    empty.textContent = allMemories.length === 0
+  if (recent15.length === 0) {
+    renderFieldEmpty(memoryBubbleField, allMemories.length === 0
       ? 'No memories yet — share your first one above.'
-      : 'No memories match your search.';
-    memoryBubbleField.appendChild(empty);
+      : 'No memories match that date.');
     return;
   }
 
-  filtered.forEach(({ id, data }) => {
-    const bubble = document.createElement('div');
-    bubble.className = 'field-bubble';
-    bubble.textContent = data.mood || '💖';
+  memoryBubbleField.innerHTML = '';
+  recent15.forEach(({ data }) => memoryBubbleField.appendChild(createBubbleEl(data)));
+}
 
-    // randomized organic position + drift
-    const top = Math.floor(Math.random() * 75);
-    const left = Math.floor(Math.random() * 80);
-    const dx = (Math.random() * 30 - 15).toFixed(0);
-    const dy = (Math.random() * 30 - 15).toFixed(0);
-    const duration = (3 + Math.random() * 3).toFixed(1);
+// History sheet: every memory, unfiltered, roaming
+function renderMemoryHistoryField() {
+  if (!memoryHistoryField) return;
 
-    bubble.style.top = `${top}%`;
-    bubble.style.left = `${left}%`;
-    bubble.style.setProperty('--dx', `${dx}px`);
-    bubble.style.setProperty('--dy', `${dy}px`);
-    bubble.style.animationDuration = `${duration}s`;
+  if (allMemories.length === 0) {
+    renderFieldEmpty(memoryHistoryField, 'No memories yet — share your first one above.');
+    return;
+  }
 
-    bubble.addEventListener('click', () => {
-      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
-      showMemoryReveal({ mood: data.mood, text: data.text, author: data.author, dateStr }, 'view');
-    });
-
-    memoryBubbleField.appendChild(bubble);
-  });
+  memoryHistoryField.innerHTML = '';
+  allMemories.forEach(({ data }) => memoryHistoryField.appendChild(createBubbleEl(data)));
 }
 
 function loadMemories() {
-  if (!memoryBubbleField) return;
   const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
 
   onSnapshot(q, (snapshot) => {
     allMemories = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
     renderMemoryBubbles();
+    if (memoryHistoryBottomSheet?.classList.contains('active')) {
+      renderMemoryHistoryField();
+    }
   });
 }
 
 memorySearchInput?.addEventListener('input', renderMemoryBubbles);
 moodFilterSelect?.addEventListener('change', renderMemoryBubbles);
+
+openMemoryHistoryBtn?.addEventListener('click', () => {
+  closeDrawer();
+  memoryHistoryBottomSheet?.classList.add('active');
+  memoryHistoryModalOverlay?.classList.add('active');
+  renderMemoryHistoryField();
+});
+
+const closeMemoryHistorySheet = () => {
+  memoryHistoryBottomSheet?.classList.remove('active');
+  memoryHistoryModalOverlay?.classList.remove('active');
+};
+
+closeMemoryHistorySheetBtn?.addEventListener('click', closeMemoryHistorySheet);
+memoryHistoryModalOverlay?.addEventListener('click', closeMemoryHistorySheet);
 
 // Share Memory -> triggers the full-screen rise & pop animation
 saveBtn?.addEventListener('click', async () => {
@@ -377,7 +403,7 @@ saveBtn?.addEventListener('click', async () => {
       createdAt: serverTimestamp()
     });
 
-    showMemoryReveal({ mood: selectedMood, text, author: displayName, dateStr: 'Just now' }, 'post');
+    showMemoryReveal({ mood: selectedMood, text, author: displayName, dateStr: formatDMY(new Date()) }, 'post');
     memoryInput.value = '';
   } catch (err) {
     console.error("Error saving memory:", err);
@@ -389,10 +415,8 @@ saveBtn?.addEventListener('click', async () => {
 // TO-DO LIST
 // ============================================================
 const priorityWeight = { high: 0, medium: 1, low: 2 };
-let allTodos = []; // cache for search
+let allTodos = [];
 
-// Check & Reset Active To-Do List at 12:00 AM Midnight.
-// Tasks already logged to history on completion are skipped to avoid duplicates.
 async function checkAndResetDailyTodos() {
   const todayKey = getTodayDateKey();
   const q = query(collection(db, "todos"));
@@ -419,7 +443,6 @@ async function checkAndResetDailyTodos() {
   });
 }
 
-// Add To-Do
 if (addTodoBtn) {
   addTodoBtn.addEventListener('click', async () => {
     const text = todoInput.value.trim();
@@ -480,13 +503,13 @@ function buildTaskCard(docId, data) {
   let dateTimeStr = 'Just now';
   if (data.createdAt) {
     const d = new Date(data.createdAt.seconds * 1000);
-    dateTimeStr = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    dateTimeStr = `${formatDMY(d)} ${formatTimeHM(d)}`;
   }
 
   let completedBadge = '';
   if (data.completed && data.completedAt) {
     const c = new Date(data.completedAt.seconds * 1000);
-    completedBadge = `<span class="completed-badge">Done ${c.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+    completedBadge = `<span class="completed-badge">Done ${formatTimeHM(c)}</span>`;
   }
 
   stickyCard.innerHTML = `
@@ -514,7 +537,6 @@ function buildTaskCard(docId, data) {
       updates.completedAt = serverTimestamp();
       stickyCard.classList.add('just-completed');
 
-      // Log to history immediately (only once per task)
       if (!data.historyLogged) {
         try {
           await addDoc(collection(db, "todo_history"), {
@@ -608,7 +630,6 @@ function renderTodoList() {
     }
   }
 
-  // Progress bar always reflects the FULL list, not the filtered view
   const allPending = allTodos.filter(t => !t.data.completed).length;
   const allCompleted = allTodos.filter(t => t.data.completed).length;
   const totalCount = allPending + allCompleted;
@@ -616,7 +637,6 @@ function renderTodoList() {
   if (todoProgressFill) todoProgressFill.style.width = `${pct}%`;
   if (todoProgressText) todoProgressText.textContent = `${allCompleted} of ${totalCount} done today`;
 
-  // Reminder banner
   const pendingReminders = allTodos.filter(t => !t.data.completed);
   if (mainPageReminder && reminderTaskText) {
     if (pendingReminders.length > 0) {
@@ -653,7 +673,6 @@ clearCompletedBtn?.addEventListener('click', async () => {
   toast("Cleared completed tasks", "success");
 });
 
-// To-Do Bottom Sheet Trigger
 const openTodoModal = () => {
   closeDrawer();
   todoBottomSheet?.classList.add('active');
@@ -671,7 +690,6 @@ const closeTodoSheet = () => {
 closeTodoSheetBtn?.addEventListener('click', closeTodoSheet);
 todoModalOverlay?.addEventListener('click', closeTodoSheet);
 
-// To-Do History Trigger
 openTodoHistoryBtn?.addEventListener('click', () => {
   closeDrawer();
   todoHistoryBottomSheet?.classList.add('active');
@@ -687,7 +705,6 @@ const closeTodoHistorySheet = () => {
 closeTodoHistorySheetBtn?.addEventListener('click', closeTodoHistorySheet);
 todoHistoryModalOverlay?.addEventListener('click', closeTodoHistorySheet);
 
-// Load To-Do History - now populated the moment a task is completed
 function loadTodoHistory() {
   if (!todoHistoryList) return;
   const q = query(collection(db, "todo_history"), orderBy("archivedAt", "desc"));
@@ -710,10 +727,10 @@ function loadTodoHistory() {
       let dateTimeStr = 'Past Task';
       if (data.completedAt) {
         const d = new Date(data.completedAt.seconds * 1000);
-        dateTimeStr = `Completed ${d.toLocaleDateString()} at ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        dateTimeStr = `Completed ${formatDMY(d)} at ${formatTimeHM(d)}`;
       } else if (data.createdAt) {
         const d = new Date(data.createdAt.seconds * 1000);
-        dateTimeStr = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        dateTimeStr = `${formatDMY(d)} at ${formatTimeHM(d)}`;
       }
 
       const priority = data.priority || 'medium';
@@ -804,7 +821,7 @@ function loadStories() {
       const accordion = document.createElement('div');
       accordion.className = 'story-accordion-card';
 
-      const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Recently';
+      const dateStr = data.createdAt ? formatDMY(new Date(data.createdAt.seconds * 1000)) : 'Recently';
 
       accordion.innerHTML = `
         <div class="story-accordion-header">
@@ -838,187 +855,6 @@ function loadStories() {
     });
   });
 }
-
-// ============================================================
-// WATCH TOGETHER
-// ============================================================
-function extractVideoId(url) {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-}
-
-function renderYtVideo(videoId) {
-  if (!ytPlayerContainer) return;
-  if (!videoId) {
-    ytPlayerContainer.innerHTML = '';
-    if (closeYtVideoBar) closeYtVideoBar.style.display = 'none';
-    return;
-  }
-  
-  if (closeYtVideoBar) closeYtVideoBar.style.display = 'flex';
-  ytPlayerContainer.innerHTML = `
-    <iframe 
-      src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&enablejsapi=1" 
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-      allowfullscreen
-      style="width:100%; height:100%; border:0;">
-    </iframe>
-  `;
-}
-
-if (closeYtVideoBtn) {
-  closeYtVideoBtn.addEventListener('click', async () => {
-    renderYtVideo(null);
-    updateMyPresence('opened');
-    try {
-      await setDoc(doc(db, "watch_sync", "current"), {
-        videoId: "",
-        updatedBy: currentUser?.email || "User",
-        timestamp: serverTimestamp()
-      }, { merge: true });
-    } catch (e) {
-      console.error(e);
-    }
-  });
-}
-
-if (loadYtBtn) {
-  loadYtBtn.addEventListener('click', async () => {
-    const url = ytUrlInput.value.trim();
-    const vidId = extractVideoId(url);
-
-    if (!vidId) {
-      toast("Please paste a valid YouTube video or Shorts link!", "error");
-      return;
-    }
-
-    renderYtVideo(vidId);
-    updateMyPresence('watching');
-
-    try {
-      await setDoc(doc(db, "watch_sync", "current"), {
-        videoId: vidId,
-        updatedBy: currentUser?.email || "User",
-        timestamp: serverTimestamp()
-      }, { merge: true });
-    } catch (e) {
-      console.error(e);
-    }
-
-    ytUrlInput.value = '';
-  });
-}
-
-if (addToQueueBtn) {
-  addToQueueBtn.addEventListener('click', async () => {
-    const url = ytUrlInput.value.trim();
-    const vidId = extractVideoId(url);
-
-    if (!vidId) {
-      toast("Please paste a valid YouTube link!", "error");
-      return;
-    }
-
-    const customName = prompt("Give this video a title/name (optional):", "") || "Saved Video";
-    const displayName = getCleanUsername(currentUser);
-
-    try {
-      await addDoc(collection(db, "yt_queue"), {
-        videoId: vidId,
-        videoTitle: customName,
-        addedBy: displayName,
-        createdAt: serverTimestamp()
-      });
-      ytUrlInput.value = '';
-      toast("Added to playlist", "success");
-    } catch (err) {
-      console.error("Error adding to queue:", err);
-      toast("Couldn't add to playlist.", "error");
-    }
-  });
-}
-
-function listenWatchSync() {
-  onSnapshot(doc(db, "watch_sync", "current"), (docSnap) => {
-    if (!docSnap.exists()) return;
-    const data = docSnap.data();
-    if (data.videoId) {
-      renderYtVideo(data.videoId);
-    } else {
-      renderYtVideo(null);
-    }
-  });
-}
-
-function loadYtQueue() {
-  if (!ytQueueFeed) return;
-  const q = query(collection(db, "yt_queue"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snapshot) => {
-    ytQueueFeed.innerHTML = '';
-
-    if (snapshot.empty) {
-      ytQueueFeed.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-emoji">🎬</span>
-          No saved videos yet.
-        </div>
-      `;
-      return;
-    }
-
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      const card = document.createElement('div');
-      card.className = 'queue-item-card';
-
-      const displayTitle = data.videoTitle ? data.videoTitle : `Video (${data.addedBy})`;
-
-      card.innerHTML = `
-        <span class="queue-item-title">📺 ${displayTitle}</span>
-        <div style="display:flex; gap:6px;">
-          <button class="queue-play-btn" id="play-q-${docSnap.id}">Play 🎬</button>
-          <button class="story-delete-btn" id="del-q-${docSnap.id}">🗑️</button>
-        </div>
-      `;
-
-      ytQueueFeed.appendChild(card);
-
-      document.getElementById(`play-q-${docSnap.id}`)?.addEventListener('click', async () => {
-        renderYtVideo(data.videoId);
-        updateMyPresence('watching');
-        await setDoc(doc(db, "watch_sync", "current"), {
-          videoId: data.videoId,
-          updatedBy: currentUser?.email || "User",
-          timestamp: serverTimestamp()
-        }, { merge: true });
-      });
-
-      document.getElementById(`del-q-${docSnap.id}`)?.addEventListener('click', async () => {
-        await deleteDoc(doc(db, 'yt_queue', docSnap.id));
-      });
-    });
-  });
-}
-
-if (openWatchTogetherBtn) {
-  openWatchTogetherBtn.addEventListener('click', () => {
-    closeDrawer();
-    watchBottomSheet?.classList.add('active');
-    watchModalOverlay?.classList.add('active');
-    updateMyPresence('opened');
-  });
-}
-
-const closeWatchSheet = () => {
-  watchBottomSheet?.classList.remove('active');
-  watchModalOverlay?.classList.remove('active');
-  updateMyPresence('online');
-};
-
-closeWatchSheetBtn?.addEventListener('click', closeWatchSheet);
-watchModalOverlay?.addEventListener('click', closeWatchSheet);
 
 // ============================================================
 // AUTH
@@ -1070,23 +906,15 @@ onAuthStateChanged(auth, (user) => {
       currentUserLabel.innerHTML = shineName(displayName);
     }
     
-    updateMyPresence('online');
+    renderMoodOptions();
+    populateMoodFilterSelect();
     setupMoodPickers();
     loadMemories();
     loadStories();
-    loadYtQueue();
-    listenWatchSync();
-    listenPartnerPresence();
     listenTodoList();
   } else {
     currentUser = null;
     authOverlay?.classList.add('active');
-  }
-});
-
-window.addEventListener('beforeunload', () => {
-  if (currentUser) {
-    updateMyPresence('offline');
   }
 });
 
@@ -1112,7 +940,6 @@ accountMenuItem?.addEventListener('click', () => {
 });
 
 logoutBtn?.addEventListener('click', async () => {
-  await updateMyPresence('offline');
   await signOut(auth);
   closeDrawer();
 });
@@ -1158,7 +985,6 @@ confirmBtn?.addEventListener('click', async () => {
   if (confirmBtn.disabled || !auth.currentUser) return;
 
   try {
-    await updateMyPresence('offline');
     await deleteUser(auth.currentUser);
     toast("Account permanently deleted.", "success");
     deleteModal?.classList.remove('active');
