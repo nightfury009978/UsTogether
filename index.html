@@ -14,9 +14,6 @@
   <!-- Toast Notifications -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Floating Memory Bubbles Container -->
-  <div id="bubbleContainer" class="bubble-container"></div>
-
   <!-- Splash Screen -->
   <div id="splash">
     <div class="splash-content">
@@ -50,11 +47,6 @@
       </li>
       <li id="openStoriesMenuBtn">
         <span>📖 Our Story Book</span>
-        <span class="chevron">&rsaquo;</span>
-      </li>
-
-      <li id="openFriendsBtn">
-        <span>👥 Friends Status</span>
         <span class="chevron">&rsaquo;</span>
       </li>
 
@@ -148,31 +140,21 @@
       <textarea id="memoryInput" placeholder="Write a sweet memory or note..."></textarea>
 
       <div class="mood-picker">
-        <span class="mood-label">Mood:</span>
-        <div class="mood-options">
-          <button class="mood-btn active" data-mood="💖">💖</button>
-          <button class="mood-btn" data-mood="✨">✨</button>
-          <button class="mood-btn" data-mood="🥰">🥰</button>
-          <button class="mood-btn" data-mood="🌙">🌙</button>
-          <button class="mood-btn" data-mood="🌸">🌸</button>
-          <button class="mood-btn" data-mood="📚">📚</button>
-          <button class="mood-btn" data-mood="💌">💌</button>
-          <button class="mood-btn" data-mood="🔥">🔥</button>
-          <button class="mood-btn" data-mood="🥹">🥹</button>
-        </div>
+        <button id="moodTriggerBtn" class="mood-trigger-btn" type="button">
+          <span id="moodTriggerEmoji">💖</span> Select mood
+        </button>
       </div>
 
       <button id="saveBtn">Share Memory ✨</button>
     </section>
 
-    <!-- Timeline Feed -->
+    <!-- Timeline: floating memory bubbles -->
     <section class="timeline-container">
       <div class="timeline-header">
         <h3>Our Memories Timeline</h3>
         <span id="entryCountBadge" class="entry-count-badge">0 memories</span>
       </div>
 
-      <!-- Search + Mood Filter -->
       <div class="search-filter-bar">
         <input type="text" id="memorySearchInput" placeholder="Search memories...">
         <select id="moodFilterSelect">
@@ -189,27 +171,37 @@
         </select>
       </div>
 
-      <div id="latestTimelineFeed" class="latest-timeline-feed"></div>
-      <div id="olderTimelineFeed" class="older-timeline-feed ios-notifications-wrapper"></div>
+      <div id="memoryBubbleField" class="memory-bubble-field">
+        <!-- floating memory bubbles rendered here -->
+      </div>
     </section>
   </main>
 
-  <!-- Friends Status Bottom Sheet -->
-  <div id="friendsModalOverlay" class="story-modal-overlay"></div>
-  <div id="friendsBottomSheet" class="story-bottom-sheet">
-    <div class="sheet-handle-bar"></div>
-    <div class="story-sheet-header">
-      <h2>👥 Friends Status</h2>
-      <button id="closeFriendsSheetBtn" class="close-sheet-btn">&times;</button>
+  <!-- Mood Picker Popup -->
+  <div id="moodPickerOverlay" class="mood-picker-overlay"></div>
+  <div id="moodPickerPopup" class="mood-picker-popup">
+    <div class="mood-popup-header">Choose a mood</div>
+    <div class="mood-options">
+      <button class="mood-btn active" data-mood="💖">💖</button>
+      <button class="mood-btn" data-mood="✨">✨</button>
+      <button class="mood-btn" data-mood="🥰">🥰</button>
+      <button class="mood-btn" data-mood="🌙">🌙</button>
+      <button class="mood-btn" data-mood="🌸">🌸</button>
+      <button class="mood-btn" data-mood="📚">📚</button>
+      <button class="mood-btn" data-mood="💌">💌</button>
+      <button class="mood-btn" data-mood="🔥">🔥</button>
+      <button class="mood-btn" data-mood="🥹">🥹</button>
     </div>
-    <div class="story-sheet-content">
-      <div id="friendsList" class="friends-list">
-        <div class="friend-item">
-          <span class="friend-name">Loading friends...</span>
-          <span class="friend-status-dot offline"></span>
-        </div>
-      </div>
+  </div>
+
+  <!-- Fullscreen Memory Reveal (posting animation + tap-to-view) -->
+  <div id="memoryRevealOverlay" class="memory-reveal-overlay">
+    <div id="memoryRevealBubble" class="memory-reveal-bubble">
+      <div id="memoryRevealMood" class="memory-reveal-mood">💖</div>
+      <div id="memoryRevealText" class="memory-reveal-text"></div>
+      <div id="memoryRevealMeta" class="memory-reveal-meta"></div>
     </div>
+    <div class="memory-reveal-exit-hint">Tap to exit "Memory Timeline"</div>
   </div>
 
   <!-- To-Do Sticky Note Bottom Sheet -->
@@ -228,6 +220,8 @@
         <div class="todo-progress-bar"><div id="todoProgressFill" class="todo-progress-fill"></div></div>
         <span id="todoProgressText" class="todo-progress-text">0 of 0 done today</span>
       </div>
+
+      <input type="text" id="todoSearchInput" class="todo-search-input" placeholder="Search tasks...">
 
       <div class="todo-input-row-container">
         <input type="text" id="todoInput" placeholder="Write a task..." />
