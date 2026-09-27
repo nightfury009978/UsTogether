@@ -18,14 +18,14 @@
   <div id="splash">
     <div class="splash-content">
       <div class="heart-pulse">💖</div>
-      <h1 class="brand-title">Our Space</h1>
+      <h1 class="brand-title shine-name">Our Space</h1>
       <p class="brand-sub">Infinite Memories</p>
     </div>
   </div>
 
   <!-- Navigation Bar -->
   <nav class="top-nav">
-    <div class="nav-brand">Our Memories ✨</div>
+    <div class="nav-brand shine-name">Our Memories ✨</div>
     <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open Menu">
       <span></span>
       <span></span>
@@ -37,26 +37,27 @@
   <div id="menuOverlay" class="menu-overlay"></div>
   <div id="menuDrawer" class="menu-drawer">
     <div class="drawer-header">
-      <h3>Navigation</h3>
+      <h3 class="shine-name">Navigation</h3>
       <button id="closeDrawerBtn" class="close-drawer">&times;</button>
     </div>
     <ul class="drawer-items">
-      <li id="openWatchTogetherBtn">
-        <span>📺 Watch Together</span>
-        <span class="chevron">&rsaquo;</span>
-      </li>
       <li id="openStoriesMenuBtn">
-        <span>📖 Our Story Book</span>
+        <span class="shine-name">📖 Our Story Book</span>
         <span class="chevron">&rsaquo;</span>
       </li>
 
       <li id="openTodoBtn">
-        <span>✅ Our To-Do List</span>
+        <span class="shine-name">✅ Our To-Do List</span>
         <span class="chevron">&rsaquo;</span>
       </li>
 
       <li id="openTodoHistoryBtn">
         <span>📜 To-Do History</span>
+        <span class="chevron">&rsaquo;</span>
+      </li>
+
+      <li id="openMemoryHistoryBtn">
+        <span class="shine-name">🫧 History of Memories</span>
         <span class="chevron">&rsaquo;</span>
       </li>
 
@@ -114,7 +115,7 @@
   <main class="app-container">
     <header class="app-header">
       <div class="profile-badge glowing-badge">
-        <h2>Our Sacred Diary 💖</h2>
+        <h2 class="shine-name">Our Sacred Diary 💖</h2>
       </div>
       <p class="subtitle">Capturing our special moments together</p>
     </header>
@@ -145,34 +146,26 @@
         </button>
       </div>
 
-      <button id="saveBtn">Share Memory ✨</button>
+      <button id="saveBtn" class="shine-btn">Share Memory ✨</button>
     </section>
 
     <!-- Timeline: floating memory bubbles -->
     <section class="timeline-container">
       <div class="timeline-header">
-        <h3>Our Memories Timeline</h3>
+        <h3 class="shine-name">Our Memories Timeline</h3>
         <span id="entryCountBadge" class="entry-count-badge">0 memories</span>
       </div>
 
+      <div class="search-label shine-name">Search by memory date</div>
       <div class="search-filter-bar">
-        <input type="text" id="memorySearchInput" placeholder="Search memories...">
+        <input type="text" id="memorySearchInput" placeholder="e.g. 24/07/2026">
         <select id="moodFilterSelect">
           <option value="all">All moods</option>
-          <option value="💖">💖</option>
-          <option value="✨">✨</option>
-          <option value="🥰">🥰</option>
-          <option value="🌙">🌙</option>
-          <option value="🌸">🌸</option>
-          <option value="📚">📚</option>
-          <option value="💌">💌</option>
-          <option value="🔥">🔥</option>
-          <option value="🥹">🥹</option>
         </select>
       </div>
 
       <div id="memoryBubbleField" class="memory-bubble-field">
-        <!-- floating memory bubbles rendered here -->
+        <!-- floating memory bubbles rendered here (most recent 15) -->
       </div>
     </section>
   </main>
@@ -181,16 +174,8 @@
   <div id="moodPickerOverlay" class="mood-picker-overlay"></div>
   <div id="moodPickerPopup" class="mood-picker-popup">
     <div class="mood-popup-header">Choose a mood</div>
-    <div class="mood-options">
-      <button class="mood-btn active" data-mood="💖">💖</button>
-      <button class="mood-btn" data-mood="✨">✨</button>
-      <button class="mood-btn" data-mood="🥰">🥰</button>
-      <button class="mood-btn" data-mood="🌙">🌙</button>
-      <button class="mood-btn" data-mood="🌸">🌸</button>
-      <button class="mood-btn" data-mood="📚">📚</button>
-      <button class="mood-btn" data-mood="💌">💌</button>
-      <button class="mood-btn" data-mood="🔥">🔥</button>
-      <button class="mood-btn" data-mood="🥹">🥹</button>
+    <div class="mood-options" id="moodOptionsContainer">
+      <!-- mood buttons injected by JS -->
     </div>
   </div>
 
@@ -204,12 +189,27 @@
     <div class="memory-reveal-exit-hint">Tap to exit "Memory Timeline"</div>
   </div>
 
+  <!-- History of Memories Sheet: ALL memories, roaming bubbles -->
+  <div id="memoryHistoryModalOverlay" class="story-modal-overlay"></div>
+  <div id="memoryHistoryBottomSheet" class="story-bottom-sheet">
+    <div class="sheet-handle-bar"></div>
+    <div class="story-sheet-header">
+      <h2 class="shine-name">🫧 History of Memories</h2>
+      <button id="closeMemoryHistorySheetBtn" class="close-sheet-btn">&times;</button>
+    </div>
+    <div class="story-sheet-content">
+      <div id="memoryHistoryField" class="memory-bubble-field memory-bubble-field-tall">
+        <!-- every memory ever posted, roaming -->
+      </div>
+    </div>
+  </div>
+
   <!-- To-Do Sticky Note Bottom Sheet -->
   <div id="todoModalOverlay" class="story-modal-overlay"></div>
   <div id="todoBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
     <div class="story-sheet-header">
-      <h2>📌 Our To-Do List</h2>
+      <h2 class="shine-name">📌 Our To-Do List</h2>
       <div style="display:flex; align-items:center; gap:10px;">
         <button id="clearCompletedBtn" class="clear-completed-btn">Clear done</button>
         <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
@@ -261,7 +261,7 @@
     <div class="sheet-handle-bar"></div>
     
     <div class="story-sheet-header">
-      <h2>📖 Our Story Book</h2>
+      <h2 class="shine-name">📖 Our Story Book</h2>
       <button id="closeStorySheetBtn" class="close-sheet-btn">&times;</button>
     </div>
 
@@ -282,50 +282,6 @@
     </div>
   </div>
 
-  <!-- Watch Together Sheet -->
-  <div id="watchModalOverlay" class="story-modal-overlay"></div>
-  <div id="watchBottomSheet" class="story-bottom-sheet">
-    <div class="sheet-handle-bar"></div>
-    
-    <div class="story-sheet-header">
-      <div>
-        <h2>📺 Watch Together</h2>
-        <div class="presence-status-bar">
-          <span id="partnerPresenceDot" class="presence-dot offline"></span>
-          <span id="partnerPresenceText" class="presence-text">Checking status...</span>
-        </div>
-      </div>
-      <button id="closeWatchSheetBtn" class="close-sheet-btn">&times;</button>
-    </div>
-
-    <div class="story-sheet-content">
-      <div id="closeYtVideoBar" class="close-yt-bar" style="display: none;">
-        <button id="closeYtVideoBtn" class="close-yt-btn">✖ Close Video</button>
-      </div>
-      <div class="yt-player-wrapper">
-        <div id="ytPlayer"></div>
-      </div>
-
-      <div class="yt-input-card">
-        <input type="text" id="ytUrlInput" class="story-title-input" placeholder="Paste YouTube link here...">
-        <div class="yt-btn-row">
-          <button id="loadYtBtn" class="story-publish-btn" style="flex: 1; margin: 0;">Play Now 🎬</button>
-          <button id="addToQueueBtn" class="story-publish-btn" style="background: var(--surface-soft); color: var(--accent-dark); flex: 1; margin: 0;">+ Save to Playlist</button>
-        </div>
-      </div>
-
-      <div class="stories-feed-header" style="margin-top: 20px;">
-        <h3>Our Shared Playlist</h3>
-      </div>
-
-      <div id="ytQueueFeed" class="stories-feed">
-        <!-- Queued video links appear here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- YouTube iFrame API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
   <!-- Main App JS -->
   <script type="module" src="app.js"></script>
 </body>
