@@ -7,9 +7,12 @@
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,700&family=Poppins:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+  <!-- Toast Notifications -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- Floating Memory Bubbles Container -->
   <div id="bubbleContainer" class="bubble-container"></div>
@@ -50,19 +53,16 @@
         <span class="chevron">&rsaquo;</span>
       </li>
 
-      <!-- Friends Status Section with > Symbol -->
       <li id="openFriendsBtn">
         <span>👥 Friends Status</span>
         <span class="chevron">&rsaquo;</span>
       </li>
 
-      <!-- To-Do List Section with > Symbol -->
       <li id="openTodoBtn">
         <span>✅ Our To-Do List</span>
         <span class="chevron">&rsaquo;</span>
       </li>
 
-      <!-- To-Do History Sub History with > Symbol -->
       <li id="openTodoHistoryBtn">
         <span>📜 To-Do History</span>
         <span class="chevron">&rsaquo;</span>
@@ -74,7 +74,6 @@
           <span class="chevron">&rsaquo;</span>
         </div>
       </li>
-      <!-- Account Submenu -->
       <div id="accountSubmenu" class="account-submenu">
         <button id="logoutBtn" class="sub-btn">Log Out</button>
         <button id="permDeleteSubBtn" class="sub-btn delete-acc-btn">Permanently Delete</button>
@@ -166,17 +165,31 @@
       <button id="saveBtn">Share Memory ✨</button>
     </section>
 
-    <!-- Timeline Feed (2 Latest Visible + iOS Notification Physics Container) -->
+    <!-- Timeline Feed -->
     <section class="timeline-container">
       <div class="timeline-header">
         <h3>Our Memories Timeline</h3>
         <span id="entryCountBadge" class="entry-count-badge">0 memories</span>
       </div>
 
-      <!-- Container for Top 2 Latest Memories -->
-      <div id="latestTimelineFeed" class="latest-timeline-feed"></div>
+      <!-- Search + Mood Filter -->
+      <div class="search-filter-bar">
+        <input type="text" id="memorySearchInput" placeholder="Search memories...">
+        <select id="moodFilterSelect">
+          <option value="all">All moods</option>
+          <option value="💖">💖</option>
+          <option value="✨">✨</option>
+          <option value="🥰">🥰</option>
+          <option value="🌙">🌙</option>
+          <option value="🌸">🌸</option>
+          <option value="📚">📚</option>
+          <option value="💌">💌</option>
+          <option value="🔥">🔥</option>
+          <option value="🥹">🥹</option>
+        </select>
+      </div>
 
-      <!-- Container for Older Memories Stacked in iOS Scroll -->
+      <div id="latestTimelineFeed" class="latest-timeline-feed"></div>
       <div id="olderTimelineFeed" class="older-timeline-feed ios-notifications-wrapper"></div>
     </section>
   </main>
@@ -204,17 +217,31 @@
   <div id="todoBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
     <div class="story-sheet-header">
-      <h2>📌 Our Sticky To-Do List</h2>
-      <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
+      <h2>📌 Our To-Do List</h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button id="clearCompletedBtn" class="clear-completed-btn">Clear done</button>
+        <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
+      </div>
     </div>
     <div class="story-sheet-content">
+      <div class="todo-progress-wrap">
+        <div class="todo-progress-bar"><div id="todoProgressFill" class="todo-progress-fill"></div></div>
+        <span id="todoProgressText" class="todo-progress-text">0 of 0 done today</span>
+      </div>
+
       <div class="todo-input-row-container">
-        <input type="text" id="todoInput" placeholder="Write a sticky note reminder..." />
+        <input type="text" id="todoInput" placeholder="Write a task..." />
+        <select id="todoPriority" title="Priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <input type="date" id="todoDueDate" title="Due date (optional)">
         <button id="addTodoBtn">+</button>
       </div>
-      <!-- Separate Sticky Notes Wrapper -->
+
       <div id="todoList" class="sticky-notes-container">
-        <!-- Sticky note cards rendered here dynamically -->
+        <!-- Task cards rendered here dynamically -->
       </div>
     </div>
   </div>
@@ -289,7 +316,7 @@
         <input type="text" id="ytUrlInput" class="story-title-input" placeholder="Paste YouTube link here...">
         <div class="yt-btn-row">
           <button id="loadYtBtn" class="story-publish-btn" style="flex: 1; margin: 0;">Play Now 🎬</button>
-          <button id="addToQueueBtn" class="story-publish-btn" style="background: rgba(255, 255, 255, 0.15); flex: 1; margin: 0;">+ Save to Playlist</button>
+          <button id="addToQueueBtn" class="story-publish-btn" style="background: var(--surface-soft); color: var(--accent-dark); flex: 1; margin: 0;">+ Save to Playlist</button>
         </div>
       </div>
 
