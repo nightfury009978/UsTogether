@@ -1,3 +1,8 @@
+// Register service worker (PWA)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+
 // Auto-hide Splash Screen on Launch
 setTimeout(() => {
   const splash = document.getElementById('splash');
@@ -17,7 +22,8 @@ import {
   deleteUser 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
-  getFirestore, 
+  initializeFirestore,
+  persistentLocalCache,
   collection, 
   addDoc, 
   onSnapshot, 
@@ -43,7 +49,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+// Offline-capable Firestore (works with no signal, syncs later)
+const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 
 // ---------- Toast Notification Helper ----------
 const toastContainer = document.getElementById('toastContainer');
@@ -56,9 +63,13 @@ function toast(message, type = 'info') {
   setTimeout(() => el.remove(), 3000);
 }
 
+// ---------- Safety + speed helpers ----------
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const debounce = (f, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), ms); }; };
+
 // ---------- Shine-name helper (used everywhere a username is shown) ----------
 function shineName(name) {
-  return `<span class="shine-name">${name}</span>`;
+  return `<span class="shine-name">${esc(name)}</span>`;
 }
 
 // ---------- Date helpers ----------
@@ -184,6 +195,8 @@ let currentUser = null;
 let deleteTimerInterval = null;
 let allMemories = []; // cache for client-side search/filter
 let revealAutoCloseTimer = null;
+let started = false; // prevents duplicate live listeners on re-login
+let unsubHist = null; // to-do history listener
 
 // Helper: Clean Username
 function getCleanUsername(user) {
@@ -248,7 +261,7 @@ function showMemoryReveal({ mood, text, author, dateStr }, mode) {
   clearTimeout(revealAutoCloseTimer);
   memoryRevealMood.textContent = mood || '💖';
   memoryRevealText.textContent = text || '';
-  memoryRevealMeta.innerHTML = `${shineName(author || 'User')} · ${dateStr || ''}`;
+  memoryRevealMeta.innerHTML = `${shineName(author || 'User')} · ${esc(dateStr || '')}`;
 
   memoryRevealOverlay.classList.remove('posting');
   void memoryRevealBubble.offsetWidth;
@@ -273,14 +286,15 @@ memoryRevealOverlay?.addEventListener('click', closeMemoryReveal);
 // ============================================================
 // MEMORY BUBBLE FIELD (shared renderer for main timeline + history sheet)
 // ============================================================
-function createBubbleEl(data) {
+function createBubbleEl(data, id) {
   const bubble = document.createElement('div');
   bubble.className = 'field-bubble';
+  if (data.pinned) bubble.classList.add('pinned');
 
   const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
 
   bubble.innerHTML = `
-    <span class="field-bubble-emoji">${data.mood || '💖'}</span>
+    <span class="field-bubble-emoji">${esc(data.mood || '💖')}</span>
     <span class="field-bubble-date">${formatDMYShort(dateObj)} ${formatTimeHM(dateObj)}</span>
   `;
 
@@ -299,6 +313,7 @@ function createBubbleEl(data) {
   bubble.addEventListener('click', () => {
     const dStr = formatDMY(dateObj);
     showMemoryReveal({ mood: data.mood, text: data.text, author: data.author, dateStr: dStr }, 'view');
+    window.dispatchEvent(new CustomEvent('memory-open', { detail: { id, data } }));
   });
 
   return bubble;
@@ -312,7 +327,7 @@ function renderFieldEmpty(container, message) {
   container.appendChild(empty);
 }
 
-// Main timeline: most recent 15, filterable by date + mood
+// Main timeline: most recent 15, filterable by date + mood (pinned first)
 function renderMemoryBubbles() {
   if (!memoryBubbleField) return;
 
@@ -323,9 +338,9 @@ function renderMemoryBubbles() {
     const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
     const dStr = formatDMY(dateObj).toLowerCase();
     const matchesSearch = !searchTerm || dStr.includes(searchTerm);
-    const matchesMood = moodFilter === 'all' || data.mood === moodFilter;
+    const matchesMood = moodFilter === 'all' || (moodFilter === 'pinned' ? !!data.pinned : data.mood === moodFilter);
     return matchesSearch && matchesMood;
-  });
+  }).sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0));
 
   if (entryCountBadge) entryCountBadge.textContent = `${allMemories.length} memories`;
 
@@ -334,12 +349,14 @@ function renderMemoryBubbles() {
   if (recent15.length === 0) {
     renderFieldEmpty(memoryBubbleField, allMemories.length === 0
       ? 'No memories yet — share your first one above.'
-      : 'No memories match that date.');
+      : 'No memories match that filter.');
     return;
   }
 
+  const frag = document.createDocumentFragment();
+  recent15.forEach(({ id, data }) => frag.appendChild(createBubbleEl(data, id)));
   memoryBubbleField.innerHTML = '';
-  recent15.forEach(({ data }) => memoryBubbleField.appendChild(createBubbleEl(data)));
+  memoryBubbleField.appendChild(frag);
 }
 
 // History sheet: every memory, unfiltered, roaming
@@ -351,8 +368,10 @@ function renderMemoryHistoryField() {
     return;
   }
 
+  const frag = document.createDocumentFragment();
+  allMemories.forEach(({ id, data }) => frag.appendChild(createBubbleEl(data, id)));
   memoryHistoryField.innerHTML = '';
-  allMemories.forEach(({ data }) => memoryHistoryField.appendChild(createBubbleEl(data)));
+  memoryHistoryField.appendChild(frag);
 }
 
 function loadMemories() {
@@ -361,13 +380,14 @@ function loadMemories() {
   onSnapshot(q, (snapshot) => {
     allMemories = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
     renderMemoryBubbles();
+    window.dispatchEvent(new Event('memories-updated'));
     if (memoryHistoryBottomSheet?.classList.contains('active')) {
       renderMemoryHistoryField();
     }
   });
 }
 
-memorySearchInput?.addEventListener('input', renderMemoryBubbles);
+memorySearchInput?.addEventListener('input', debounce(renderMemoryBubbles));
 moodFilterSelect?.addEventListener('change', renderMemoryBubbles);
 
 openMemoryHistoryBtn?.addEventListener('click', () => {
@@ -400,11 +420,14 @@ saveBtn?.addEventListener('click', async () => {
       text: text,
       mood: selectedMood,
       author: displayName,
+      photo: window.OS?.photo?.() || '',
+      pinned: false,
       createdAt: serverTimestamp()
     });
 
     showMemoryReveal({ mood: selectedMood, text, author: displayName, dateStr: formatDMY(new Date()) }, 'post');
     memoryInput.value = '';
+    window.OS?.clearPhoto?.();
   } catch (err) {
     console.error("Error saving memory:", err);
     toast("Couldn't save memory. Try again.", "error");
@@ -515,7 +538,7 @@ function buildTaskCard(docId, data) {
   stickyCard.innerHTML = `
     <div class="sticky-content">
       <input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docId}">
-      <span class="todo-text" id="text-${docId}">${data.task}</span>
+      <span class="todo-text" id="text-${docId}">${esc(data.task)}</span>
       <button class="todo-icon-btn" id="edit-todo-${docId}" title="Edit">✏️</button>
       <button class="todo-icon-btn" id="del-todo-${docId}" title="Delete">&times;</button>
     </div>
@@ -619,15 +642,17 @@ function renderTodoList() {
       </div>
     `;
   } else {
-    pending.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
+    const frag = document.createDocumentFragment();
+    pending.forEach(({ id, data }) => frag.appendChild(buildTaskCard(id, data)));
 
     if (completed.length > 0) {
       const label = document.createElement('div');
       label.className = 'todo-section-label';
       label.textContent = `Completed (${completed.length})`;
-      todoList.appendChild(label);
-      completed.forEach(({ id, data }) => todoList.appendChild(buildTaskCard(id, data)));
+      frag.appendChild(label);
+      completed.forEach(({ id, data }) => frag.appendChild(buildTaskCard(id, data)));
     }
+    todoList.appendChild(frag);
   }
 
   const allPending = allTodos.filter(t => !t.data.completed).length;
@@ -642,7 +667,7 @@ function renderTodoList() {
     if (pendingReminders.length > 0) {
       mainPageReminder.classList.remove('hidden');
       const first = pendingReminders[0].data;
-      reminderTaskText.innerHTML = `${shineName(first.createdBy || 'User')}: "${first.task}" ${pendingReminders.length > 1 ? `(+${pendingReminders.length - 1} more)` : ''}`;
+      reminderTaskText.innerHTML = `${shineName(first.createdBy || 'User')}: "${esc(first.task)}" ${pendingReminders.length > 1 ? `(+${pendingReminders.length - 1} more)` : ''}`;
     } else {
       mainPageReminder.classList.add('hidden');
     }
@@ -660,7 +685,7 @@ function listenTodoList() {
   });
 }
 
-todoSearchInput?.addEventListener('input', renderTodoList);
+todoSearchInput?.addEventListener('input', debounce(renderTodoList));
 
 clearCompletedBtn?.addEventListener('click', async () => {
   const q = query(collection(db, "todos"), where("completed", "==", true));
@@ -709,7 +734,8 @@ function loadTodoHistory() {
   if (!todoHistoryList) return;
   const q = query(collection(db, "todo_history"), orderBy("archivedAt", "desc"));
   
-  onSnapshot(q, (snapshot) => {
+  unsubHist?.();
+  unsubHist = onSnapshot(q, (snapshot) => {
     todoHistoryList.innerHTML = '';
     if (snapshot.empty) {
       todoHistoryList.innerHTML = `
@@ -721,6 +747,7 @@ function loadTodoHistory() {
       return;
     }
 
+    const frag = document.createDocumentFragment();
     snapshot.docs.forEach((docSnap) => {
       const data = docSnap.data();
 
@@ -744,15 +771,16 @@ function loadTodoHistory() {
           <span class="entry-date">${dateTimeStr}</span>
         </div>
         <p class="entry-text" style="${data.completed ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
-          ${data.task} ${data.completed ? '✅' : '⏳'}
+          ${esc(data.task)} ${data.completed ? '✅' : '⏳'}
         </p>
         <div class="todo-badges">
           <span class="priority-badge ${priority}">${priority}</span>
         </div>
       `;
 
-      todoHistoryList.appendChild(card);
+      frag.appendChild(card);
     });
+    todoHistoryList.appendChild(frag);
   });
 }
 
@@ -826,7 +854,7 @@ function loadStories() {
       accordion.innerHTML = `
         <div class="story-accordion-header">
           <div>
-            <div class="story-accordion-title glowing-story-title">${data.title}</div>
+            <div class="story-accordion-title glowing-story-title">${esc(data.title)}</div>
             <div class="story-by-sub">By: ${shineName(data.author)} • ${dateStr}</div>
           </div>
           <span class="chevron">&rsaquo;</span>
@@ -836,7 +864,7 @@ function loadStories() {
             <span>By: ${shineName(data.author)}</span>
             <button id="del-story-${docSnap.id}" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
           </div>
-          <p class="story-book-text">${data.text}</p>
+          <p class="story-book-text">${esc(data.text)}</p>
         </div>
       `;
 
@@ -906,12 +934,15 @@ onAuthStateChanged(auth, (user) => {
       currentUserLabel.innerHTML = shineName(displayName);
     }
     
-    renderMoodOptions();
-    populateMoodFilterSelect();
-    setupMoodPickers();
-    loadMemories();
-    loadStories();
-    listenTodoList();
+    if (!started) {
+      started = true;
+      renderMoodOptions();
+      populateMoodFilterSelect();
+      setupMoodPickers();
+      loadMemories();
+      loadStories();
+      listenTodoList();
+    }
   } else {
     currentUser = null;
     authOverlay?.classList.add('active');
@@ -992,3 +1023,16 @@ confirmBtn?.addEventListener('click', async () => {
     toast("Security limit: Please log out and log back in before deleting your account.", "error");
   }
 });
+
+// ============================================================
+// Bridge for features.js (leave this at the very bottom)
+// ============================================================
+window.OS = {
+  db, auth, toast,
+  name: () => getCleanUsername(currentUser),
+  memories: () => allMemories,
+  todos: () => allTodos,
+  reveal: showMemoryReveal,
+  fmt: formatDMY,
+  today: getTodayDateKey
+};
