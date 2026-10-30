@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "Our Space – Infinite Memories",
+  "short_name": "Our Space",
+  "description": "Our private diary, story book and to-do list.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff5f2",
+  "theme_color": "#cf9b7a",
+  "categories": ["lifestyle", "social"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Our To-Do List", "url": "./index.html?open=todo", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
