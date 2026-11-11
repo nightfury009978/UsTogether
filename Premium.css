@@ -1,0 +1,134 @@
+/* =========================================================
+   premium.css  — load AFTER style.css and features.css
+   ========================================================= */
+
+/* ---------- Typography: Cormorant Garamond (display) + Plus Jakarta Sans (UI) ---------- */
+:root { --serif: 'Cormorant Garamond', Georgia, serif; }
+
+.brand-title, .nav-brand, .drawer-header h3, .glowing-badge h2, .timeline-header h3,
+.story-sheet-header h2, .auth-card h2, .mood-popup-header, .anniv-num {
+  font-family: var(--serif);
+  letter-spacing: .01em;
+}
+.brand-title { font-size: 2.6rem; font-weight: 700; }
+.nav-brand { font-size: 1.5rem; font-weight: 700; }
+.glowing-badge h2 { font-size: 1.6rem; font-weight: 700; }
+.timeline-header h3 { font-size: 1.4rem; font-weight: 700; }
+.story-sheet-header h2 { font-size: 1.5rem; font-weight: 700; }
+.auth-card h2 { font-size: 2rem; font-weight: 700; }
+.mood-popup-header { font-size: 1.3rem; font-weight: 600; }
+.anniv-num { font-size: 2.1rem; font-weight: 700; }
+.subtitle { font-family: var(--serif); font-style: italic; font-size: 1.05rem; letter-spacing: .02em; }
+.memory-reveal-text { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; line-height: 1.45; }
+
+/* Emoji inside gradient-clipped text turns into brown boxes — keep emoji outside shine spans,
+   and make sheet/drawer headings plain so nothing breaks */
+.story-sheet-header .shine-name,
+.drawer-header .shine-name {
+  background: none; -webkit-text-fill-color: currentColor; color: var(--accent-dark); animation: none;
+}
+
+/* ---------- Premium surfaces ---------- */
+.card, .glowing-card {
+  border-radius: 26px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 14px 34px rgba(160,104,68,.13);
+}
+.top-nav { border-bottom: 1px solid var(--card-border); box-shadow: 0 6px 20px rgba(160,104,68,.06); }
+.shine-btn { letter-spacing: .02em; }
+.memory-bubble-field {
+  background: radial-gradient(120% 90% at 30% 10%, var(--surface) 0%, var(--surface-soft) 60%, var(--accent-light) 140%);
+  box-shadow: inset 0 0 40px rgba(207,155,122,.12);
+}
+.entry-count-badge { font-family: var(--serif); font-size: .9rem; font-weight: 600; }
+
+/* ---------- Field bubbles: glassy water look ---------- */
+.field-bubble {
+  background: radial-gradient(circle at 30% 28%, #fff 0%, var(--accent-light) 55%, rgba(207,155,122,.45) 100%);
+  border: 1px solid rgba(207,155,122,.7);
+}
+.field-bubble::before {
+  content: ''; position: absolute; top: 12%; left: 18%; width: 28%; height: 18%;
+  border-radius: 50%; background: rgba(255,255,255,.75); transform: rotate(-28deg); filter: blur(1px);
+}
+.field-bubble-date { font-family: 'Plus Jakarta Sans', sans-serif; }
+html[data-theme="dark"] .field-bubble {
+  background: radial-gradient(circle at 30% 28%, #5a4435 0%, #3a2b22 60%, #2a1f1a 100%);
+}
+html[data-theme="dark"] .field-bubble::before { background: rgba(255,255,255,.25); }
+
+/* ---------- Memory reveal: grows from the tapped bubble, shrinks back like a water drop ---------- */
+.memory-reveal-overlay {
+  transition: opacity .35s ease .08s, visibility 0s linear .5s;
+}
+.memory-reveal-overlay.active {
+  transition: opacity .25s ease, visibility 0s;
+}
+.memory-reveal-bubble {
+  position: relative;
+  transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(.06);
+  opacity: 0;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;      /* droplet while shrinking */
+  transition: transform .5s cubic-bezier(.55,.05,.7,.4),
+              opacity .38s ease .12s,
+              border-radius .5s ease;
+  background: radial-gradient(circle at 30% 24%, #fff 0%, var(--accent-light) 60%, rgba(207,155,122,.55) 130%);
+}
+.memory-reveal-overlay.active .memory-reveal-bubble {
+  transform: none;
+  opacity: 1;
+  border-radius: 50%;
+  transition: transform .7s cubic-bezier(.34,1.56,.64,1),    /* springy pop-in */
+              opacity .2s ease,
+              border-radius .7s ease;
+}
+.memory-reveal-bubble::after {
+  content: ''; position: absolute; top: 9%; left: 17%; width: 26%; height: 14%;
+  border-radius: 50%; background: rgba(255,255,255,.8); transform: rotate(-30deg); filter: blur(1.5px);
+  pointer-events: none;
+}
+html[data-theme="dark"] .memory-reveal-bubble {
+  background: radial-gradient(circle at 30% 24%, #5a4435 0%, #3a2b22 65%, #2a1f1a 130%);
+}
+html[data-theme="dark"] .memory-reveal-text { color: var(--text-primary); }
+html[data-theme="dark"] .memory-reveal-meta { color: var(--text-muted); }
+
+/* ---------- Clean, grouped menu ---------- */
+.menu-drawer { width: min(330px, 86vw); padding: 22px 18px 28px; }
+.drawer-header { padding-bottom: 12px; margin-bottom: 14px; }
+.drawer-header h3 { font-size: 1.9rem; font-weight: 600; color: var(--text-primary); }
+
+.drawer-section { margin-bottom: 20px; }
+.drawer-label {
+  font-size: .78rem; font-weight: 600; color: var(--text-muted);
+  margin: 0 6px 8px; letter-spacing: .02em;
+}
+.drawer-items {
+  gap: 0; background: var(--surface-soft);
+  border: 1px solid var(--card-border); border-radius: 18px; overflow: hidden;
+}
+.drawer-items li {
+  padding: 12px 14px; gap: 12px; justify-content: flex-start;
+  background: transparent; border: none; border-radius: 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: .94rem; font-weight: 500; color: var(--text-primary);
+  transform: none;
+}
+.drawer-items li:last-child { border-bottom: none; }
+.drawer-items li:hover, .drawer-items li:active {
+  background: var(--accent-light); border-color: var(--card-border); transform: none;
+}
+.di-icon {
+  width: 32px; height: 32px; flex: none; display: grid; place-items: center;
+  border-radius: 10px; background: var(--surface); border: 1px solid var(--card-border);
+  font-size: 1rem; line-height: 1;
+}
+.di-label { flex: 1; }
+.drawer-items .chevron { font-size: 1.3rem; opacity: .7; }
+
+.account-submenu { padding: 8px 0 0; margin: 0; }
+.account-submenu .sub-btn { text-align: center; }
+
+/* ---------- Small touches ---------- */
+.auth-card { border-radius: 28px; box-shadow: 0 20px 50px rgba(160,104,68,.2); }
+.toast { font-family: 'Plus Jakarta Sans', sans-serif; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
