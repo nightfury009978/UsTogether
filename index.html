@@ -16,9 +16,10 @@
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="features.css">
+  <link rel="stylesheet" href="premium.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,700&family=Poppins:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -36,7 +37,7 @@
 
   <!-- Navigation Bar -->
   <nav class="top-nav">
-    <div class="nav-brand shine-name">Our Memories ✨</div>
+    <div class="nav-brand"><span class="shine-name">Our Memories</span> ✨</div>
     <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open Menu">
       <span></span>
       <span></span>
@@ -44,45 +45,56 @@
     </button>
   </nav>
 
-  <!-- Side Drawer Menu -->
+  <!-- Side Drawer Menu (grouped, no colour effects) -->
   <div id="menuOverlay" class="menu-overlay"></div>
   <div id="menuDrawer" class="menu-drawer">
     <div class="drawer-header">
-      <h3 class="shine-name">Navigation</h3>
-      <button id="closeDrawerBtn" class="close-drawer">&times;</button>
+      <h3>Menu</h3>
+      <button id="closeDrawerBtn" class="close-drawer" aria-label="Close menu">&times;</button>
     </div>
-    <ul class="drawer-items">
-      <li id="openStoriesMenuBtn">
-        <span class="shine-name">📖 Our Story Book</span>
-        <span class="chevron">&rsaquo;</span>
-      </li>
 
-      <li id="openTodoBtn">
-        <span class="shine-name">✅ Our To-Do List</span>
-        <span class="chevron">&rsaquo;</span>
-      </li>
+    <div class="drawer-section">
+      <p class="drawer-label">Memories</p>
+      <ul id="memoriesList" class="drawer-items">
+        <li id="openStoriesMenuBtn">
+          <span class="di-icon">📖</span><span class="di-label">Our Story Book</span><span class="chevron">&rsaquo;</span>
+        </li>
+        <li id="openMemoryHistoryBtn">
+          <span class="di-icon">🫧</span><span class="di-label">History of Memories</span><span class="chevron">&rsaquo;</span>
+        </li>
+      </ul>
+    </div>
 
-      <li id="openTodoHistoryBtn">
-        <span>📜 To-Do History</span>
-        <span class="chevron">&rsaquo;</span>
-      </li>
+    <div class="drawer-section">
+      <p class="drawer-label">Planner</p>
+      <ul class="drawer-items">
+        <li id="openTodoBtn">
+          <span class="di-icon">✅</span><span class="di-label">Our To-Do List</span><span class="chevron">&rsaquo;</span>
+        </li>
+        <li id="openTodoHistoryBtn">
+          <span class="di-icon">📜</span><span class="di-label">To-Do History</span><span class="chevron">&rsaquo;</span>
+        </li>
+      </ul>
+    </div>
 
-      <li id="openMemoryHistoryBtn">
-        <span class="shine-name">🫧 History of Memories</span>
-        <span class="chevron">&rsaquo;</span>
-      </li>
+    <div class="drawer-section">
+      <p class="drawer-label">Settings</p>
+      <!-- features.js / premium.js add their items here -->
+      <ul id="settingsList" class="drawer-items"></ul>
+    </div>
 
-      <li id="accountMenuItem" class="account-menu-item">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-          <span>⚙️ Account Controls</span>
-          <span class="chevron">&rsaquo;</span>
-        </div>
-      </li>
+    <div class="drawer-section">
+      <p class="drawer-label">Account</p>
+      <ul class="drawer-items">
+        <li id="accountMenuItem" class="account-menu-item">
+          <span class="di-icon">⚙️</span><span class="di-label">Account controls</span><span class="chevron">&rsaquo;</span>
+        </li>
+      </ul>
       <div id="accountSubmenu" class="account-submenu">
-        <button id="logoutBtn" class="sub-btn">Log Out</button>
-        <button id="permDeleteSubBtn" class="sub-btn delete-acc-btn">Permanently Delete</button>
+        <button id="logoutBtn" class="sub-btn">Log out</button>
+        <button id="permDeleteSubBtn" class="sub-btn delete-acc-btn">Permanently delete</button>
       </div>
-    </ul>
+    </div>
   </div>
 
   <!-- Auth Overlay (Login / Signup) -->
@@ -90,7 +102,7 @@
     <div class="auth-card">
       <h2 id="authTitle">Welcome Back</h2>
       <p id="authSub" class="auth-sub">Enter details to unlock our space</p>
-      
+
       <div class="auth-inputs">
         <input type="text" id="authEmail" placeholder="Username" autocomplete="username">
         <input type="password" id="authPassword" placeholder="Password">
@@ -110,7 +122,7 @@
     <div class="auth-card">
       <h2>Are you sure? ⚠️</h2>
       <p class="auth-sub">Do you want to delete your account permanently? This action cannot be undone.</p>
-      
+
       <div style="margin: 20px 0;">
         <span id="deleteTimerBadge" class="timer-badge">7</span>
       </div>
@@ -126,7 +138,7 @@
   <main class="app-container">
     <header class="app-header">
       <div class="profile-badge glowing-badge">
-        <h2 class="shine-name">Our Sacred Diary 💖</h2>
+        <h2><span class="shine-name">Our Sacred Diary</span> 💖</h2>
       </div>
       <p class="subtitle">Capturing our special moments together</p>
     </header>
@@ -197,7 +209,7 @@
       <div id="memoryRevealText" class="memory-reveal-text"></div>
       <div id="memoryRevealMeta" class="memory-reveal-meta"></div>
     </div>
-    <div class="memory-reveal-exit-hint">Tap to exit "Memory Timeline"</div>
+    <div class="memory-reveal-exit-hint">Tap anywhere to close</div>
   </div>
 
   <!-- History of Memories Sheet: ALL memories, roaming bubbles -->
@@ -205,7 +217,7 @@
   <div id="memoryHistoryBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
     <div class="story-sheet-header">
-      <h2 class="shine-name">🫧 History of Memories</h2>
+      <h2>🫧 <span class="shine-name">History of Memories</span></h2>
       <button id="closeMemoryHistorySheetBtn" class="close-sheet-btn">&times;</button>
     </div>
     <div class="story-sheet-content">
@@ -220,7 +232,7 @@
   <div id="todoBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
     <div class="story-sheet-header">
-      <h2 class="shine-name">📌 Our To-Do List</h2>
+      <h2>📌 <span class="shine-name">Our To-Do List</span></h2>
       <div style="display:flex; align-items:center; gap:10px;">
         <button id="clearCompletedBtn" class="clear-completed-btn">Clear done</button>
         <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
@@ -256,7 +268,7 @@
   <div id="todoHistoryBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
     <div class="story-sheet-header">
-      <h2>📜 To-Do Sub History</h2>
+      <h2>📜 To-Do History</h2>
       <button id="closeTodoHistorySheetBtn" class="close-sheet-btn">&times;</button>
     </div>
     <div class="story-sheet-content">
@@ -270,9 +282,9 @@
   <div id="storyModalOverlay" class="story-modal-overlay"></div>
   <div id="storyBottomSheet" class="story-bottom-sheet">
     <div class="sheet-handle-bar"></div>
-    
+
     <div class="story-sheet-header">
-      <h2 class="shine-name">📖 Our Story Book</h2>
+      <h2>📖 <span class="shine-name">Our Story Book</span></h2>
       <button id="closeStorySheetBtn" class="close-sheet-btn">&times;</button>
     </div>
 
@@ -293,8 +305,9 @@
     </div>
   </div>
 
-  <!-- Main App JS (app.js MUST come first, then features.js) -->
+  <!-- Main App JS (order matters: app.js, features.js, premium.js) -->
   <script type="module" src="app.js"></script>
   <script type="module" src="features.js"></script>
+  <script type="module" src="premium.js"></script>
 </body>
 </html>
