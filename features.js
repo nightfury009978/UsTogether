@@ -11,10 +11,11 @@ const LS = {
 const say = (m, ty) => O()?.toast(m, ty);
 
 function addMenu(label, fn) {
+  const m = label.match(/^(\S+)\s+(.*)$/);
   const li = document.createElement('li');
-  li.innerHTML = `<span>${label}</span><span class="chevron">&rsaquo;</span>`;
+  li.innerHTML = `<span class="di-icon">${m[1]}</span><span class="di-label">${m[2]}</span><span class="chevron">&rsaquo;</span>`;
   li.onclick = () => { $('closeDrawerBtn').click(); fn(); };
-  $('accountMenuItem').before(li);
+  $('settingsList').appendChild(li);
 }
 
 /* ---------- Dark mode ---------- */
