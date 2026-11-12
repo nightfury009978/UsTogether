@@ -1,5 +1,5 @@
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, query, where, orderBy, limit,
+  doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, query, where, orderBy, limit,
   onSnapshot, runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -104,8 +104,10 @@ const state = {
   reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [],
   profiles: new Map(), watch: new Map(), chats: new Map(),
   active: null, msgDocs: [], unsubs: [], unsubMsgs: null, listening: false, warned: false,
-  celebrated: new Set(), search: '', sig: ''
+  celebrated: new Set(), search: '', sig: '',
+  presence: new Map(), gotTo: false, chatsReady: false
 };
+let hbTimer = null, presenceBound = false;
 const plain = new Map();   // decrypted message payloads by id
 const media = new Map();   // blob URLs by message id
 
@@ -183,12 +185,19 @@ const hideSideMobile = () => { side.classList.remove('active'); scrim.classList.
 scrim.onclick = hideSideMobile;
 function closeChat() {
   stopRec(false);
+  if (state.active) closeConversation();
   closeSheet(); closeLight(); hideSideMobile();
   app.classList.remove('active');
   document.documentElement.style.overflow = '';
 }
-const reg = (el, fn) => window.OSBack?.add(el, fn);
-reg(app, closeChat); reg(side, hideSideMobile); reg(sheet, closeSheet); reg(light, closeLight); reg(congrats, closeCongrats);
+const reg = (el, fn, test) => window.OSBack?.add(el, fn, test);
+const pane = main.querySelector('.chat-pane');
+const convBack = () => { closeConversation(); if (!wide()) openSide(); };
+/* order = back-button structure: chat > conversation > friends drawer (over a conversation) > sheet / viewer */
+reg(app, closeChat);
+reg(pane, convBack);
+reg(side, hideSideMobile, () => side.classList.contains('active') && !!state.active);
+reg(sheet, closeSheet); reg(light, closeLight); reg(congrats, closeCongrats);
 
 /* swipe: left closes the friends panel, right opens it */
 let tx0 = 0, ty0 = 0, tblock = false;
@@ -226,8 +235,9 @@ onAuthStateChanged(O().auth, (u) => {
 function teardown() {
   state.unsubs.forEach((f) => f()); state.watch.forEach((f) => f());
   state.unsubMsgs?.();
-  Object.assign(state, { uid: null, profile: null, private: null, priv: null, nick: {}, bootErr: false, reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [], unsubs: [], unsubMsgs: null, listening: false, warned: false, active: null, msgDocs: [], sig: '' });
-  state.profiles.clear(); state.watch.clear(); state.chats.clear(); state.celebrated.clear(); keyCache.clear();
+  Object.assign(state, { uid: null, profile: null, private: null, priv: null, nick: {}, bootErr: false, reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [], unsubs: [], unsubMsgs: null, listening: false, warned: false, active: null, msgDocs: [], sig: '', gotTo: false, chatsReady: false });
+  clearInterval(hbTimer); hbTimer = null;
+  state.profiles.clear(); state.presence.clear(); state.watch.clear(); state.chats.clear(); state.celebrated.clear(); keyCache.clear();
   closeChat(); closeCongrats(); updateBadges();
 }
 
@@ -351,16 +361,28 @@ function startListeners() {
   if (state.listening) return; state.listening = true;
   const me = state.uid;
   const err = (e) => { console.error(e); if (!state.warned) { state.warned = true; toast('Chat permission error — check Firestore rules', 'error'); } };
-  watchProfile(me);
+  watchProfile(me); startPresence();
   const rq = collection(D(), 'chatRequests');
   state.unsubs.push(onSnapshot(query(rq, where('from', '==', me)), (s) => { state.reqFrom = s.docs.map((d) => ({ id: d.id, ...d.data() })); recompute(); }, err));
-  state.unsubs.push(onSnapshot(query(rq, where('to', '==', me)), (s) => { state.reqTo = s.docs.map((d) => ({ id: d.id, ...d.data() })); recompute(); }, err));
+  state.unsubs.push(onSnapshot(query(rq, where('to', '==', me)), (s) => {
+    const next = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (state.gotTo) next.filter((r) => r.status === 'pending' && !state.reqTo.some((o) => o.id === r.id)).forEach(notifyReq);
+    state.gotTo = true; state.reqTo = next; recompute();
+  }, err));
   state.unsubs.push(onSnapshot(query(collection(D(), 'chats'), where('members', 'array-contains', me)), (s) => {
-    state.chats = new Map(s.docs.map((d) => [d.id, d.data()])); renderAll();
+    s.docChanges().forEach((ch) => {
+      if (ch.type === 'removed' || !state.chatsReady || ch.doc.metadata.hasPendingWrites) return;
+      const c = ch.doc.data(), prev = state.chats.get(ch.doc.id);
+      if (c.lastFrom && c.lastFrom !== me && c.lastAt && prev?.lastAt?.seconds !== c.lastAt.seconds) notifyMsg(ch.doc.id, c);
+    });
+    state.chats = new Map(s.docs.map((d) => [d.id, d.data()])); state.chatsReady = true; renderAll();
   }, err));
 }
 function watchProfile(uid) {
   if (state.watch.has(uid)) return;
+  state.watch.set('p:' + uid, onSnapshot(doc(D(), 'chatPresence', uid), (s) => {
+    state.presence.set(uid, s.exists() ? s.data({ serverTimestamps: 'estimate' }) : null); renderAll();
+  }, () => {}));
   state.watch.set(uid, onSnapshot(doc(D(), 'chatUsers', uid), (s) => {
     const d = s.exists() ? s.data() : null;
     state.profiles.set(uid, d);
@@ -393,6 +415,43 @@ function checkCongrats() {
     celebrate(uid);
   });
 }
+/* ---------- presence (online / last seen) ---------- */
+function startPresence() {
+  if (hbTimer) return;
+  const beat = (on) => { if (state.uid) setDoc(doc(D(), 'chatPresence', state.uid), { online: on, lastSeen: serverTimestamp() }).catch(() => {}); };
+  beat(!document.hidden);
+  hbTimer = setInterval(() => { if (!document.hidden) beat(true); if (app.classList.contains('active') && state.profile) renderAll(); }, 30000);
+  if (!presenceBound) {
+    presenceBound = true;
+    document.addEventListener('visibilitychange', () => beat(!document.hidden));
+    addEventListener('pagehide', () => beat(false));
+  }
+}
+function presence(uid) {
+  const p = state.presence.get(uid);
+  if (!p?.lastSeen) return { on: false, txt: 'Offline' };
+  const ms = p.lastSeen.seconds * 1000;
+  if (p.online && Date.now() - ms < 100000) return { on: true, txt: 'Online' };
+  const d = new Date(ms), day = dayLabel(d), t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return { on: false, txt: `Last seen ${day === 'Today' ? 'today' : day === 'Yesterday' ? 'yesterday' : day} at ${t}` };
+}
+
+/* ---------- notifications ---------- */
+async function notifyReq(r) {
+  const p = await getProfile(r.from);
+  window.OSNotify?.push({ icon: '💌', title: 'New friend request', body: `@${p?.username || 'someone'} wants to be friends`, key: 'rq:' + r.id, onTap: () => openChat() });
+}
+async function notifyMsg(cid, c) {
+  const uid = (c.members || []).find((m) => m !== state.uid); if (!uid) return;
+  if (app.classList.contains('active') && state.active === uid && !document.hidden) return;
+  let body = 'New message';
+  try {
+    const m = (await getDocs(query(collection(D(), 'chats', cid, 'messages'), orderBy('at', 'desc'), limit(1)))).docs[0]?.data();
+    if (m) { const p = await decJSON(await sharedKey(uid), m.iv, m.ct); body = p.k === 't' ? p.x.slice(0, 90) : p.k === 'img' ? '📷 Photo' : p.k === 'vid' ? '🎞️ Video' : '🎤 Voice message'; }
+  } catch {}
+  window.OSNotify?.push({ icon: '💬', title: displayName(uid), body, key: 'chat:' + cid, onTap: async () => { await openChat(); openConversation(uid); } });
+}
+
 async function celebrate(uid) {
   const p = await getProfile(uid), nm = p?.username || 'your friend';
   $('ccPfp').innerHTML = av(p, nm);
@@ -425,12 +484,12 @@ function updateBadges() {
 }
 function friendRow(uid) {
   const p = state.profiles.get(uid) || {}, nm = displayName(uid), b = safeImg(p.banner), un = p.username ? '@' + p.username : '';
-  const sub = state.nick[uid] && un ? un : 'Tap to chat';
+  const pr = presence(uid);
   return `<button class="fr-row${state.active === uid ? ' sel' : ''}" data-open="${uid}">
     ${bannerEl(p, 'fr-banner')}
     <span class="fr-sheen"></span><span class="fr-scrim"></span>
-    <span class="pfp-ring">${av(p, nm)}</span>
-    <span class="fr-text"><b>${esc(nm)}</b><i>${esc(sub)}</i></span>
+    <span class="pfp-wrap"><span class="pfp-ring">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span>
+    <span class="fr-text"><b>${esc(nm)}</b>${state.nick[uid] && un ? `<i>${esc(un)}</i>` : ''}<i class="pres${pr.on ? ' on' : ''}">${esc(pr.txt)}</i></span>
     ${unreadFor(uid) ? '<span class="fr-dot"></span>' : ''}</button>`;
 }
 function renderSide() {
@@ -467,7 +526,8 @@ function renderHeader() {
   const em = $('cpEmptyTxt'); if (em) em.innerHTML = has ? 'Select a friend<br>to start chatting' : 'Add a friend<br>to start chatting';
   if (!uid) { who.innerHTML = `<span style="min-width:0"><b class="cp-title">Chats</b>${has ? '<i>🔒 End-to-end encrypted</i>' : ''}</span>`; return; }
   const p = state.profiles.get(uid) || {}, nm = displayName(uid);
-  who.innerHTML = `<span class="pfp-sm">${av(p, nm)}</span><span style="min-width:0"><b>${esc(nm)}</b><i>🔒 End-to-end encrypted</i></span>`;
+  const pr = presence(uid);
+  who.innerHTML = `<span class="pfp-wrap sm"><span class="pfp-sm">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span><span style="min-width:0"><b>${esc(nm)}</b><i class="pres${pr.on ? ' on' : ''}">${esc(pr.txt)}</i><i>🔒 End-to-end encrypted</i></span>`;
 }
 function renderAll() { if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); updateBadges(); }
 
@@ -495,7 +555,7 @@ $('cpWho').onclick = () => { if (state.active) openFriendSheet(state.active); };
    Conversation
    ========================================================= */
 function closeConversation() {
-  state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = '';
+  state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = ''; pane.classList.remove('active');
   $('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden');
   renderHeader();
 }
@@ -504,6 +564,7 @@ async function openConversation(uid) {
   if (!state.priv) return route();
   state.unsubMsgs?.();
   state.active = uid; state.msgDocs = []; state.sig = ''; state.first = true;
+  pane.classList.add('active');
   hideSideMobile();
   $('cpEmpty').classList.add('hidden'); $('cpMsgs').classList.remove('hidden'); comp.classList.remove('hidden');
   $('cpMsgs').innerHTML = '';
@@ -759,6 +820,7 @@ function openFriendSheet(uid) {
   openSheet('Profile', `<div class="pv-banner">${bannerEl(p, 'pv-bn')}<span class="fr-sheen"></span></div>
     <div class="pv-pfpwrap"><span class="pfp-ring lg">${av(p, nm)}</span></div>
     <h3 class="pv-name">${esc(nm)}</h3><div class="pv-user">@${esc(p.username || '')}</div>
+    ${(() => { const q = presence(uid); return `<div class="pv-user pres${q.on ? ' on' : ''}">● ${esc(q.txt)}</div>`; })()}
     ${p.bio ? `<p class="pv-bio">${esc(p.bio)}</p>` : ''}
     <label class="sh-lab">Nickname</label>
     <div class="sh-row"><input id="fpNick" type="text" maxlength="24" placeholder="Add a nickname" value="${esc(state.nick[uid] || '')}"><button id="fpSave" class="gate-btn sm">Save</button></div>
@@ -787,7 +849,7 @@ function openMeSheet() {
     <button id="mpPfpBtn" class="sh-btn">📷 Change profile photo</button>
     <input id="mpPfpF" type="file" accept="image/*" hidden>
     <label class="sh-lab">Select banner</label>
-    <div class="bn-grid" id="mpGrid"></div>
+    <div class="bn-box"><div class="bn-grid" id="mpGrid"></div></div>
     <label class="sh-lab">Bio</label><textarea id="mpBio" maxlength="120" placeholder="Say something about you">${esc(state.profile.bio || '')}</textarea>
     <label class="sh-lab">Username</label><div class="sh-note" style="margin:0">@${esc(state.profile.username)} · <a id="mpForgot" style="color:var(--accent-dark);font-weight:700">Forgot it / create a new one</a></div>
     <button id="mpSave" class="sh-btn primary">Save profile</button>`);
@@ -841,3 +903,5 @@ function openUsernameSheet() {
     } catch (e) { toast(e.message === 'taken' ? 'That username is taken' : 'Couldn’t update username', 'error'); }
   };
 }
+
+window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(uid)) };
