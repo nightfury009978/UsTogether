@@ -19,6 +19,13 @@ const INLINE = 700000;                    // max base64 chars kept inside one Fi
 const MAX_VIDEO = 8 * 1024 * 1024;        // 8 MB
 const safeImg = (s) => (typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)) ? s : '';
 const chatId = (a, b) => [a, b].sort().join('_');
+const BANNERS = [['rosegold', 'Rose Gold'], ['champagne', 'Champagne'], ['midnight', 'Midnight'], ['aurora', 'Aurora'], ['royal', 'Royal Velvet'],
+  ['sunset', 'Sunset Silk'], ['ocean', 'Ocean Pearl'], ['emerald', 'Emerald Luxe'], ['blush', 'Blush Pearl'], ['obsidian', 'Obsidian Gold']];
+const bannerEl = (p, cls) => {
+  if (p?.bannerId && BANNERS.some((b) => b[0] === p.bannerId)) return `<span class="${cls} bn bn-${p.bannerId}"></span>`;
+  const s = safeImg(p?.banner);
+  return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bn-rosegold"></span>`;
+};
 const wide = () => matchMedia('(min-width:820px)').matches;
 const svg = (d, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const IC = {
@@ -132,9 +139,9 @@ document.body.insertAdjacentHTML('beforeend', `
         <button id="cpWho" class="cp-who"></button>
         <button id="cpClose" class="cp-btn" aria-label="Close chat">${IC.close()}</button>
       </header>
-      <div id="cpEmpty" class="cp-empty"><div>Select a friend<br>to start chatting<small>🔒 Messages are end-to-end encrypted</small></div></div>
+      <div id="cpEmpty" class="cp-empty"><div><span id="cpEmptyTxt">Add a friend<br>to start chatting</span><small id="cpNote">🔒 Messages are end-to-end encrypted</small></div></div>
       <div id="cpMsgs" class="cp-msgs hidden"></div>
-      <footer id="cpComp" class="cp-comp hidden">
+      <footer id="cpComp" class="cp-comp">
         <button id="cpFileBtn" class="cp-circle" aria-label="Send photo or video">${IC.img}</button>
         <input id="cpFile" type="file" accept="image/*,video/*" hidden>
         <textarea id="cpInput" class="cp-input" rows="1" placeholder="Type a message"></textarea>
@@ -182,6 +189,21 @@ function closeChat() {
 }
 const reg = (el, fn) => window.OSBack?.add(el, fn);
 reg(app, closeChat); reg(side, hideSideMobile); reg(sheet, closeSheet); reg(light, closeLight); reg(congrats, closeCongrats);
+
+/* swipe: left closes the friends panel, right opens it */
+let tx0 = 0, ty0 = 0, tblock = false;
+app.addEventListener('touchstart', (e) => {
+  const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY;
+  tblock = !!e.target.closest('audio,video,input,textarea,.chat-sheet,.chat-light');
+}, { passive: true });
+app.addEventListener('touchend', (e) => {
+  if (wide() || tblock || sheet.classList.contains('active')) return;
+  const t = e.changedTouches[0], dx = t.clientX - tx0, dy = t.clientY - ty0;
+  if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+  const open = side.classList.contains('active');
+  if (open && dx < 0) hideSideMobile();
+  else if (!open && dx > 0 && !main.classList.contains('hidden')) openSide();
+}, { passive: true });
 
 /* keyboard-aware sizing (so the composer never hides behind the keyboard) */
 const fit = () => {
@@ -405,7 +427,7 @@ function friendRow(uid) {
   const p = state.profiles.get(uid) || {}, nm = displayName(uid), b = safeImg(p.banner), un = p.username ? '@' + p.username : '';
   const sub = state.nick[uid] && un ? un : 'Tap to chat';
   return `<button class="fr-row${state.active === uid ? ' sel' : ''}" data-open="${uid}">
-    ${b ? `<img class="fr-banner" src="${b}" alt="">` : '<span class="fr-banner fr-banner-def"></span>'}
+    ${bannerEl(p, 'fr-banner')}
     <span class="fr-sheen"></span><span class="fr-scrim"></span>
     <span class="pfp-ring">${av(p, nm)}</span>
     <span class="fr-text"><b>${esc(nm)}</b><i>${esc(sub)}</i></span>
@@ -413,7 +435,7 @@ function friendRow(uid) {
 }
 function renderSide() {
   const p = state.profile; if (!p) return;
-  $('csMe').innerHTML = `<span class="pfp-sm">${av(p, p.username)}</span><span><b>@${esc(p.username)}</b><i>Tap to edit your profile</i></span>`;
+  $('csMe').innerHTML = `<span class="pfp-ring sm">${av(p, p.username)}</span><span><b>@${esc(p.username)}</b><i>Tap to edit your profile</i></span>`;
   const q = state.search.trim().toLowerCase();
   let h = '';
   if (state.incoming.length) {
@@ -440,8 +462,10 @@ function renderSide() {
   $('csScroll').innerHTML = h;
 }
 function renderHeader() {
-  const uid = state.active, who = $('cpWho');
-  if (!uid) { who.innerHTML = '<b style="font-family:var(--serif);font-size:1.3rem">Chats</b>'; return; }
+  const uid = state.active, who = $('cpWho'), has = state.friends.length > 0;
+  $('cpNote')?.classList.toggle('gone', has);
+  const em = $('cpEmptyTxt'); if (em) em.innerHTML = has ? 'Select a friend<br>to start chatting' : 'Add a friend<br>to start chatting';
+  if (!uid) { who.innerHTML = `<span style="min-width:0"><b class="cp-title">Chats</b>${has ? '<i>🔒 End-to-end encrypted</i>' : ''}</span>`; return; }
   const p = state.profiles.get(uid) || {}, nm = displayName(uid);
   who.innerHTML = `<span class="pfp-sm">${av(p, nm)}</span><span style="min-width:0"><b>${esc(nm)}</b><i>🔒 End-to-end encrypted</i></span>`;
 }
@@ -472,7 +496,7 @@ $('cpWho').onclick = () => { if (state.active) openFriendSheet(state.active); };
    ========================================================= */
 function closeConversation() {
   state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = '';
-  $('cpMsgs').classList.add('hidden'); comp.classList.add('hidden'); $('cpEmpty').classList.remove('hidden');
+  $('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden');
   renderHeader();
 }
 async function openConversation(uid) {
@@ -577,8 +601,15 @@ async function sendPayload(payload, extra) {
   await setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort(), lastAt: serverTimestamp(), lastFrom: state.uid }, { merge: true });
   await addDoc(collection(D(), 'chats', cid, 'messages'), { from: state.uid, at: serverTimestamp(), iv, ct, ...(extra || {}) });
 }
+function needFriend() {
+  if (state.active) return false;
+  toast('Add a friend to start chatting 💬', 'info');
+  if (!state.friends.length) openAddSheet(); else openSide();
+  return true;
+}
 function sendText() {
   const x = input.value.trim(); if (!x) return;
+  if (needFriend()) return;
   input.value = ''; autoGrow(); updateComp();
   sendPayload({ k: 't', x }).catch(() => toast('Couldn’t send', 'error'));
 }
@@ -623,7 +654,7 @@ const cropImg = (file, w, h, q) => new Promise((res, rej) => {
   img.onerror = () => { URL.revokeObjectURL(u); rej(); }; img.src = u;
 });
 
-$('cpFileBtn').onclick = () => $('cpFile').click();
+$('cpFileBtn').onclick = () => { if (needFriend()) return; $('cpFile').click(); };
 $('cpFile').onchange = async (e) => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   if (f.type.startsWith('image/')) {
@@ -650,6 +681,7 @@ let rec = null, recTimer = null;
 const stopRec = (send) => { if (!rec) return; rec.send = send; if (rec.mr.state !== 'inactive') rec.mr.stop(); };
 async function startRec() {
   if (rec) return;
+  if (needFriend()) return;
   if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) return toast('Voice messages aren’t supported here', 'error');
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -724,8 +756,8 @@ function openRemoveSheet() {
 
 function openFriendSheet(uid) {
   const p = state.profiles.get(uid) || {}, nm = displayName(uid), b = safeImg(p.banner);
-  openSheet('Profile', `<div class="pv-banner">${b ? `<img src="${b}" alt="">` : ''}</div>
-    <div class="pv-pfpwrap"><span class="pv-pfp">${av(p, nm)}</span></div>
+  openSheet('Profile', `<div class="pv-banner">${bannerEl(p, 'pv-bn')}<span class="fr-sheen"></span></div>
+    <div class="pv-pfpwrap"><span class="pfp-ring lg">${av(p, nm)}</span></div>
     <h3 class="pv-name">${esc(nm)}</h3><div class="pv-user">@${esc(p.username || '')}</div>
     ${p.bio ? `<p class="pv-bio">${esc(p.bio)}</p>` : ''}
     <label class="sh-lab">Nickname</label>
@@ -748,23 +780,42 @@ function openFriendSheet(uid) {
 }
 
 function openMeSheet() {
-  const p = state.profile; if (!p) return;
-  const d = { pfp: p.pfp || '', banner: p.banner || '' };
-  const drawB = () => { const s = safeImg(d.banner); $('mpBanner').innerHTML = s ? `<img src="${s}" alt="">` : ''; };
+  if (!state.profile) return;
+  const me = state.uid;
   openSheet('My profile', `<div class="pv-banner" id="mpBanner"></div>
-    <div class="pv-pfpwrap"><span class="pv-pfp" id="mpPfp"></span></div>
-    <div class="sh-row" style="margin-top:12px"><button id="mpBanBtn" class="sh-btn" style="margin:0">Change banner</button><button id="mpPfpBtn" class="sh-btn" style="margin:0">Change photo</button></div>
-    <input id="mpBanF" type="file" accept="image/*" hidden><input id="mpPfpF" type="file" accept="image/*" hidden>
-    <label class="sh-lab">Bio</label><textarea id="mpBio" maxlength="120" placeholder="Say something about you">${esc(p.bio || '')}</textarea>
-    <label class="sh-lab">Username</label><div class="sh-note" style="margin:0">@${esc(p.username)} · <a id="mpForgot" style="color:var(--accent-dark);font-weight:700">Forgot it / create a new one</a></div>
+    <div class="pv-pfpwrap"><span class="pfp-ring lg" id="mpPfp"></span></div>
+    <button id="mpPfpBtn" class="sh-btn">📷 Change profile photo</button>
+    <input id="mpPfpF" type="file" accept="image/*" hidden>
+    <label class="sh-lab">Select banner</label>
+    <div class="bn-grid" id="mpGrid"></div>
+    <label class="sh-lab">Bio</label><textarea id="mpBio" maxlength="120" placeholder="Say something about you">${esc(state.profile.bio || '')}</textarea>
+    <label class="sh-lab">Username</label><div class="sh-note" style="margin:0">@${esc(state.profile.username)} · <a id="mpForgot" style="color:var(--accent-dark);font-weight:700">Forgot it / create a new one</a></div>
     <button id="mpSave" class="sh-btn primary">Save profile</button>`);
-  drawB(); $('mpPfp').innerHTML = av(d, p.username);
-  $('mpBanBtn').onclick = () => $('mpBanF').click(); $('mpPfpBtn').onclick = () => $('mpPfpF').click();
-  $('mpBanF').onchange = async (e) => { const f = e.target.files[0]; if (f) { try { d.banner = await cropImg(f, 900, 300, .78); drawB(); } catch { toast('Couldn’t read image', 'error'); } } };
-  $('mpPfpF').onchange = async (e) => { const f = e.target.files[0]; if (f) { try { d.pfp = await cropImg(f, 256, 256, .82); $('mpPfp').innerHTML = av(d, p.username); } catch { toast('Couldn’t read image', 'error'); } } };
+  const draw = () => {
+    const q = state.profile;
+    $('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
+    $('mpPfp').innerHTML = av(q, q.username);
+    $('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bn-${id}"></span><i>${n}</i></button>`).join('');
+  };
+  draw();
+  const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
+  $('mpGrid').onclick = async (e) => {
+    const b = e.target.closest('[data-bn]'); if (!b) return;
+    apply({ bannerId: b.dataset.bn, banner: '' });
+    try { await updateDoc(doc(D(), 'chatUsers', me), { bannerId: b.dataset.bn, banner: '' }); toast('Banner applied ✨', 'success'); }
+    catch { toast('Couldn’t save banner', 'error'); }
+  };
+  $('mpPfpBtn').onclick = () => $('mpPfpF').click();
+  $('mpPfpF').onchange = async (e) => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    let data; try { data = await cropImg(f, 256, 256, .82); } catch { return toast('Couldn’t read that image', 'error'); }
+    apply({ pfp: data });
+    try { await updateDoc(doc(D(), 'chatUsers', me), { pfp: data }); toast('Profile photo updated ✨', 'success'); }
+    catch { toast('Couldn’t save photo', 'error'); }
+  };
   $('mpForgot').onclick = openUsernameSheet;
   $('mpSave').onclick = async () => {
-    try { await updateDoc(doc(D(), 'chatUsers', state.uid), { pfp: d.pfp, banner: d.banner, bio: $('mpBio').value.trim().slice(0, 120) }); toast('Profile saved ✨', 'success'); closeSheet(); }
+    try { await updateDoc(doc(D(), 'chatUsers', me), { bio: $('mpBio').value.trim().slice(0, 120) }); toast('Profile saved ✨', 'success'); closeSheet(); }
     catch { toast('Couldn’t save profile', 'error'); }
   };
 }
