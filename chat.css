@@ -302,3 +302,9 @@
 @media (prefers-reduced-motion: reduce) {
   .pfp-ring::before, .fr-sheen::before, .cc-pfp::before, .cc-confetti i { animation: none !important; }
 }
+
+/* ---------- Hidden entry: tap "Our Sacred Diary" ---------- */
+.glowing-badge { position: relative; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.glowing-badge:active { transform: scale(.98); }
+.badge-dot { position: absolute; top: 6px; right: 12px; width: 11px; height: 11px; border-radius: 50%; background: #ff6f8f; box-shadow: 0 0 0 3px rgba(255,111,143,.35); }
+.badge-dot.hidden { display: none; }
