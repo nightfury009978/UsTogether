@@ -1,4 +1,4 @@
-const CACHE = 'our-space-v4';
+const CACHE = 'our-space-v5';
 const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.css', './premium.js', './chat.css', './chat.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png'];
 
