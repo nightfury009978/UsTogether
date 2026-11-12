@@ -4,10 +4,10 @@ const $ = (id) => document.getElementById(id);
 const O = () => window.OS;
 
 /* =========================================================
-   1. BACK BUTTON / SWIPE-BACK ROUTER
-   Every sheet, popup, drawer and the memory viewer gets its own
-   history entry, so Back closes the top layer instead of leaving
-   the site. Closing with the X / overlay removes the entry again.
+   1. STRUCTURED BACK BUTTON / SWIPE-BACK ROUTER
+   Every layer (menu, sheets, popups, chat screens...) owns one
+   history entry. Back/swipe closes the top layer, one step at a time,
+   and never leaves the site until nothing is open.
    ========================================================= */
 const LAYERS = [
   ['menuDrawer', 'closeDrawerBtn'],
@@ -20,7 +20,7 @@ const LAYERS = [
   ['deleteConfirmModal', 'cancelDeleteBtn']
 ].map(([el, closer]) => ({ el: $(el), close: () => $(closer)?.click() })).filter((l) => l.el);
 
-const isOpen = (l) => l.el.classList.contains('active') && !l.el.classList.contains('posting');
+const isOpen = (l) => (l.test ? !!l.test() : (l.el.classList.contains('active') && !l.el.classList.contains('posting')));
 const stack = [];          // open layers, oldest first
 let depth = 0;             // history entries we have pushed
 let expecting = false;     // true while a history.go() we triggered is in flight
@@ -40,6 +40,7 @@ function sync() {
     const n = depth - stack.length;
     depth = stack.length;
     expecting = true;
+    setTimeout(() => { expecting = false; }, 900);   // safety net
     history.go(-n);
   }
 }
@@ -48,23 +49,30 @@ const queueSync = () => { clearTimeout(timer); timer = setTimeout(sync, 30); };
 const mo = new MutationObserver(queueSync);
 LAYERS.forEach((l) => mo.observe(l.el, { attributes: true, attributeFilter: ['class'] }));
 
-/* lets other modules (chat.js) register their own back-button layers */
+addEventListener('popstate', (e) => {
+  if (expecting) { expecting = false; return; }
+  const target = (e.state && e.state.ui) || 0;     // depth of the entry we landed on
+  if (target < depth) {
+    const n = depth - target;
+    depth = target;
+    stack.slice(-n).reverse().forEach((l) => l.close());   // close exactly the layers we stepped back over
+    queueSync();
+  } else if (target > depth) {                     // forward onto a stale entry: step back again
+    expecting = true;
+    setTimeout(() => { expecting = false; }, 900);
+    history.go(depth - target);
+  }
+});
+
+/* other modules register their own layers here */
 window.OSBack = {
-  add(el, close) {
+  add(el, close, test) {
     if (!el || LAYERS.some((l) => l.el === el)) return;
-    LAYERS.push({ el, close });
+    LAYERS.push({ el, close, test });
     mo.observe(el, { attributes: true, attributeFilter: ['class'] });
     queueSync();
   }
 };
-
-addEventListener('popstate', (e) => {
-  if (expecting) { expecting = false; return; }
-  if (e.state && e.state.ui) return;          // forward onto a stale entry: ignore
-  if (depth > 0) depth--;
-  const top = stack[stack.length - 1];
-  if (top) top.close();                        // observer will see it close; counts already match
-});
 
 /* =========================================================
    2. WATER-BUBBLE ORIGIN: viewer grows from / shrinks back to the tapped bubble
@@ -81,7 +89,7 @@ document.addEventListener('click', (e) => {
 }, true);
 
 /* =========================================================
-   3. EXTRA MENU ITEMS: Surprise me, Export backup
+   3. EXTRA MENU ITEM: Export backup
    ========================================================= */
 function addItem(listId, label, fn) {
   const m = label.match(/^(\S+)\s+(.*)$/);
@@ -90,16 +98,6 @@ function addItem(listId, label, fn) {
   li.onclick = () => { $('closeDrawerBtn').click(); setTimeout(fn, 320); };
   $(listId).appendChild(li);
 }
-
-addItem('memoriesList', '🎲 Surprise me', () => {
-  const all = O().memories();
-  if (!all.length) return O().toast('No memories yet', 'info');
-  const { id, data } = all[Math.floor(Math.random() * all.length)];
-  const d = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
-  setOrigin(0, 0);
-  O().reveal({ mood: data.mood, text: data.text, author: data.author, dateStr: O().fmt(d) }, 'view');
-  dispatchEvent(new CustomEvent('memory-open', { detail: { id, data } }));
-});
 
 addItem('settingsList', '💾 Export backup', async () => {
   try {
