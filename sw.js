@@ -1,6 +1,6 @@
-const CACHE = 'our-space-v3';
-const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './manifest.json',
-  './icons/icon-192.png', './icons/icon-512.png', './premium.css', './premium.js'];
+const CACHE = 'our-space-v4';
+const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.css', './premium.js', './chat.css', './chat.js', './manifest.json',
+  './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
