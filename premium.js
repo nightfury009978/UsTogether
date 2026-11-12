@@ -48,6 +48,16 @@ const queueSync = () => { clearTimeout(timer); timer = setTimeout(sync, 30); };
 const mo = new MutationObserver(queueSync);
 LAYERS.forEach((l) => mo.observe(l.el, { attributes: true, attributeFilter: ['class'] }));
 
+/* lets other modules (chat.js) register their own back-button layers */
+window.OSBack = {
+  add(el, close) {
+    if (!el || LAYERS.some((l) => l.el === el)) return;
+    LAYERS.push({ el, close });
+    mo.observe(el, { attributes: true, attributeFilter: ['class'] });
+    queueSync();
+  }
+};
+
 addEventListener('popstate', (e) => {
   if (expecting) { expecting = false; return; }
   if (e.state && e.state.ui) return;          // forward onto a stale entry: ignore
