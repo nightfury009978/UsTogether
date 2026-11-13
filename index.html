@@ -16,7 +16,6 @@
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="features.css">
-  <link rel="stylesheet" href="premium.css">
   <link rel="stylesheet" href="chat.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,55 +45,62 @@
     </button>
   </nav>
 
-  <!-- Side Drawer Menu (grouped, no colour effects) -->
+  <!-- Side Drawer Menu (accordion groups) -->
   <div id="menuOverlay" class="menu-overlay"></div>
   <div id="menuDrawer" class="menu-drawer">
     <div class="drawer-header">
-      <h3>Menu</h3>
+      <h3 class="glow-text">Menu</h3>
       <button id="closeDrawerBtn" class="close-drawer" aria-label="Close menu">&times;</button>
     </div>
 
-    <div class="drawer-section">
-      <p class="drawer-label">Memories</p>
-      <ul id="memoriesList" class="drawer-items">
-        <li id="openStoriesMenuBtn">
-          <span class="di-icon">📖</span><span class="di-label">Our Story Book</span><span class="chevron">&rsaquo;</span>
-        </li>
-        <li id="openMemoryHistoryBtn">
-          <span class="di-icon">🫧</span><span class="di-label">History of Memories</span><span class="chevron">&rsaquo;</span>
-        </li>
-      </ul>
-    </div>
+    <div class="dr-groups">
 
-    <div class="drawer-section">
-      <p class="drawer-label">Planner</p>
-      <ul class="drawer-items">
-        <li id="openTodoBtn">
-          <span class="di-icon">✅</span><span class="di-label">Our To-Do List</span><span class="chevron">&rsaquo;</span>
-        </li>
-        <li id="openTodoHistoryBtn">
-          <span class="di-icon">📜</span><span class="di-label">To-Do History</span><span class="chevron">&rsaquo;</span>
-        </li>
-      </ul>
-    </div>
+      <section class="dr-group">
+        <button type="button" class="dr-head" aria-expanded="false">
+          <span class="dr-ic">🫧</span><span class="dr-title glow-text">Memories</span><span class="dr-chev">&rsaquo;</span>
+        </button>
+        <div class="dr-sub"><div class="dr-sub-in">
+          <ul id="memoriesList" class="drawer-items">
+            <li id="openStoriesMenuBtn"><span class="di-icon">📖</span><span class="di-label">Our Story Book</span><span class="chevron">&rsaquo;</span></li>
+            <li id="openMemoryHistoryBtn"><span class="di-icon">🫧</span><span class="di-label">History of Memories</span><span class="chevron">&rsaquo;</span></li>
+          </ul>
+        </div></div>
+      </section>
 
-    <div class="drawer-section">
-      <p class="drawer-label">Settings</p>
-      <!-- features.js / premium.js add their items here -->
-      <ul id="settingsList" class="drawer-items"></ul>
-    </div>
+      <section class="dr-group">
+        <button type="button" class="dr-head" aria-expanded="false">
+          <span class="dr-ic">📌</span><span class="dr-title glow-text">Planner</span><span class="dr-chev">&rsaquo;</span>
+        </button>
+        <div class="dr-sub"><div class="dr-sub-in">
+          <ul class="drawer-items">
+            <li id="openTodoBtn"><span class="di-icon">✅</span><span class="di-label">Our To-Do List</span><span class="chevron">&rsaquo;</span></li>
+            <li id="openTodoHistoryBtn"><span class="di-icon">📜</span><span class="di-label">To-Do History</span><span class="chevron">&rsaquo;</span></li>
+          </ul>
+        </div></div>
+      </section>
 
-    <div class="drawer-section">
-      <p class="drawer-label">Account</p>
-      <ul class="drawer-items">
-        <li id="accountMenuItem" class="account-menu-item">
-          <span class="di-icon">⚙️</span><span class="di-label">Account controls</span><span class="chevron">&rsaquo;</span>
-        </li>
-      </ul>
-      <div id="accountSubmenu" class="account-submenu">
-        <button id="logoutBtn" class="sub-btn">Log out</button>
-        <button id="permDeleteSubBtn" class="sub-btn delete-acc-btn">Permanently delete</button>
-      </div>
+      <section class="dr-group">
+        <button type="button" class="dr-head" aria-expanded="false">
+          <span class="dr-ic">🎛️</span><span class="dr-title glow-text">Settings</span><span class="dr-chev">&rsaquo;</span>
+        </button>
+        <div class="dr-sub"><div class="dr-sub-in">
+          <!-- features.js / premium.js add their items here -->
+          <ul id="settingsList" class="drawer-items"></ul>
+        </div></div>
+      </section>
+
+      <section class="dr-group">
+        <button type="button" class="dr-head" aria-expanded="false">
+          <span class="dr-ic">👤</span><span class="dr-title glow-text">Account</span><span class="dr-chev">&rsaquo;</span>
+        </button>
+        <div class="dr-sub"><div class="dr-sub-in">
+          <div class="dr-list">
+            <button id="logoutBtn" class="dr-item" type="button"><span class="di-icon">🚪</span><span class="di-label">Log out</span></button>
+            <button id="permDeleteSubBtn" class="dr-item danger" type="button"><span class="di-icon">🗑️</span><span class="di-label">Permanently delete</span></button>
+          </div>
+        </div></div>
+      </section>
+
     </div>
   </div>
 
