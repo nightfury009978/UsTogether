@@ -1,4 +1,4 @@
-const CACHE = 'our-space-v7';
+const CACHE = 'our-space-v8';
 const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.js', './chat.css', './chat.js', './notify.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png'];
 
@@ -19,15 +19,12 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Never cache the big APK download
+  // Never cache the downloadable APK
   if (url.pathname.endsWith('.apk')) return;
 
   // Let Firebase / Google APIs handle their own traffic
   if (url.hostname.includes('googleapis.com') && !url.hostname.startsWith('fonts')) return;
   if (url.hostname.includes('firebaseio.com') || url.hostname.includes('identitytoolkit')) return;
-
-  // Never cache the downloadable APK
-  if (url.pathname.endsWith('.apk')) return;
 
   // Pages: network first, fall back to cache when offline
   if (req.mode === 'navigate') {
