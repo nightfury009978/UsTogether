@@ -1,322 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Us Together 💖</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#cf9b7a">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Our Space">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="features.css">
-  <link rel="stylesheet" href="chat.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-
-  <!-- Toast Notifications -->
-  <div id="toastContainer" class="toast-container"></div>
-
-  <!-- Splash Screen -->
-  <div id="splash">
-    <div class="splash-content">
-      <div class="heart-pulse">💖</div>
-      <h1 class="brand-title shine-name">Our Space</h1>
-      <p class="brand-sub">Infinite Memories</p>
-    </div>
-  </div>
-
-  <!-- Navigation Bar -->
-  <nav class="top-nav">
-    <div class="nav-brand"><span class="shine-name">Our Memories</span> ✨</div>
-    <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open Menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </nav>
-
-  <!-- Side Drawer Menu (accordion groups) -->
-  <div id="menuOverlay" class="menu-overlay"></div>
-  <div id="menuDrawer" class="menu-drawer">
-    <div class="drawer-header">
-      <h3 class="glow-text">Menu</h3>
-      <button id="closeDrawerBtn" class="close-drawer" aria-label="Close menu">&times;</button>
-    </div>
-
-    <div class="dr-groups">
-
-      <section class="dr-group">
-        <button type="button" class="dr-head" aria-expanded="false">
-          <span class="dr-ic">🫧</span><span class="dr-title glow-text">Memories</span><span class="dr-chev">&rsaquo;</span>
-        </button>
-        <div class="dr-sub"><div class="dr-sub-in">
-          <ul id="memoriesList" class="drawer-items">
-            <li id="openStoriesMenuBtn"><span class="di-icon">📖</span><span class="di-label">Our Story Book</span><span class="chevron">&rsaquo;</span></li>
-            <li id="openMemoryHistoryBtn"><span class="di-icon">🫧</span><span class="di-label">History of Memories</span><span class="chevron">&rsaquo;</span></li>
-          </ul>
-        </div></div>
-      </section>
-
-      <section class="dr-group">
-        <button type="button" class="dr-head" aria-expanded="false">
-          <span class="dr-ic">📌</span><span class="dr-title glow-text">Planner</span><span class="dr-chev">&rsaquo;</span>
-        </button>
-        <div class="dr-sub"><div class="dr-sub-in">
-          <ul class="drawer-items">
-            <li id="openTodoBtn"><span class="di-icon">✅</span><span class="di-label">Our To-Do List</span><span class="chevron">&rsaquo;</span></li>
-            <li id="openTodoHistoryBtn"><span class="di-icon">📜</span><span class="di-label">To-Do History</span><span class="chevron">&rsaquo;</span></li>
-          </ul>
-        </div></div>
-      </section>
-
-      <section class="dr-group">
-        <button type="button" class="dr-head" aria-expanded="false">
-          <span class="dr-ic">🎛️</span><span class="dr-title glow-text">Settings</span><span class="dr-chev">&rsaquo;</span>
-        </button>
-        <div class="dr-sub"><div class="dr-sub-in">
-          <!-- features.js / premium.js add their items here -->
-          <ul id="settingsList" class="drawer-items"></ul>
-        </div></div>
-      </section>
-
-      <section class="dr-group">
-        <button type="button" class="dr-head" aria-expanded="false">
-          <span class="dr-ic">👤</span><span class="dr-title glow-text">Account</span><span class="dr-chev">&rsaquo;</span>
-        </button>
-        <div class="dr-sub"><div class="dr-sub-in">
-          <div class="dr-list">
-            <button id="logoutBtn" class="dr-item" type="button"><span class="di-icon">🚪</span><span class="di-label">Log out</span></button>
-            <button id="permDeleteSubBtn" class="dr-item danger" type="button"><span class="di-icon">🗑️</span><span class="di-label">Permanently delete</span></button>
-          </div>
-        </div></div>
-      </section>
-
-    </div>
-  </div>
-
-  <!-- Auth Overlay (Login / Signup) -->
-  <div id="authOverlay" class="auth-overlay active">
-    <div class="auth-card">
-      <h2 id="authTitle">Welcome Back</h2>
-      <p id="authSub" class="auth-sub">Enter details to unlock our space</p>
-
-      <div class="auth-inputs">
-        <input type="text" id="authEmail" placeholder="Username" autocomplete="username">
-        <input type="password" id="authPassword" placeholder="Password">
-      </div>
-
-      <button id="authSubmitBtn" class="auth-btn">Unlock Space ✨</button>
-
-      <div class="auth-toggle">
-        <span id="authToggleText">Need an account?</span>
-        <button id="authToggleBtn">Sign Up</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Permanent Delete Confirmation Modal -->
-  <div id="deleteConfirmModal" class="auth-overlay">
-    <div class="auth-card">
-      <h2>Are you sure? ⚠️</h2>
-      <p class="auth-sub">Do you want to delete your account permanently? This action cannot be undone.</p>
-
-      <div style="margin: 20px 0;">
-        <span id="deleteTimerBadge" class="timer-badge">7</span>
-      </div>
-
-      <button id="confirmDeleteBtn" class="confirm-delete-btn" disabled>
-        Wait 7s...
-      </button>
-      <button id="cancelDeleteBtn" class="cancel-btn">Cancel</button>
-    </div>
-  </div>
-
-  <!-- Main App Content -->
-  <main class="app-container">
-    <header class="app-header">
-      <div class="profile-badge glowing-badge">
-        <h2><span class="shine-name">Our Sacred Diary</span> 💖</h2>
-      </div>
-      <p class="subtitle">Capturing our special moments together</p>
-    </header>
-
-    <!-- Active To-Do Reminder Banner -->
-    <div id="mainPageReminder" class="main-reminder-card hidden">
-      <div class="reminder-left">
-        <span class="bell-icon">🔔</span>
-        <div class="reminder-info">
-          <span class="reminder-title">Pending To-Do Reminders</span>
-          <span id="reminderTaskText" class="reminder-task-text">Loading reminders...</span>
-        </div>
-      </div>
-      <button id="openTodoFromBanner" class="reminder-action-btn">View All</button>
-    </div>
-
-    <!-- Create Memory Card -->
-    <section class="card glowing-card">
-      <div class="active-user-bar">
-        Posting as: <strong id="currentUserLabel">Loading...</strong>
-      </div>
-
-      <textarea id="memoryInput" placeholder="Write a sweet memory or note..."></textarea>
-
-      <div class="mood-picker">
-        <button id="moodTriggerBtn" class="mood-trigger-btn" type="button">
-          <span id="moodTriggerEmoji">💖</span> Select mood
-        </button>
-      </div>
-
-      <button id="saveBtn" class="shine-btn">Share Memory ✨</button>
-    </section>
-
-    <!-- Timeline: floating memory bubbles -->
-    <section class="timeline-container">
-      <div class="timeline-header">
-        <h3 class="shine-name">Our Memories Timeline</h3>
-        <span id="entryCountBadge" class="entry-count-badge">0 memories</span>
-      </div>
-
-      <div class="search-label shine-name">Search by memory date</div>
-      <div class="search-filter-bar">
-        <input type="text" id="memorySearchInput" placeholder="e.g. 24/07/2026">
-        <select id="moodFilterSelect">
-          <option value="all">All moods</option>
-        </select>
-      </div>
-
-      <div id="memoryBubbleField" class="memory-bubble-field">
-        <!-- floating memory bubbles rendered here (most recent 15) -->
-      </div>
-    </section>
-  </main>
-
-  <!-- Mood Picker Popup -->
-  <div id="moodPickerOverlay" class="mood-picker-overlay"></div>
-  <div id="moodPickerPopup" class="mood-picker-popup">
-    <div class="mood-popup-header">Choose a mood</div>
-    <div class="mood-options" id="moodOptionsContainer">
-      <!-- mood buttons injected by JS -->
-    </div>
-  </div>
-
-  <!-- Fullscreen Memory Reveal (posting animation + tap-to-view) -->
-  <div id="memoryRevealOverlay" class="memory-reveal-overlay">
-    <div id="memoryRevealBubble" class="memory-reveal-bubble">
-      <div id="memoryRevealMood" class="memory-reveal-mood">💖</div>
-      <div id="memoryRevealText" class="memory-reveal-text"></div>
-      <div id="memoryRevealMeta" class="memory-reveal-meta"></div>
-    </div>
-    <div class="memory-reveal-exit-hint">Tap anywhere to close</div>
-  </div>
-
-  <!-- History of Memories Sheet: ALL memories, roaming bubbles -->
-  <div id="memoryHistoryModalOverlay" class="story-modal-overlay"></div>
-  <div id="memoryHistoryBottomSheet" class="story-bottom-sheet">
-    <div class="sheet-handle-bar"></div>
-    <div class="story-sheet-header">
-      <h2>🫧 <span class="shine-name">History of Memories</span></h2>
-      <button id="closeMemoryHistorySheetBtn" class="close-sheet-btn">&times;</button>
-    </div>
-    <div class="story-sheet-content">
-      <div id="memoryHistoryField" class="memory-bubble-field memory-bubble-field-tall">
-        <!-- every memory ever posted, roaming -->
-      </div>
-    </div>
-  </div>
-
-  <!-- To-Do Sticky Note Bottom Sheet -->
-  <div id="todoModalOverlay" class="story-modal-overlay"></div>
-  <div id="todoBottomSheet" class="story-bottom-sheet">
-    <div class="sheet-handle-bar"></div>
-    <div class="story-sheet-header">
-      <h2>📌 <span class="shine-name">Our To-Do List</span></h2>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <button id="clearCompletedBtn" class="clear-completed-btn">Clear done</button>
-        <button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
-      </div>
-    </div>
-    <div class="story-sheet-content">
-      <div class="todo-progress-wrap">
-        <div class="todo-progress-bar"><div id="todoProgressFill" class="todo-progress-fill"></div></div>
-        <span id="todoProgressText" class="todo-progress-text">0 of 0 done today</span>
-      </div>
-
-      <input type="text" id="todoSearchInput" class="todo-search-input" placeholder="Search tasks...">
-
-      <div class="todo-input-row-container">
-        <input type="text" id="todoInput" placeholder="Write a task..." />
-        <select id="todoPriority" title="Priority">
-          <option value="low">Low</option>
-          <option value="medium" selected>Medium</option>
-          <option value="high">High</option>
-        </select>
-        <input type="date" id="todoDueDate" title="Due date (optional)">
-        <button id="addTodoBtn">+</button>
-      </div>
-
-      <div id="todoList" class="sticky-notes-container">
-        <!-- Task cards rendered here dynamically -->
-      </div>
-    </div>
-  </div>
-
-  <!-- To-Do Sub-History Bottom Sheet -->
-  <div id="todoHistoryModalOverlay" class="story-modal-overlay"></div>
-  <div id="todoHistoryBottomSheet" class="story-bottom-sheet">
-    <div class="sheet-handle-bar"></div>
-    <div class="story-sheet-header">
-      <h2>📜 To-Do History</h2>
-      <button id="closeTodoHistorySheetBtn" class="close-sheet-btn">&times;</button>
-    </div>
-    <div class="story-sheet-content">
-      <div id="todoHistoryList" class="ios-notifications-wrapper">
-        <!-- History items rendered here dynamically -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Story Book Sheet -->
-  <div id="storyModalOverlay" class="story-modal-overlay"></div>
-  <div id="storyBottomSheet" class="story-bottom-sheet">
-    <div class="sheet-handle-bar"></div>
-
-    <div class="story-sheet-header">
-      <h2>📖 <span class="shine-name">Our Story Book</span></h2>
-      <button id="closeStorySheetBtn" class="close-sheet-btn">&times;</button>
-    </div>
-
-    <div class="story-sheet-content">
-      <div class="story-input-box">
-        <input type="text" id="storyTitleInput" class="story-title-input glowing-title-input" placeholder="Chapter Title...">
-        <textarea id="storyTextInput" class="story-text-area" placeholder="Write a long story or note here..."></textarea>
-        <button id="publishStoryBtn" class="story-publish-btn">Add Chapter to Book ✨</button>
-      </div>
-
-      <div class="stories-feed-header">
-        <h3>Chapters</h3>
-      </div>
-
-      <div id="storiesFeed" class="stories-feed">
-        <!-- Story chapters appear here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Main App JS (order matters: app.js, features.js, premium.js, notify.js, chat.js) -->
-  <script type="module" src="app.js"></script>
-  <script type="module" src="features.js"></script>
-  <script type="module" src="premium.js"></script>
-  <script type="module" src="notify.js"></script>
-  <script type="module" src="chat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Us Together 💖</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#cf9b7a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Our Space">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="chat.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,500;1,6..96,600&family=Jost:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head> <body>
+<!-- Toast Notifications -->
+<div id="toastContainer" class="toast-container"></div>
+<!-- Splash Screen -->
+<div id="splash">
+<i class="sp-orb o1"></i><i class="sp-orb o2"></i><i class="sp-orb o3"></i>
+<div class="sp-stars"></div>
+<div class="splash-content">
+<div class="sp-emblem">
+<span class="sp-halo"></span>
+<svg viewBox="0 0 120 120" aria-hidden="true">
+<defs><linearGradient id="spg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0df"/><stop offset=".5" stop-color="#e3a883"/><stop offset="1" stop-color="#b9805a"/></linearGradient></defs>
+<circle class="sp-ring r1" cx="46" cy="60" r="30"/>
+<circle class="sp-ring r2" cx="74" cy="60" r="30"/>
+<svg class="sp-heart" x="44" y="44" width="32" height="32" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+</svg>
+</div>
+<h1 class="brand-title sp-title" aria-label="Our Space"><span style="--i:0">O</span><span style="--i:1">u</span><span style="--i:2">r</span><span class="sp-gap"></span><span style="--i:4">S</span><span style="--i:5">p</span><span style="--i:6">a</span><span style="--i:7">c</span><span style="--i:8">e</span></h1>
+<p class="brand-sub sp-sub">Infinite Memories</p>
+<div class="sp-line"></div>
+</div>
+<div class="sp-bar"><i></i></div>
+</div>
+<!-- Navigation Bar -->
+<nav class="top-nav">
+<div class="nav-brand"><span class="shine-name">Our Memories</span> ✨</div>
+<button id="hamburgerBtn" class="hamburger-btn" aria-label="Open Menu">
+<span></span>
+<span></span>
+<span></span>
+</button>
+</nav>
+<!-- Side Drawer Menu (accordion groups) -->
+<div id="menuOverlay" class="menu-overlay"></div>
+<div id="menuDrawer" class="menu-drawer">
+<div class="drawer-header">
+<h3 class="glow-text">Menu</h3>
+<button id="closeDrawerBtn" class="close-drawer" aria-label="Close menu">&times;</button>
+</div>
+<div class="dr-groups">
+<section class="dr-group">
+<button type="button" class="dr-head" aria-expanded="false">
+<span class="dr-ic">🫧</span><span class="dr-title glow-text">Memories</span><span class="dr-chev">&rsaquo;</span>
+</button>
+<div class="dr-sub"><div class="dr-sub-in">
+<ul id="memoriesList" class="drawer-items">
+<li id="openStoriesMenuBtn"><span class="di-icon">📖</span><span class="di-label">Our Story Book</span><span class="chevron">&rsaquo;</span></li>
+<li id="openMemoryHistoryBtn"><span class="di-icon">🫧</span><span class="di-label">History of Memories</span><span class="chevron">&rsaquo;</span></li>
+</ul>
+</div></div>
+</section>
+<section class="dr-group">
+<button type="button" class="dr-head" aria-expanded="false">
+<span class="dr-ic">📌</span><span class="dr-title glow-text">Planner</span><span class="dr-chev">&rsaquo;</span>
+</button>
+<div class="dr-sub"><div class="dr-sub-in">
+<ul class="drawer-items">
+<li id="openTodoBtn"><span class="di-icon">✅</span><span class="di-label">Our To-Do List</span><span class="chevron">&rsaquo;</span></li>
+<li id="openTodoHistoryBtn"><span class="di-icon">📜</span><span class="di-label">To-Do History</span><span class="chevron">&rsaquo;</span></li>
+</ul>
+</div></div> </section>
+<section class="dr-group">
+<button type="button" class="dr-head" aria-expanded="false">
+<span class="dr-ic">🎛️</span><span class="dr-title glow-text">Settings</span><span class="dr-chev">&rsaquo;</span>
+</button>
+<div class="dr-sub"><div class="dr-sub-in">
+<!-- features.js / premium.js add their items here -->
+<ul id="settingsList" class="drawer-items"></ul>
+</div></div>
+</section>
+<section class="dr-group">
+<button type="button" class="dr-head" aria-expanded="false">
+<span class="dr-ic">👤</span><span class="dr-title glow-text">Account</span><span class="dr-chev">&rsaquo;</span>
+</button>
+<div class="dr-sub"><div class="dr-sub-in">
+<div class="dr-list">
+<button id="logoutBtn" class="dr-item" type="button"><span class="di-icon">🚪</span><span class="di-label">Log out</span></button>
+<button id="permDeleteSubBtn" class="dr-item danger" type="button"><span class="di-icon">🗑️</span><span class="di-label">Permanently delete</span></button>
+</div>
+</div></div>
+</section>
+</div>
+</div>
+<!-- Auth Overlay (Login / Signup) -->
+<div id="authOverlay" class="auth-overlay active">
+<div class="auth-card">
+<h2 id="authTitle">Welcome Back</h2>
+<p id="authSub" class="auth-sub">Enter details to unlock our space</p>
+<div class="auth-inputs">
+<input type="text" id="authEmail" placeholder="Username" autocomplete="username">
+<input type="password" id="authPassword" placeholder="Password">
+</div>
+<button id="authSubmitBtn" class="auth-btn">Unlock Space ✨</button>
+<div class="auth-toggle">
+<span id="authToggleText">Need an account?</span>
+<button id="authToggleBtn">Sign Up</button>
+</div>
+</div>
+</div>
+<!-- Permanent Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="auth-overlay">
+<div class="auth-card">
+<h2>Are you sure? ⚠️</h2>
+<p class="auth-sub">Do you want to delete your account permanently? This action cannot be undone.</p>
+<div style="margin: 20px 0;">
+<span id="deleteTimerBadge" class="timer-badge">7</span> </div>
+<button id="confirmDeleteBtn" class="confirm-delete-btn" disabled>
+Wait 7s...
+</button>
+<button id="cancelDeleteBtn" class="cancel-btn">Cancel</button>
+</div>
+</div>
+<!-- Main App Content -->
+<main class="app-container">
+<header class="app-header">
+<div class="profile-badge glowing-badge">
+<h2><span class="shine-name">Our Sacred Diary</span> 💖</h2>
+</div>
+<p class="subtitle">Capturing our special moments together</p>
+</header>
+<!-- Active To-Do Reminder Banner -->
+<div id="mainPageReminder" class="main-reminder-card hidden">
+<div class="reminder-left">
+<span class="bell-icon">🔔</span>
+<div class="reminder-info">
+<span class="reminder-title">Pending To-Do Reminders</span>
+<span id="reminderTaskText" class="reminder-task-text">Loading reminders...</span>
+</div> </div>
+<button id="openTodoFromBanner" class="reminder-action-btn">View All</button>
+</div>
+<!-- Create Memory Card -->
+<section class="card glowing-card">
+<div class="active-user-bar">
+Posting as: <strong id="currentUserLabel">Loading...</strong>
+</div>
+<textarea id="memoryInput" placeholder="Write a sweet memory or note..."></textarea>
+<div class="mood-picker">
+<button id="moodTriggerBtn" class="mood-trigger-btn" type="button">
+<span id="moodTriggerEmoji">💖</span> Select mood
+</button>
+</div>
+<button id="saveBtn" class="shine-btn">Share Memory ✨</button>
+</section>
+<!-- Timeline: floating memory bubbles -->
+<section class="timeline-container">
+<div class="timeline-header"> <h3 class="shine-name">Our Memories Timeline</h3>
+<span id="entryCountBadge" class="entry-count-badge">0 memories</span> </div>
+<div class="search-label shine-name">Search by memory date</div>
+<div class="search-filter-bar">
+<input type="text" id="memorySearchInput" placeholder="e.g. 24/07/2026">
+<select id="moodFilterSelect">
+<option value="all">All moods</option>
+</select>
+</div>
+<div id="memoryBubbleField" class="memory-bubble-field">
+<!-- floating memory bubbles rendered here (most recent 15) -->
+</div>
+</section>
+</main>
+<!-- Mood Picker Popup --> <div id="moodPickerOverlay" class="mood-picker-overlay"></div>
+<div id="moodPickerPopup" class="mood-picker-popup">
+<div class="mood-popup-header">Choose a mood</div>
+<div class="mood-options" id="moodOptionsContainer">
+<!-- mood buttons injected by JS -->
+</div>
+</div>
+<!-- Fullscreen Memory Reveal (posting animation + tap-to-view) -->
+<div id="memoryRevealOverlay" class="memory-reveal-overlay">
+<div id="memoryRevealBubble" class="memory-reveal-bubble">
+<div id="memoryRevealMood" class="memory-reveal-mood">💖</div>
+<div id="memoryRevealText" class="memory-reveal-text"></div>
+<div id="memoryRevealMeta" class="memory-reveal-meta"></div>
+</div>
+<div class="memory-reveal-exit-hint">Tap anywhere to close</div>
+</div>
+<!-- History of Memories Sheet: ALL memories, roaming bubbles -->
+<div id="memoryHistoryModalOverlay" class="story-modal-overlay"></div>
+<div id="memoryHistoryBottomSheet" class="story-bottom-sheet">
+<div class="sheet-handle-bar"></div>
+<div class="story-sheet-header">
+<h2>🫧 <span class="shine-name">History of Memories</span></h2>
+<button id="closeMemoryHistorySheetBtn" class="close-sheet-btn">&times;</button>
+</div>
+<div class="story-sheet-content"> <div id="memoryHistoryField" class="memory-bubble-field memory-bubble-field-tall">
+<!-- every memory ever posted, roaming -->
+</div>
+</div>
+</div>
+<!-- To-Do Sticky Note Bottom Sheet -->
+<div id="todoModalOverlay" class="story-modal-overlay"></div>
+<div id="todoBottomSheet" class="story-bottom-sheet"> <div class="sheet-handle-bar"></div>
+<div class="story-sheet-header">
+<h2>📌 <span class="shine-name">Our To-Do List</span></h2>
+<div style="display:flex; align-items:center; gap:10px;">
+<button id="clearCompletedBtn" class="clear-completed-btn">Clear done</button>
+<button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button> </div>
+</div>
+<div class="story-sheet-content">
+<div class="todo-progress-wrap">
+<div class="todo-progress-bar"><div id="todoProgressFill" class="todo-progress-fill"></div></div>
+<span id="todoProgressText" class="todo-progress-text">0 of 0 done today</span>
+</div>
+<input type="text" id="todoSearchInput" class="todo-search-input" placeholder="Search tasks...">
+<div class="todo-input-row-container">
+<input type="text" id="todoInput" placeholder="Write a task..." />
+<select id="todoPriority" title="Priority"> <option value="low">Low</option>
+<option value="medium" selected>Medium</option>
+<option value="high">High</option>
+</select>
+<input type="date" id="todoDueDate" title="Due date (optional)">
+<button id="addTodoBtn">+</button>
+</div>
+<div id="todoList" class="sticky-notes-container">
+<!-- Task cards rendered here dynamically -->
+</div>
+</div>
+</div>
+<!-- To-Do Sub-History Bottom Sheet -->
+<div id="todoHistoryModalOverlay" class="story-modal-overlay"></div>
+<div id="todoHistoryBottomSheet" class="story-bottom-sheet">
+<div class="sheet-handle-bar"></div>
+<div class="story-sheet-header">
+<h2>📜 To-Do History</h2>
+<button id="closeTodoHistorySheetBtn" class="close-sheet-btn">&times;</button>
+</div>
+<div class="story-sheet-content">
+<div id="todoHistoryList" class="ios-notifications-wrapper">
+<!-- History items rendered here dynamically -->
+</div>
+</div>
+</div>
+<!-- Story Book Sheet -->
+<div id="storyModalOverlay" class="story-modal-overlay"></div>
+<div id="storyBottomSheet" class="story-bottom-sheet">
+<div class="sheet-handle-bar"></div>
+<div class="story-sheet-header">
+<h2>📖 <span class="shine-name">Our Story Book</span></h2>
+<button id="closeStorySheetBtn" class="close-sheet-btn">&times;</button>
+</div>
+<div class="story-sheet-content">
+<div class="story-input-box">
+<input type="text" id="storyTitleInput" class="story-title-input glowing-title-input" placeholder="Chapter Title...">
+<textarea id="storyTextInput" class="story-text-area" placeholder="Write a long story or note here..."></textarea>
+<button id="publishStoryBtn" class="story-publish-btn">Add Chapter to Book ✨</button>
+</div>
+<div class="stories-feed-header">
+<h3>Chapters</h3>
+</div>
+<div id="storiesFeed" class="stories-feed">
+<!-- Story chapters appear here --> </div>
+</div>
+</div>
+<!-- Main App JS (order matters: app.js, features.js, premium.js, notify.js, chat.js) -->
+<script type="module" src="app.js"></script>
+<script type="module" src="features.js"></script>
+<script type="module" src="premium.js"></script>
+<script type="module" src="notify.js"></script>
+<script type="module" src="chat.js"></script>
 </body>
 </html>
