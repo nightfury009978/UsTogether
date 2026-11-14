@@ -17,19 +17,24 @@ const INLINE = 700000;                    // max base64 chars kept inside one Fi
 const MAX_VIDEO = 8 * 1024 * 1024;               // 8 MB
 const safeImg = (s) => (typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)) ? s : '';
 const chatId = (a, b) => [a, b].sort().join('_');
-const BANNERS = [['rosegold', 'Rose Gold'], ['champagne', 'Champagne'], ['midnight', 'Midnight'], ['aurora', 'Aurora'], ['royal', 'Royal Velvet'],
-['sunset', 'Sunset Silk'], ['ocean', 'Ocean Pearl'], ['emerald', 'Emerald Luxe'], ['blush', 'Blush Pearl'], ['obsidian', 'Obsidian Gold']];
+const BANNERS = [['rosegold', 'Rose Gold'], ['thunder', 'Thunder Storm'], ['cloud9', 'Cloud Nine'], ['aurora', 'Aurora Veil'], ['starry', 'Starry Night'], ['sakura', 'Sakura Dusk'],
+  ['royalgold', 'Royal Gold'], ['ocean', 'Ocean Waves'], ['ember', 'Ember Glow'], ['galaxy', 'Galaxy'], ['hearts', 'Love Hearts'], ['frost', 'Frost & Snow']];
+const BN_LEGACY = { champagne: 'royalgold', midnight: 'starry', royal: 'galaxy', sunset: 'ember', emerald: 'aurora', blush: 'sakura', obsidian: 'royalgold' };
+const bnId = (id) => (BANNERS.some((b) => b[0] === id) ? id : (BN_LEGACY[id] || null));
+const BNL = '<i class="l1"></i><i class="l2"></i><i class="l3"></i>';
 const bannerEl = (p, cls) => {
-if (p?.bannerId && BANNERS.some((b) => b[0] === p.bannerId)) return `<span class="${cls} bn bn-${p.bannerId}"></span>`;
-const s = safeImg(p?.banner);
-return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bn-rosegold"></span>`; };
+ const id = bnId(p?.bannerId);
+ if (id) return `<span class="${cls} bn bn-${id}">${BNL}</span>`;
+ const s = safeImg(p?.banner);
+ return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bn-rosegold">${BNL}</span>`; };
 const wide = () => matchMedia('(min-width:820px)').matches; const svg = (d, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const IC = { add: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M19 8v6M16 11h6"/>'),
 img: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>'),
 mic: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>'),
 send: svg('<path d="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z"/>'),
 panel: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>'),
-dots: svg('<circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>'),
+chev: svg('<path d="M9 5l7 7-7 7"/>', 18),
+ dots: svg('<circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>'),
  trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
  close: (s = 22) => svg('<path d="M6 6l12 12M18 6L6 18"/>', s)
 };
@@ -89,7 +94,7 @@ const state = {
 uid: null, profile: null, private: null, priv: null, nick: {}, bootP: null, bootErr: false,
 reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [],
 profiles: new Map(), watch: new Map(), chats: new Map(), active: null, msgDocs: [], unsubs: [], unsubMsgs: null, listening: false, warned: false,
-celebrated: new Set(), search: '', sig: '',
+celebrated: new Set(), notified: new Set(), search: '', sig: '',
 presence: new Map(), gotTo: false, chatsReady: false,
  sel: new Set(), typeUntil: new Map(), typeStamp: new Map()
 };
@@ -125,9 +130,10 @@ document.body.insertAdjacentHTML('beforeend', `
 <button id="cpWho" class="cp-who"></button>
 <button id="cpMore" class="cp-btn" aria-label="More options">${IC.dots}</button>
 <div id="cpMenu" class="cs-menu cp-menu">
- <button id="cpmSelect">☑️ Delete messages</button>
- <button id="cpmAll" class="danger">🗑️ Delete all chats</button>
- <button id="cpmClose">✕ Close chat</button>
+ <div class="cpm-title">Chat options</div>
+ <button id="cpmSelect" class="cpm-row"><span class="cpm-ic">☑️</span><span class="cpm-tx"><b>Delete messages</b><small>Select texts, photos &amp; voice</small></span><span class="cpm-ch">${IC.chev}</span></button>
+ <button id="cpmAll" class="cpm-row danger"><span class="cpm-ic">🗑️</span><span class="cpm-tx"><b>Delete all chats</b><small>Wipe everything for both</small></span><span class="cpm-ch">${IC.chev}</span></button>
+ <button id="cpmClose" class="cpm-row"><span class="cpm-ic">✕</span><span class="cpm-tx"><b>Close chat</b><small>Back to your memories</small></span><span class="cpm-ch">${IC.chev}</span></button>
 </div>
 <div id="cpSelBar" class="cp-selbar">
  <button id="selCancel" class="cp-btn" aria-label="Cancel selection">${IC.close(20)}</button>
@@ -139,6 +145,8 @@ document.body.insertAdjacentHTML('beforeend', `
 <div id="cpEmpty" class="cp-empty"><div><span id="cpEmptyTxt">Add a friend<br>to start chatting</span><small id="cpNote">🔒 Messages are end-to-end encrypted</small></div></div>
 <div id="cpMsgs" class="cp-msgs hidden"></div>
 <footer id="cpComp" class="cp-comp">
+ <div id="tyThem" class="ty-cloud them" aria-hidden="true"><i></i><i></i><i></i><b class="tt t1"></b><b class="tt t2"></b></div>
+ <div id="tyMe" class="ty-cloud me" aria-hidden="true"><i></i><i></i><i></i><b class="tt t1"></b><b class="tt t2"></b></div>
 <button id="cpFileBtn" class="cp-circle" aria-label="Send photo or video">${IC.img}</button>
 <input id="cpFile" type="file" accept="image/*,video/*" hidden>
 <textarea id="cpInput" class="cp-input" rows="1" placeholder="Type a message"></textarea> <div class="cp-rec"><span class="rec-dot"></span><span id="cpRecTime" class="rec-time">0:00</span>
@@ -218,7 +226,7 @@ teardown(); state.uid = u.uid; state.bootP = boot();
 function teardown() {
 state.unsubs.forEach((f) => f()); state.watch.forEach((f) => f()); state.unsubMsgs?.(); Object.assign(state, { uid: null, profile: null, private: null, priv: null, nick: {}, bootErr: false, reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [], unsubs: [], unsubMsgs: null, listening: false, warned: false, selecting: false, active: null, msgDocs: [], sig: '', gotTo: false, chatsReady: false });
 clearInterval(hbTimer); hbTimer = null;
-state.profiles.clear(); state.presence.clear(); state.typeUntil.clear(); state.typeStamp.clear(); state.sel.clear(); state.watch.clear(); state.chats.clear(); state.celebrated.clear(); keyCache.clear();
+state.profiles.clear(); state.presence.clear(); state.typeUntil.clear(); state.typeStamp.clear(); state.sel.clear(); state.watch.clear(); state.chats.clear(); state.celebrated.clear(); state.notified.clear(); keyCache.clear();
 closeChat(); closeCongrats(); updateBadges(); }
 async function boot() {
 const me = state.uid;
@@ -337,7 +345,7 @@ state.gotTo = true; state.reqTo = next; recompute();
 state.unsubs.push(onSnapshot(query(collection(D(), 'chats'), where('members', 'array-contains', me)), (s) => {
 s.docChanges().forEach((ch) => { if (ch.type === 'removed' || !state.chatsReady || ch.doc.metadata.hasPendingWrites) return;
 const c = ch.doc.data(), prev = state.chats.get(ch.doc.id);
-if (c.lastFrom && c.lastFrom !== me && c.lastAt && prev?.lastAt?.seconds !== c.lastAt.seconds) notifyMsg(ch.doc.id, c); });
+if (c.lastFrom && c.lastFrom !== me && c.lastAt && (prev?.lastAt?.toMillis?.() ?? 0) !== (c.lastAt?.toMillis?.() ?? 0)) notifyMsg(ch.doc.id, c); });
 state.chats = new Map(s.docs.map((d) => [d.id, d.data()])); state.chatsReady = true; renderAll();
 }, err));
 }
@@ -401,11 +409,13 @@ function setTyping(on) {
 function typingPing() {
  if (!state.active) return;
  const now = Date.now();
+ $('tyMe')?.classList.add('show');
  if (now - typeLast > 2500) { typeLast = now; setTyping(true); }
  clearTimeout(typeOff); typeOff = setTimeout(stopTyping, 3000);
 }
 function stopTyping() {
  clearTimeout(typeOff); typeOff = null;
+ $('tyMe')?.classList.remove('show');
  if (typeLast) { typeLast = 0; setTyping(false); }
 }
 
@@ -419,19 +429,29 @@ return { on: false, txt: `Last seen ${day === 'Today' ? 'today' : day === 'Yeste
 }
 /* ---------- notifications ---------- */
 async function notifyReq(r) {
-const p = await getProfile(r.from);
-window.OSNotify?.push({ icon: '💌', title: 'New friend request', body: `@${p?.username || 'someone'} wants to be friends`, key: 'rq:' + r.id, onTap: () => openChat() });
+ const p = await getProfile(r.from);
+ window.OSNotify?.push({ icon: '💌', img: safeImg(p?.pfp), title: 'New friend request', body: `@${p?.username || 'someone'} wants to be friends`, key: 'rq:' + r.id, onTap: () => openChat() });
 }
 async function notifyMsg(cid, c) {
-const uid = (c.members || []).find((m) => m !== state.uid); if (!uid) return;
-if (app.classList.contains('active') && state.active === uid && !document.hidden) return;
-let body = 'New message';
-try {
-const m = (await getDocs(query(collection(D(), 'chats', cid, 'messages'), orderBy('at', 'desc'), limit(1)))).docs[0]?.data();
-if (m) { const p = await decJSON(await sharedKey(uid), m.iv, m.ct); body = p.k === 't' ? p.x.slice(0, 90) : p.k === 'img' ? '📷 Photo' : p.k === 'vid' ? '🎞️ Video' : '🎤 Voice message'; }
-} catch {}
-window.OSNotify?.push({ icon: '💬', title: displayName(uid), body, key: 'chat:' + cid, onTap: async () => { await openChat(); openConversation(uid); } });
+ const uid = (c.members || []).find((m) => m !== state.uid); if (!uid) return;
+ if (app.classList.contains('active') && state.active === uid && !document.hidden) return;   // you're already looking at it
+ let body = '🔒 New message', mid = null;
+ try {
+  const d = (await getDocs(query(collection(D(), 'chats', cid, 'messages'), orderBy('at', 'desc'), limit(1)))).docs[0];
+  if (d) {
+   const m = d.data(); mid = d.id;
+   if (m.from === state.uid || state.notified.has(mid)) return;                                  // never notify own / repeated messages
+   try {
+    const p = await decJSON(await sharedKey(uid), m.iv, m.ct);
+    body = p.k === 't' ? (p.x.length > 90 ? p.x.slice(0, 90).trim() + '…' : p.x) : p.k === 'img' ? '📷 Photo' : p.k === 'vid' ? '🎞️ Video' : '🎤 Voice message';
+   } catch {}
+  }
+ } catch {}
+ if (mid) { state.notified.add(mid); if (state.notified.size > 300) state.notified.delete(state.notified.values().next().value); }
+ const pr = state.profiles.get(uid) || await getProfile(uid);
+ window.OSNotify?.push({ icon: '💬', img: safeImg(pr?.pfp), title: displayName(uid), body, key: 'chat:' + cid, onTap: async () => { await openChat(); openConversation(uid); } });
 }
+
 async function celebrate(uid) {
 const p = await getProfile(uid), nm = p?.username || 'your friend';
 $('ccPfp').innerHTML = av(p, nm);
@@ -500,7 +520,8 @@ if (!uid) { who.innerHTML = `<span style="min-width:0"><b class="cp-title">Chats
 const p = state.profiles.get(uid) || {}, nm = displayName(uid); const pr = presence(uid);
 who.innerHTML = `<span class="pfp-wrap sm"><span class="pfp-sm">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span><span style="min-width:0"><b>${esc(nm)}</b><i class="pres${pr.on ? ' on' : ''}${pr.typing ? ' typing' : ''}">${esc(pr.txt)}</i><i>🔒 End-to-end encrypted</i></span>`;
 }
-function renderAll() { if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); updateBadges(); }
+function syncTyCloud() { const t = !!state.active && (state.typeUntil.get(state.active) || 0) > Date.now(); $('tyThem')?.classList.toggle('show', t); }
+function renderAll() { if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); syncTyCloud(); updateBadges(); }
 $('csScroll').addEventListener('click', async (e) => {
 const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
 if (t.dataset.open) return openConversation(t.dataset.open); try {
@@ -523,7 +544,7 @@ Conversation
 function closeConversation() {
  exitSelect(); stopTyping();
 state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = ''; pane.classList.remove('active');
-$('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden'); renderHeader();
+$('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden'); renderHeader(); syncTyCloud();
 }
 async function openConversation(uid) {
 await state.bootP;
@@ -533,6 +554,7 @@ state.active = uid; state.msgDocs = []; state.sig = ''; state.first = true;
 pane.classList.add('active');
 hideSideMobile();
 $('cpEmpty').classList.add('hidden'); $('cpMsgs').classList.remove('hidden'); comp.classList.remove('hidden');
+window.OSNotify?.clear('chat:' + chatId(state.uid, uid));
 $('cpMsgs').innerHTML = '';
 renderAll();
 const cid = chatId(state.uid, uid);
@@ -544,6 +566,7 @@ if (state.active !== uid) return;
 state.unsubMsgs = onSnapshot(query(collection(D(), 'chats', cid, 'messages'), orderBy('at', 'desc'), limit(80)), (s) => {
 s.docChanges().forEach((ch) => { if (ch.type === 'removed') { const u = media.get(ch.doc.id); if (u) { URL.revokeObjectURL(u); media.delete(ch.doc.id); } plain.delete(ch.doc.id); } });
 state.msgDocs = s.docs.map((d) => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
+{ const lm = state.msgDocs[state.msgDocs.length - 1]; if (lm && lm.from !== state.uid && state.active) { state.typeUntil.delete(state.active); syncTyCloud(); } }
 if (state.sel.size) { const live = new Set(state.msgDocs.map((m) => m.id)); [...state.sel].forEach((id) => { if (!live.has(id)) state.sel.delete(id); }); updateSelUI(); }
 paint(); markSeen(cid);
 }, () => toast('Couldn’t load messages', 'error'));
@@ -792,7 +815,7 @@ const draw = () => {
 const q = state.profile;
 $('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
 $('mpPfp').innerHTML = av(q, q.username);
-$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bn-${id}"></span><i>${n}</i></button>`).join('');
+$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${bnId(q.bannerId) === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bn-${id}">${BNL}</span><i>${n}</i></button>`).join('');
 };
 draw();
 const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
