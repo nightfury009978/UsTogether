@@ -1,4 +1,4 @@
-const CACHE = 'our-space-v9';
+const CACHE = 'our-space-v10';
 const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.js', './chat.css', './chat.js', './notify.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png'];
 
@@ -13,7 +13,6 @@ self.addEventListener('activate', (e) => {
       .then(() => self.clients.claim())
   );
 });
-
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
