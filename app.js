@@ -3,8 +3,6 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
 }
 
-// Auto-hide Splash Screen on Launch
-setTimeout(() => {
 // Auto-hide the NEW premium splash (3.3s, or 0.6s if the phone prefers reduced motion)
 setTimeout(() => {
   const s = document.getElementById('introSplash');
@@ -12,24 +10,24 @@ setTimeout(() => {
 }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 3300);
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  onAuthStateChanged, 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
   signOut,
-  deleteUser 
+  deleteUser
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { 
+import {
   initializeFirestore,
   persistentLocalCache,
-  collection, 
-  addDoc, 
-  onSnapshot, 
-  query, 
-  orderBy, 
-  serverTimestamp, 
-  deleteDoc, 
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+  deleteDoc,
   doc,
   updateDoc,
   getDocs,
@@ -90,12 +88,11 @@ function getTodayDateKey() {
   const d = new Date();
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
-
 // ---------- Mood list: original 9 + 25 more ----------
 const ALL_MOODS = [
-  '💖', '✨', '🥰', '🌙', '🌸', '📚', '💌', '🔥', '🥹',
-  '😊', '😍', '😘', '🥲', '😴', '😇', '🤗', '😌', '😢',
-  '😭', '😡', '😱', '🥳', '🤔', '😅', '🙈', '💫', '🌟',
+  '💖', '✨', '🥰', '🌙', '🌸', '📚', '💌', '🔥', '🥰',
+  '😊', '😍', '😘', '🥰', '😴', '😇', '🤗', '😌', '😢',
+  '😭', '😡', '😱', '🥰', '🤔', '😅', '🙈', '💫', '🌟',
   '🌈', '☕', '🍫', '🎶', '🌺', '🍀', '🦋'
 ];
 
@@ -117,7 +114,6 @@ const accountMenuItem = document.getElementById('accountMenuItem');
 const accountSubmenu = document.getElementById('accountSubmenu');
 const logoutBtn = document.getElementById('logoutBtn');
 const permDeleteSubBtn = document.getElementById('permDeleteSubBtn');
-
 const todoInput = document.getElementById('todoInput');
 const todoPriority = document.getElementById('todoPriority');
 const todoDueDate = document.getElementById('todoDueDate');
@@ -351,7 +347,6 @@ function renderMemoryBubbles() {
       : 'No memories match that filter.');
     return;
   }
-
   const frag = document.createDocumentFragment();
   recent15.forEach(({ id, data }) => frag.appendChild(createBubbleEl(data, id)));
   memoryBubbleField.innerHTML = '';
@@ -511,7 +506,6 @@ function formatDueDate(dueDateStr) {
   else if (diffDays === 1) label = 'Due tomorrow';
   else if (diffDays < 0) label = `Overdue · ${due.toLocaleDateString()}`;
   else label = `Due ${due.toLocaleDateString()}`;
-
   return { label, overdue: diffDays < 0 };
 }
 
@@ -591,7 +585,6 @@ function buildTaskCard(docId, data) {
     const textSpan = stickyCard.querySelector(`#text-${docId}`);
     if (!textSpan) return;
     const currentText = textSpan.textContent;
-
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'todo-text-input';
@@ -618,7 +611,6 @@ function buildTaskCard(docId, data) {
 
 function renderTodoList() {
   if (!todoList) return;
-
   const searchTerm = (todoSearchInput?.value || '').trim().toLowerCase();
   const visible = allTodos.filter(({ data }) => !searchTerm || data.task.toLowerCase().includes(searchTerm));
 
@@ -643,7 +635,6 @@ function renderTodoList() {
   } else {
     const frag = document.createDocumentFragment();
     pending.forEach(({ id, data }) => frag.appendChild(buildTaskCard(id, data)));
-
     if (completed.length > 0) {
       const label = document.createElement('div');
       label.className = 'todo-section-label';
@@ -720,7 +711,6 @@ openTodoHistoryBtn?.addEventListener('click', () => {
   todoHistoryModalOverlay?.classList.add('active');
   loadTodoHistory();
 });
-
 const closeTodoHistorySheet = () => {
   todoHistoryBottomSheet?.classList.remove('active');
   todoHistoryModalOverlay?.classList.remove('active');
@@ -732,7 +722,7 @@ todoHistoryModalOverlay?.addEventListener('click', closeTodoHistorySheet);
 function loadTodoHistory() {
   if (!todoHistoryList) return;
   const q = query(collection(db, "todo_history"), orderBy("archivedAt", "desc"));
-  
+
   unsubHist?.();
   unsubHist = onSnapshot(q, (snapshot) => {
     todoHistoryList.innerHTML = '';
@@ -763,7 +753,7 @@ function loadTodoHistory() {
 
       const card = document.createElement('div');
       card.className = 'entry-card ios-notification-card';
-      
+
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <span>${shineName(data.createdBy || 'User')}</span>
@@ -927,12 +917,12 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
     authOverlay?.classList.remove('active');
-    
+
     const displayName = getCleanUsername(user);
     if (currentUserLabel) {
       currentUserLabel.innerHTML = shineName(displayName);
     }
-    
+
     if (!started) {
       started = true;
       renderMoodOptions();
@@ -960,7 +950,6 @@ const closeDrawer = () => {
   menuDrawer?.classList.remove('active');
   menuOverlay?.classList.remove('active');
 };
-
 closeDrawerBtn?.addEventListener('click', closeDrawer);
 menuOverlay?.addEventListener('click', closeDrawer);
 
@@ -987,7 +976,6 @@ permDeleteSubBtn?.addEventListener('click', () => {
   }
 
   clearInterval(deleteTimerInterval);
-
   deleteTimerInterval = setInterval(() => {
     timeLeft--;
     if (timerBadge) timerBadge.textContent = timeLeft;
