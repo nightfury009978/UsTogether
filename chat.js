@@ -232,12 +232,7 @@ if (state.profile) startListeners();
 } catch (e) { console.error(e); state.bootErr = true; }
 updateBadges();
 }
-/* hidden entry: tap "Our Sacred Diary" */
-const badge = document.querySelector('.glowing-badge');
-if (badge) {
-badge.setAttribute('role', 'button'); badge.insertAdjacentHTML('beforeend', '<i id="chatBadgeDot" class="badge-dot hidden"></i>');
-badge.addEventListener('click', openChat);
-}
+/* chat opens only from the "Chat" tile on the home screen */
 async function openChat() {
 if (!state.uid) { toast('Please log in first', 'error'); return; }
 await state.bootP;
@@ -408,7 +403,6 @@ function stopTyping() {
  clearTimeout(typeOff); typeOff = null;
  if (typeLast) { typeLast = 0; setTyping(false); }
 }
-
 function presence(uid) { const p = state.presence.get(uid);
 if ((state.typeUntil.get(uid) || 0) > Date.now()) return { on: true, typing: true, txt: 'typing…' };
 if (!p?.lastSeen) return { on: false, txt: 'Offline' };
@@ -870,7 +864,6 @@ function toggleSelAll() {
  $('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid)));
  updateSelUI();
 }
-
 /* run deletes a few at a time (each delete is checked by the security rules) */
 async function delRefs(refs) {
  for (let i = 0; i < refs.length; i += 20) await Promise.all(refs.slice(i, i + 20).map((r) => deleteDoc(r)));
@@ -879,7 +872,6 @@ function forgetLocal(ids) {
  ids.forEach((id) => { const u = media.get(id); if (u) { URL.revokeObjectURL(u); media.delete(id); } plain.delete(id); });
  state.sig = '';
 }
-
 async function deleteSelected() {
  const uid = state.active, ids = [...state.sel];
  if (!uid || !ids.length) return;
@@ -893,14 +885,12 @@ async function deleteSelected() {
   });
   await delRefs(refs);
   await delRefs(ids.map((id) => doc(D(), 'chats', cid, 'messages', id))); // then the messages themselves
-
   forgetLocal(ids); exitSelect(); toast('Deleted for both of you 🗑️', 'success');
  } catch (e) {
   console.error(e); btn.disabled = !state.sel.size;
   toast('Couldn’t delete — publish the updated Firestore rules', 'error');
  }
 }
-
 /* wipe EVERYTHING in one conversation: messages (incl. inline photos/voice) + media chunks */
 async function wipeChat(uid) {
  const cid = chatId(state.uid, uid);
@@ -913,7 +903,6 @@ async function wipeChat(uid) {
  }
  try { await updateDoc(doc(D(), 'chats', cid), { lastAt: deleteField(), lastFrom: deleteField() }); } catch {}
 }
-
 function openDeleteAllSheet() {
  const cur = state.active;
  openSheet('Delete all chats', `<p class="sh-note">Every message, photo, video and voice message is permanently erased from the database — for <b>both</b> of you. This can’t be undone.</p>
@@ -934,7 +923,6 @@ function openDeleteAllSheet() {
  if (cur) $('daThis').onclick = () => run([cur], `Delete the whole chat with ${displayName(cur)}`);
  $('daAll').onclick = () => run(state.friends.map((f) => f.uid), 'Delete ALL your chats with every friend');
 }
-
 /* 3-dots menu + selection bar wiring */
 $('cpMore').onclick = (e) => { e.stopPropagation(); $('cpMenu').classList.toggle('open'); };
 document.addEventListener('click', (e) => { if (!e.target.closest('#cpMenu') && !e.target.closest('#cpMore')) $('cpMenu').classList.remove('open'); });
@@ -944,17 +932,13 @@ $('cpmClose').onclick = () => { $('cpMenu').classList.remove('open'); closeChat(
 $('selCancel').onclick = () => exitSelect();
 $('selAll').onclick = toggleSelAll;
 $('selDel').onclick = deleteSelected;
-
 window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(uid)) };
-
-
 /* =========================================================
    v5 — typing cloud + Seen / Not seen  (paste at the VERY END of chat.js)
    ========================================================= */
 (function () {
   const msgsBox = $('cpMsgs');
   const tsMs = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
-
   /* typing clouds: friend = bottom-left (near photos) · me = bottom-right (near mic) */
   comp.insertAdjacentHTML('beforeend',
     '<div id="tcL" class="tcloud l" aria-hidden="true"><i></i><i></i><i></i></div>' +
@@ -963,25 +947,20 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   let lastKey = 0, marked = '';
   input.addEventListener('input', () => { lastKey = input.value.trim() ? Date.now() : 0; });
   input.addEventListener('blur', () => { lastKey = 0; });
-
   const inView = (el) => {
     const r = el.getBoundingClientRect(), b = msgsBox.getBoundingClientRect();
     return r.bottom > b.top + 4 && r.top < b.bottom - 4;
   };
-
   function refresh() {
     const open = app.classList.contains('active') && state.active && !msgsBox.classList.contains('hidden');
     if (!open) { tcL.classList.remove('show'); tcR.classList.remove('show'); return; }
-
     tcL.classList.toggle('show', (state.typeUntil.get(state.active) || 0) > Date.now());
     const mine = lastKey && Date.now() - lastKey < 2600 && input.value.trim() && document.activeElement === input;
     tcR.classList.toggle('show', !!mine);
-
     const cid = chatId(state.uid, state.active), chat = state.chats.get(cid) || {};
     const theirRead = tsMs(chat.reads && chat.reads[state.active]);
     const myRead = tsMs(chat.reads && chat.reads[state.uid]);
     const byId = new Map((state.msgDocs || []).map((m) => [m.id, m]));
-
     /* label every message I sent */
     msgsBox.querySelectorAll('.msg.me').forEach((el) => {
       const m = byId.get(el.dataset.mid), mt = el.querySelector('.mt');
@@ -993,7 +972,6 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
       if (tag.className !== cls) tag.className = cls;
       if (tag.textContent !== txt) tag.textContent = txt;
     });
-
     /* tell my friend I've seen their latest message — only when it is really on screen */
     if (document.hidden) return;
     let last = null;
@@ -1009,18 +987,14 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
     setDoc(doc(D(), 'chats', cid), { reads: { [state.uid]: serverTimestamp() } }, { merge: true })
       .catch(() => { marked = ''; });
   }
-
   new MutationObserver(refresh).observe(msgsBox, { childList: true });
   msgsBox.addEventListener('scroll', refresh, { passive: true });
   document.addEventListener('visibilitychange', refresh);
   setInterval(refresh, 400);
 })();
-
-
 /* =========================================================
    BENTO NOIR home tiles + bottom dock  (v6)
-   Chat is opened by the "Chat" tile / dock button, and still by tapping "Our Sacred Diary".
-   To hide Chat again from the home screen: delete the 2 lines marked  // CHAT-VISIBLE
+   Chat opens from the "Chat" tile. A red shining dot on that tile shows when something unread is waiting.
    ========================================================= */
 (function () {
   const root = document.querySelector('.app-container'), header = document.querySelector('.app-header');
@@ -1032,7 +1006,7 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   el.innerHTML =
     '<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title">Our Space</div></div></div>' +
     '<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
-    tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span><span class="bn-snip" id="bnSnip"></span>', 'bn-mem') +
+    tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
     tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Open chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') +   // CHAT-VISIBLE
     tile('bnTodo', 'To-do', '<span class="bn-big" id="bnTodoN" style="font-size:1.7rem;margin-top:6px">0</span><span class="bn-sm">left today</span>') +
     tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
@@ -1041,26 +1015,17 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   const top = el.querySelector('.bn-heroTop');
   if (hb) top.appendChild(hb);
   if (sub) top.appendChild(sub);
-
   const dock = document.createElement('nav');
   dock.className = 'dock'; dock.setAttribute('aria-label', 'Main');
   const svg = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p}"/></svg>`;
-  dock.innerHTML =
-    `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}</button>` +
-    `<button type="button" id="dkMem" aria-label="Memories">${svg('M12 20S3 14.5 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 14.5 12 20 12 20z')}</button>` +
-    `<button type="button" id="dkChat" aria-label="Chat">${svg('M4 5h16v11H9l-5 4z')}<i id="dkDot" class="dk-dot hidden"></i></button>` +   // CHAT-VISIBLE
-    `<button type="button" id="dkTodo" aria-label="To-do">${svg('M5 12l4.5 4.5L19 7')}</button>` +
-    `<button type="button" id="dkStory" aria-label="Story Book">${svg('M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11')}</button>`;
+  dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}</button>`;
   document.body.appendChild(dock);
-
-  const click = (id) => () => document.getElementById(id)?.click();
-  $('bnMem').onclick = $('dkMem').onclick = click('openMemoryHistoryBtn');
-  $('bnTodo').onclick = $('dkTodo').onclick = click('openTodoBtn');
-  $('bnStory').onclick = $('dkStory').onclick = click('openStoriesMenuBtn');
-  $('bnChat').onclick = $('dkChat').onclick = () => openChat();
+  $('bnMem').onclick = () => O().openMemories?.();
+  $('bnTodo').onclick = () => O().openTodo?.();
+  $('bnStory').onclick = () => O().openStory?.();
+  $('bnChat').onclick = () => openChat();
   $('dkHome').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-  $('bnDaysBox').onclick = $('bnAnn').onclick = click('annivCard');
-
+  $('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click();   // set the anniversary only from "days together"
   const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
   function tick() {
     const nm = ($('currentUserLabel')?.textContent || '').trim(), h = new Date().getHours();
@@ -1070,9 +1035,9 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
       set('bnDays', d); $('bnBar').style.width = ((d % 365) / 365 * 100) + '%';
       const next = 365 * (Math.floor(d / 365) + 1) - d, yr = Math.floor(d / 365) + 1;
       set('bnAnnN', next); set('bnAnnS', 'days to year ' + yr);
-    } else { set('bnDays', '–'); set('bnAnnN', '–'); set('bnAnnS', 'tap to set our day'); }
+    } else { set('bnDays', '–'); set('bnAnnN', '–'); set('bnAnnS', 'set it from days together'); }
     const mems = window.OS?.memories?.() || [];
-    set('bnMemN', mems.length); set('bnSnip', mems[0]?.data?.text ? '“' + mems[0].data.text + '”' : '');
+    set('bnMemN', mems.length);
     set('bnTodoN', (window.OS?.todos?.() || []).filter((t) => !t.data.completed).length);
     const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
     set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
@@ -1080,7 +1045,7 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
     const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
     set('bnChatT', un ? un + ' unread' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'All caught up');
     const dot = !!(un || rq);
-    $('bnChatDot').classList.toggle('hidden', !dot); $('dkDot').classList.toggle('hidden', !dot);
+    $('bnChatDot').classList.toggle('hidden', !dot);
   }
   tick(); setInterval(tick, 1000);
 })();
