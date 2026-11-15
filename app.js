@@ -5,12 +5,11 @@ if ('serviceWorker' in navigator) {
 
 // Auto-hide Splash Screen on Launch
 setTimeout(() => {
-  const splash = document.getElementById('splash');
-  if (splash) {
-    splash.style.opacity = '0';
-    setTimeout(() => { splash.style.display = 'none'; }, 500);
-  }
-}, 1200);
+// Auto-hide the NEW premium splash (3.3s, or 0.6s if the phone prefers reduced motion)
+setTimeout(() => {
+  const s = document.getElementById('introSplash');
+  if (s) { s.classList.add('out'); setTimeout(() => s.remove(), 950); }
+}, matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 3300);
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
