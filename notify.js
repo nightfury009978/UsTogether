@@ -1,40 +1,35 @@
 import { collection, query, orderBy, limit, onSnapshot, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
 const $ = (id) => document.getElementById(id);
 const O = () => window.OS;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const recent = (ts) => ts && Date.now() - ts.seconds * 1000 < 120000;
 const clip = (s, n = 80) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; };
-
 /* =========================================================
    Swipeable top notifications  (window.OSNotify.push)
    ========================================================= */
 document.body.insertAdjacentHTML('beforeend', '<div id="ntfWrap" class="ntf-wrap"></div>');
 const wrap = $('ntfWrap');
-
 const LABELS = { chat: 'Messages', memory: 'Memories', task: 'To-do', story: 'Story book', love: 'Anniversary', friend: 'Friends', general: 'Our Space' };
 const TYPES = { chat: 'chat', mem: 'memory', todo: 'task', story: 'story', anniv: 'love', rq: 'friend' };
 const typeOf = (key) => TYPES[String(key || '').split(':')[0]] || 'general';
 const SHOW_MS = 6500;
 const ago = (t) => { const s = Math.floor((Date.now() - t) / 1000); return s < 10 ? 'now' : s < 60 ? s + 's ago' : s < 3600 ? Math.floor(s / 60) + 'm ago' : Math.floor(s / 3600) + 'h ago'; };
 setInterval(() => wrap.querySelectorAll('.ntf').forEach((e) => { const t = e.querySelector('.ntf-time'); if (t) t.textContent = ago(+e.dataset.at); }), 10000);
-
 function dismiss(el, dx = 0, dy = -60) {
   if (el.dataset.gone) return; el.dataset.gone = '1'; clearTimeout(el._t);
   el.style.transition = 'transform .25s ease, opacity .25s ease';
   el.style.transform = `translate(${dx}px, ${dy}px)`; el.style.opacity = '0';
   setTimeout(() => el.remove(), 260);
 }
-
 function push(n) {
+  if (document.getElementById('introSplash')) { setTimeout(() => push(n), 1200); return; }   // wait until the splash has finished
   const type = typeOf(n.key);
   let count = 1;
   // same key = same conversation / item: replace it instead of stacking duplicates
   if (n.key) wrap.querySelectorAll('.ntf').forEach((x) => {
     if (x.dataset.key === n.key) { if (type === 'chat') count = (+x.dataset.count || 1) + 1; clearTimeout(x._t); x.remove(); }
   });
-
   const at = n.at || Date.now();
   const el = document.createElement('div');
   el.className = 'ntf'; el.dataset.type = type; el.dataset.at = String(at); el.dataset.count = String(count);
@@ -48,7 +43,6 @@ function push(n) {
   wrap.prepend(el);
   while (wrap.children.length > 3) wrap.lastChild.remove();
   navigator.vibrate?.(12);
-
   /* auto-hide timer that pauses while you hold / hover */
   let left = SHOW_MS, t0 = 0;
   const arm = () => { t0 = Date.now(); el._t = setTimeout(() => dismiss(el), left); };
@@ -56,7 +50,6 @@ function push(n) {
   const resume = () => { if (el.dataset.gone) return; left = Math.max(left, 1200); el.classList.remove('hold'); arm(); };
   arm();
   el.addEventListener('mouseenter', pause); el.addEventListener('mouseleave', resume);
-
   /* swipe (left / right / up) or tap */
   let x0 = 0, y0 = 0, dx = 0, dy = 0, down = false, onX = false;
   el.addEventListener('pointerdown', (e) => {
@@ -75,14 +68,12 @@ function push(n) {
     resume();
   };
   el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
-
   /* background tab: also show a system notification if allowed (unchanged behaviour) */
   if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
     navigator.serviceWorker?.ready.then((r) => r.showNotification(n.title, { body: n.body || '', icon: 'icons/icon-192.png', tag: n.key || 'os' })).catch(() => {});
   }
 }
 window.OSNotify = { push };
-
 /* =========================================================
    Anniversary: one shared date, either of you can edit
    ========================================================= */
@@ -123,7 +114,6 @@ document.addEventListener('click', (e) => {
     e.stopPropagation(); e.preventDefault(); openAx();
   }
 }, true);
-
 /* =========================================================
    Live notifications for everything your partner does
    ========================================================= */
@@ -132,11 +122,9 @@ onAuthStateChanged(O().auth, (u) => {
   unsubs.forEach((f) => f()); unsubs = [];
   if (u) start();
 });
-
 function start() {
   const db = O().db, me = () => O().name();
   const err = (e) => console.warn('notify listener', e);
-
   /* memories: new + edited */
   const mem = new Map(); let mFirst = true;
   unsubs.push(onSnapshot(query(collection(db, 'memories'), orderBy('createdAt', 'desc'), limit(40)), (snap) => {
@@ -145,12 +133,11 @@ function start() {
       if (ch.type === 'removed') { mem.delete(id); return; }
       const prev = mem.get(id); mem.set(id, ed);
       if (mFirst || pend || !d.author || d.author === me()) return;
-      if (ch.type === 'added' && recent(d.createdAt)) push({ icon: d.mood || '💖', title: `${d.author} shared a memory`, body: clip(d.text), key: 'mem:' + id, onTap: () => document.querySelector('.timeline-container')?.scrollIntoView({ behavior: 'smooth' }) });
+      if (ch.type === 'added' && recent(d.createdAt)) push({ icon: d.mood || '💖', title: `${d.author} shared a memory`, body: clip(d.text), key: 'mem:' + id, onTap: () => O().openMemories?.(id) });
       else if (ch.type === 'modified' && ed > (prev || 0) && Date.now() - ed * 1000 < 120000) push({ icon: '✏️', title: `${d.author} edited a memory`, body: clip(d.text), key: 'mem:' + id });
     });
     mFirst = false;
   }, err));
-
   /* to-dos: new, completed, edited */
   const todo = new Map(); let tFirst = true;
   unsubs.push(onSnapshot(collection(db, 'todos'), (snap) => {
@@ -159,7 +146,7 @@ function start() {
       if (ch.type === 'removed') { todo.delete(id); return; }
       const prev = todo.get(id); todo.set(id, { c: !!d.completed, t: d.task });
       if (tFirst || pend) return;
-      const open = () => $('openTodoBtn')?.click();
+      const open = () => O().openTodo?.();
       if (ch.type === 'added' && d.createdBy && d.createdBy !== me() && recent(d.createdAt)) push({ icon: '📌', title: `${d.createdBy} added a task`, body: clip(d.task), key: 'todo:' + id, onTap: open });
       else if (ch.type === 'modified' && prev) {
         if (!prev.c && d.completed) push({ icon: '✅', title: 'Task completed', body: clip(d.task), key: 'todo:' + id, onTap: open });
@@ -174,11 +161,10 @@ function start() {
     snap.docChanges().forEach((ch) => {
       const d = ch.doc.data();
       if (sFirst || ch.type !== 'added' || ch.doc.metadata.hasPendingWrites || !d.author || d.author === me() || !recent(d.createdAt)) return;
-      push({ icon: '📖', title: `${d.author} added a chapter`, body: clip(d.title), key: 'story:' + ch.doc.id, onTap: () => $('openStoriesMenuBtn')?.click() });
+      push({ icon: '📖', title: `${d.author} added a chapter`, body: clip(d.title), key: 'story:' + ch.doc.id, onTap: () => O().openStory?.() });
     });
     sFirst = false;
   }, err));
-
   /* anniversary */
   let aFirst = true;
   unsubs.push(onSnapshot(doc(db, 'settings', 'couple'), (s) => {
