@@ -1004,7 +1004,7 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   const el = document.createElement('section');
   el.id = 'bento'; el.className = 'bento';
   el.innerHTML =
-    '<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title">Our Space</div></div></div>' +
+    '<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title" id="bnTitle" role="button" tabindex="0" aria-label="Open Space Universe">Our Space<span class="bn-orbit" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="10.5" ry="3.6" transform="rotate(-24 12 12)"/></svg></span></div></div></div>' +
     '<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
     tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
     tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Open chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') +   // CHAT-VISIBLE
@@ -1021,6 +1021,8 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}</button>`;
   document.body.appendChild(dock);
   $('bnMem').onclick = () => O().openMemories?.();
+  $('bnTitle').onclick = () => O().openSpace?.();
+  $('bnTitle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); O().openSpace?.(); } };
   $('bnTodo').onclick = () => O().openTodo?.();
   $('bnStory').onclick = () => O().openStory?.();
   $('bnChat').onclick = () => openChat();
