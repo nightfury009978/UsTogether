@@ -11,6 +11,7 @@ const LAYERS = [
   ['menuDrawer', 'closeDrawerBtn'],
   ['todoBottomSheet', 'closeTodoSheetBtn'],
   ['todoHistoryBottomSheet', 'closeTodoHistorySheetBtn'],
+  ['spaceU', 'spaceCloseBtn'],
   ['memNotes', 'mnClose'],
   ['storyBottomSheet', 'closeStorySheetBtn'],
   ['moodPickerPopup', 'moodPickerOverlay'],
