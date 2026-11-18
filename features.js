@@ -133,7 +133,7 @@ function initAnniv() {
 function initOnThisDay() {
   const c = document.createElement('div');
   c.id = 'otdCard'; c.className = 'otd-card hidden';
-  $('mainPageReminder').after(c);
+  ($('bento') || $('mainPageReminder')).after(c);
   const draw = () => {
     const n = new Date(), key = n.getDate() + '/' + n.getMonth();
     const hits = O().memories().filter(({ data }) => {
