@@ -33,7 +33,8 @@ import {
   doc,
   updateDoc,
   getDocs,
-  where
+  where,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 // Firebase Credentials
 const firebaseConfig = {
@@ -267,28 +268,39 @@ const priorityWeight = { high: 0, medium: 1, low: 2 };
 let allTodos = [];
 async function checkAndResetDailyTodos() {
   const todayKey = getTodayDateKey();
-  const q = query(collection(db, "todos"));
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocs(query(collection(db, "todos")));
   snapshot.docs.forEach(async (docSnap) => {
     const data = docSnap.data();
     if (data.dateKey && data.dateKey !== todayKey) {
-      if (!data.historyLogged) {
-        await addDoc(collection(db, "todo_history"), {
-          task: data.task,
-          completed: data.completed,
-          priority: data.priority || 'medium',
-          dueDate: data.dueDate || '',
-          createdBy: data.createdBy,
-          createdAt: data.createdAt || serverTimestamp(),
-          completedAt: data.completedAt || null,
-          dateKey: data.dateKey,
-          archivedAt: serverTimestamp()
-        });
-      }
-      await deleteDoc(doc(db, "todos", docSnap.id));
+      try {
+        if (!data.historyLogged) {
+          /* unfinished tasks go to History and wait for a tick / cross (same id = never duplicated) */
+          await setDoc(doc(db, "todo_history", "t_" + docSnap.id), {
+            task: data.task,
+            completed: !!data.completed,
+            status: data.completed ? 'done' : 'unconfirmed',
+            priority: data.priority || 'medium',
+            dueDate: data.dueDate || '',
+            createdBy: data.createdBy,
+            createdAt: data.createdAt || serverTimestamp(),
+            completedAt: data.completedAt || null,
+            dateKey: data.dateKey,
+            archivedAt: serverTimestamp()
+          });
+        }
+        await deleteDoc(doc(db, "todos", docSnap.id));
+      } catch (e) { console.warn('todo rollover', e); }
     }
   });
 }
+let resetKey = null;
+const rollover = () => {
+  const k = getTodayDateKey();
+  if (resetKey === null) { resetKey = k; return; }
+  if (k !== resetKey) { resetKey = k; checkAndResetDailyTodos(); }
+};
+rollover(); setInterval(rollover, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) rollover(); });
 if (addTodoBtn) {
   addTodoBtn.addEventListener('click', async () => {
     const text = todoInput.value.trim();
@@ -375,6 +387,7 @@ function buildTaskCard(docId, data) {
           await addDoc(collection(db, "todo_history"), {
             task: data.task,
             completed: true,
+            status: 'done',
             priority: data.priority || 'medium',
             dueDate: data.dueDate || '',
             createdBy: data.createdBy,
@@ -456,17 +469,100 @@ function renderTodoList() {
   const pct = totalCount === 0 ? 0 : Math.round((allCompleted / totalCount) * 100);
   if (todoProgressFill) todoProgressFill.style.width = `${pct}%`;
   if (todoProgressText) todoProgressText.textContent = `${allCompleted} of ${totalCount} done today`;
-  const pendingReminders = allTodos.filter(t => !t.data.completed);
-  if (mainPageReminder && reminderTaskText) {
-    if (pendingReminders.length > 0) {
-      mainPageReminder.classList.remove('hidden');
-      const first = pendingReminders[0].data;
-      reminderTaskText.innerHTML = `${shineName(first.createdBy || 'User')}: "${esc(first.task)}" ${pendingReminders.length > 1 ? `(+${pendingReminders.length - 1} more)` : ''}`;
-    } else {
-      mainPageReminder.classList.add('hidden');
-    }
-  }
+  renderReminders();
 }
+// ============================================================
+// SWIPEABLE REMINDERS  (shown between "Our Space" and "Our Sacred Diary")
+// A task stays here until you press ✓ (done) or ✕ (not done).
+// ============================================================
+let unconfirmed = [], unconfOn = false, rmSig = '', rmRaf = 0;
+function listenUnconfirmed() {
+  if (unconfOn) return;
+  unconfOn = true;
+  onSnapshot(query(collection(db, "todo_history"), where("status", "==", "unconfirmed")), (snap) => {
+    unconfirmed = snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+    renderReminders();
+  }, (e) => console.warn('reminders', e));
+}
+async function markTodoDone(docId, data) {
+  const updates = { completed: true, completedAt: serverTimestamp() };
+  if (!data.historyLogged) {
+    try {
+      await setDoc(doc(db, "todo_history", "t_" + docId), {
+        task: data.task, completed: true, status: 'done', priority: data.priority || 'medium', dueDate: data.dueDate || '',
+        createdBy: data.createdBy, createdAt: data.createdAt || serverTimestamp(), completedAt: serverTimestamp(),
+        dateKey: data.dateKey || getTodayDateKey(), archivedAt: serverTimestamp()
+      });
+      updates.historyLogged = true;
+    } catch (err) { console.error("Error logging to history:", err); }
+  }
+  await updateDoc(doc(db, "todos", docId), updates);
+  toast("Marked as done ✅", "success");
+}
+async function markTodoMissed(docId, data) {
+  await setDoc(doc(db, "todo_history", "t_" + docId), {
+    task: data.task, completed: false, status: 'missed', priority: data.priority || 'medium', dueDate: data.dueDate || '',
+    createdBy: data.createdBy, createdAt: data.createdAt || serverTimestamp(), completedAt: null,
+    dateKey: data.dateKey || getTodayDateKey(), archivedAt: serverTimestamp()
+  });
+  await deleteDoc(doc(db, "todos", docId));
+  toast("Marked as not done", "info");
+}
+function rmSlideHtml(i) {
+  const d = i.data, hist = i.k === 'hist';
+  const dt = d.createdAt?.seconds ? formatDMY(new Date(d.createdAt.seconds * 1000)) : (d.dateKey || '');
+  const meta = hist ? `From ${esc(dt)} · did you finish it?` : `${esc(d.createdBy || 'Us')} · ${esc(d.priority || 'medium')} priority`;
+  return `<div class="rm-slide" data-k="${i.k}" data-id="${esc(i.id)}"><div class="rm-body"><span class="rm-ic">${hist ? '⏳' : '📌'}</span>` +
+    `<div class="rm-tx"><b>${esc(d.task)}</b><i>${meta}</i></div></div>` +
+    `<div class="rm-acts"><button type="button" class="rm-no" data-a="no" aria-label="Not done">✕</button><button type="button" class="rm-ok" data-a="ok" aria-label="Done">✓</button></div></div>`;
+}
+function rmMeta(n) {
+  const track = document.getElementById('rmTrack'), cnt = document.getElementById('rmCount'), dots = document.getElementById('rmDots');
+  if (!track || !cnt || !dots) return;
+  const i = Math.min(n - 1, Math.max(0, Math.round(track.scrollLeft / Math.max(1, track.clientWidth))));
+  cnt.textContent = n > 1 ? `${i + 1} / ${n}` : '';
+  const shown = Math.min(n, 8);
+  dots.innerHTML = n > 1 ? Array.from({ length: shown }, (_, k) => `<i${k === Math.min(i, shown - 1) ? ' class="on"' : ''}></i>`).join('') : '';
+}
+function renderReminders() {
+  const card = mainPageReminder, track = document.getElementById('rmTrack');
+  if (!card || !track) return;
+  const items = [
+    ...unconfirmed.slice().sort((a, b) => (a.data.archivedAt?.seconds || 0) - (b.data.archivedAt?.seconds || 0)).map((x) => ({ k: 'hist', ...x })),
+    ...allTodos.filter((t) => !t.data.completed).map((x) => ({ k: 'todo', ...x }))
+  ];
+  document.getElementById('bnSlot')?.classList.toggle('empty', !items.length);
+  card.classList.toggle('hidden', !items.length);
+  if (!items.length) { track.innerHTML = ''; rmSig = ''; return; }
+  const sig = items.map((i) => i.k + i.id + (i.data.task || '')).join('|');
+  if (sig !== rmSig) {
+    const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    rmSig = sig;
+    track.innerHTML = items.map(rmSlideHtml).join('');
+    track.scrollLeft = Math.min(idx, items.length - 1) * track.clientWidth;
+  }
+  rmMeta(items.length);
+}
+document.getElementById('rmTrack')?.addEventListener('scroll', () => {
+  cancelAnimationFrame(rmRaf);
+  rmRaf = requestAnimationFrame(() => rmMeta(document.getElementById('rmTrack').children.length));
+}, { passive: true });
+document.getElementById('rmTrack')?.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-a]');
+  if (!b) return;
+  const slide = b.closest('.rm-slide'), k = slide.dataset.k, id = slide.dataset.id, ok = b.dataset.a === 'ok';
+  slide.classList.add('out'); navigator.vibrate?.(10);
+  try {
+    if (k === 'hist') {
+      await updateDoc(doc(db, "todo_history", id), ok ? { completed: true, status: 'done', completedAt: serverTimestamp() } : { status: 'missed' });
+      toast(ok ? "Marked as done ✅" : "Marked as not done", ok ? "success" : "info");
+    } else {
+      const t = allTodos.find((x) => x.id === id);
+      if (!t) return;
+      if (ok) await markTodoDone(id, t.data); else await markTodoMissed(id, t.data);
+    }
+  } catch (err) { console.error(err); slide.classList.remove('out'); toast("Couldn't save. Try again.", "error"); }
+});
 function listenTodoList() {
   if (!todoList) return;
   checkAndResetDailyTodos();
@@ -475,6 +571,7 @@ function listenTodoList() {
     allTodos = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
     renderTodoList();
   });
+  listenUnconfirmed();
 }
 todoSearchInput?.addEventListener('input', debounce(renderTodoList));
 clearCompletedBtn?.addEventListener('click', async () => {
@@ -547,12 +644,20 @@ function loadTodoHistory() {
           <span class="entry-date">${dateTimeStr}</span>
         </div>
         <p class="entry-text" style="${data.completed ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
-          ${esc(data.task)} ${data.completed ? '✅' : '⏳'}
+          ${esc(data.task)} ${data.completed ? '✅' : (data.status === 'missed' ? '❌' : '⏳')}
         </p>
         <div class="todo-badges">
           <span class="priority-badge ${priority}">${priority}</span>
         </div>
       `;
+      if (data.status === 'unconfirmed') {
+        const row = document.createElement('div');
+        row.className = 'hs-acts';
+        row.innerHTML = '<span>Did you finish it?</span><button type="button" class="rm-no" aria-label="Not done">✕</button><button type="button" class="rm-ok" aria-label="Done">✓</button>';
+        row.querySelector('.rm-ok').onclick = () => updateDoc(doc(db, "todo_history", docSnap.id), { completed: true, status: 'done', completedAt: serverTimestamp() });
+        row.querySelector('.rm-no').onclick = () => updateDoc(doc(db, "todo_history", docSnap.id), { status: 'missed' });
+        card.appendChild(row);
+      }
       frag.appendChild(card);
     });
     todoHistoryList.appendChild(frag);
