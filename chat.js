@@ -17,12 +17,26 @@ const INLINE = 700000;// max base64 chars kept inside one Firestore doc
 const MAX_VIDEO = 8 * 1024 * 1024;// 8 MB
 const safeImg = (s) => (typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)) ? s : '';
 const chatId = (a, b) => [a, b].sort().join('_');
-const BANNERS = [['rosegold', 'Rose Gold'], ['champagne', 'Champagne'], ['midnight', 'Midnight'], ['aurora', 'Aurora'], ['royal', 'Royal Velvet'],
-['sunset', 'Sunset Silk'], ['ocean', 'Ocean Pearl'], ['emerald', 'Emerald Luxe'], ['blush', 'Blush Pearl'], ['obsidian', 'Obsidian Gold']];
+const BANNERS = [['volt', 'Golden Thunder'], ['aurora', 'Night Aurora'], ['storm', 'White Thunder'], ['tide', 'Ocean Bubbles'], ['cosmos', 'Cosmic Drift']];
+const BOLT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>';
+const bolts = () => [['0s', 19], ['-2s', 15], ['-4s', 15]].map(([l, s]) => `<em class="ob" style="--d:6s;--dl:${l};--s:${s}px"><u>${BOLT}</u></em>`).join('');
+const rocks = (a) => a.map(([s, d, l, dir, sh]) => `<em class="ob" style="--d:${d}s;--dl:${l}s;--dir:${dir};--s:${s}px"><u class="rk ${sh}"></u></em>`).join('');
+const bubbles = [[8, 8, 6, -1, 4], [19, 13, 8, -4, -6], [31, 7, 5.5, -2, 5], [44, 11, 7.5, -6, -5], [57, 15, 9, -3, 6], [68, 8, 6.5, -5, -4], [79, 12, 8, -1.5, 5], [90, 9, 6, -4.5, -5], [50, 6, 5, -.5, 3]]
+  .map(([x, s, d, l, dx]) => `<em class="bb" style="left:${x}%;--s:${s}px;--d:${d}s;--dl:${l}s;--x:${dx}px"></em>`).join('');
+const BX = '<b class="rg"></b><b class="cv"></b>';
+const BNFX = {
+  volt: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
+  storm: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
+  aurora: BX + '<b class="fx"><b class="st"></b><em class="au a1"></em><em class="au a2"></em><em class="au a3"></em></b><b class="glo"></b><b class="shn"></b>',
+  tide: BX + '<b class="fx"><em class="wv"></em>' + bubbles + '</b><b class="glo"></b><b class="pth"><em class="ob" style="--d:7s;--s:12px"><u class="dr"></u></em><em class="ob" style="--d:7s;--dl:-3.5s;--s:10px"><u class="dr"></u></em></b><b class="shn"></b>',
+  cosmos: BX + '<b class="fx"><b class="st"></b><b class="st s2"></b></b><b class="glo"></b><b class="pth">' +
+    rocks([[9, 11, 0, 'normal', 'r1'], [6, 8, -3, 'reverse', 'r2'], [11, 14, -6, 'normal', 'r3'], [7, 9.5, -8, 'reverse', 'r1']]) +
+    '</b><b class="pth p2">' + rocks([[5, 7, -1, 'normal', 'r2'], [8, 12, -5, 'reverse', 'r3'], [6, 10, -9, 'normal', 'r1']]) + '</b><b class="shn"></b>'
+};
 const bannerEl = (p, cls) => {
-if (p?.bannerId && BANNERS.some((b) => b[0] === p.bannerId)) return `<span class="${cls} bn bn-${p.bannerId}"></span>`;
+if (p?.bannerId && BNFX[p.bannerId]) return `<span class="${cls} bn bnx bn-${p.bannerId}">${BNFX[p.bannerId]}</span>`;
 const s = safeImg(p?.banner);
-return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bn-rosegold"></span>`; };
+return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bnx bn-cosmos">${BNFX.cosmos}</span>`; };
 const wide = () => matchMedia('(min-width:820px)').matches; const svg = (d, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const IC = { add: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M19 8v6M16 11h6"/>'),
 img: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>'),
@@ -494,7 +508,7 @@ if (!uid) { who.innerHTML = `<span style="min-width:0"><b class="cp-title">Chats
 const p = state.profiles.get(uid) || {}, nm = displayName(uid); const pr = presence(uid);
 who.innerHTML = `<span class="pfp-wrap sm"><span class="pfp-sm">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span><span style="min-width:0"><b>${esc(nm)}</b><i class="pres${pr.on ? ' on' : ''}${pr.typing ? ' typing' : ''}">${esc(pr.txt)}</i><i>🔒 End-to-end encrypted</i></span>`;
 }
-function renderAll() { if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); updateBadges(); }
+function renderAll() { if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); updateBadges(); renderFriendsPage(); }
 $('csScroll').addEventListener('click', async (e) => {
 const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
 if (t.dataset.open) return openConversation(t.dataset.open); try {
@@ -786,7 +800,7 @@ const draw = () => {
 const q = state.profile;
 $('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
 $('mpPfp').innerHTML = av(q, q.username);
-$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bn-${id}"></span><i>${n}</i></button>`).join('');
+$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bnx bn-${id}">${BNFX[id]}</span><i>${n}</i></button>`).join('');
 };
 draw();
 const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
@@ -1005,6 +1019,7 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   el.id = 'bento'; el.className = 'bento';
   el.innerHTML =
     '<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title" id="bnTitle" role="button" tabindex="0" aria-label="Open Space Universe">Our Space<span class="bn-orbit" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="10.5" ry="3.6" transform="rotate(-24 12 12)"/></svg></span></div></div></div>' +
+    '<div class="bn-slot empty" id="bnSlot"></div>' +
     '<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
     tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
     tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Open chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') +   // CHAT-VISIBLE
@@ -1012,13 +1027,15 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
     tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
     tile('bnAnn', 'Next milestone', '<span class="bn-big" id="bnAnnN" style="font-size:1.7rem;margin-top:6px">–</span><span class="bn-sm" id="bnAnnS">days to go</span>');
   header.after(el); header.style.display = 'none';
+  const rmCard = document.getElementById('mainPageReminder');
+  if (rmCard) { const slot = el.querySelector('#bnSlot'); slot.appendChild(rmCard); slot.classList.toggle('empty', rmCard.classList.contains('hidden')); }   // pending reminders live between "Our Space" and "Our Sacred Diary"
   const top = el.querySelector('.bn-heroTop');
   if (hb) top.appendChild(hb);
   if (sub) top.appendChild(sub);
   const dock = document.createElement('nav');
   dock.className = 'dock'; dock.setAttribute('aria-label', 'Main');
   const svg = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p}"/></svg>`;
-  dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}</button>`;
+  dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}</button><button type="button" id="dkFr" aria-label="Friend list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.3"/><path d="M2.8 20c.5-3.4 3.1-5.2 6.2-5.2s5.7 1.8 6.2 5.2"/><circle cx="17.2" cy="9.5" r="2.5"/><path d="M17 14.7c2.6.1 4.4 1.7 4.8 5"/></svg></button>`;
   document.body.appendChild(dock);
   $('bnMem').onclick = () => O().openMemories?.();
   $('bnTitle').onclick = () => O().openSpace?.();
@@ -1027,6 +1044,7 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   $('bnStory').onclick = () => O().openStory?.();
   $('bnChat').onclick = () => openChat();
   $('dkHome').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('dkFr').onclick = () => openFriends();
   $('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click();   // set the anniversary only from "days together"
   const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
   function tick() {
@@ -1051,3 +1069,44 @@ window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(u
   }
   tick(); setInterval(tick, 1000);
 })();
+
+/* =========================================================
+   FRIEND LIST  (beside the home button)  — only accepted friends
+   ========================================================= */
+var frPage = null;
+document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
+<header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div class="fp-title">Friends</div><span id="frCount" class="fp-count">0</span></header>
+<div id="frList" class="fp-list"></div></div>`);
+frPage = $('frPage');
+function renderFriendsPage() {
+  if (!frPage || !frPage.classList.contains('active')) return;
+  const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
+  $('frCount').textContent = fr.length;
+  if (!fr.length) {
+    list.innerHTML = '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>When you accept a friend request in Chat, your friend shows up here.</i></div>';
+    return;
+  }
+  list.innerHTML = fr.map(({ uid }) => {
+    const p = state.profiles.get(uid) || {}, nm = displayName(uid), un = p.username ? '@' + p.username : '', pr = presence(uid);
+    return `<article class="fp-card"><div class="fp-ban">${bannerEl(p, 'fp-bn')}<span class="fp-scrim"></span><span class="fp-pres${pr.on ? ' on' : ''}">${pr.on ? '● Online' : esc(pr.txt)}</span></div>
+<div class="fp-mid"><span class="pfp-wrap" style="width:104px;height:104px"><span class="pfp-ring lg">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span><button type="button" class="fp-msg" data-msg="${esc(uid)}">${IC.send} Message</button></div>
+<div class="fp-info"><h3>${esc(nm)}</h3>${un ? `<div class="fp-user">${esc(un)}</div>` : ''}${p.bio ? `<p>${esc(p.bio)}</p>` : ''}</div></article>`;
+  }).join('');
+}
+function openFriends() {
+  frPage.classList.add('active'); frPage.setAttribute('aria-hidden', 'false');
+  document.documentElement.style.overflow = 'hidden';
+  renderFriendsPage();
+}
+function closeFriends() {
+  frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
+  if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
+}
+$('frClose').onclick = closeFriends;
+$('frList').onclick = async (e) => {
+  const b = e.target.closest('[data-msg]'); if (!b) return;
+  const uid = b.dataset.msg; closeFriends();
+  await openChat(); openConversation(uid);
+};
+window.OSBack?.add(frPage, closeFriends);
+setInterval(renderFriendsPage, 15000);   // keeps "online / last seen" fresh while it is open
