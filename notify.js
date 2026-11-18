@@ -16,58 +16,78 @@ const typeOf = (key) => TYPES[String(key || '').split(':')[0]] || 'general';
 const SHOW_MS = 6500;
 const ago = (t) => { const s = Math.floor((Date.now() - t) / 1000); return s < 10 ? 'now' : s < 60 ? s + 's ago' : s < 3600 ? Math.floor(s / 60) + 'm ago' : Math.floor(s / 3600) + 'h ago'; };
 setInterval(() => wrap.querySelectorAll('.ntf').forEach((e) => { const t = e.querySelector('.ntf-time'); if (t) t.textContent = ago(+e.dataset.at); }), 10000);
-function dismiss(el, dx = 0, dy = -60) {
-  if (el.dataset.gone) return; el.dataset.gone = '1'; clearTimeout(el._t);
-  el.style.transition = 'transform .25s ease, opacity .25s ease';
-  el.style.transform = `translate(${dx}px, ${dy}px)`; el.style.opacity = '0';
-  setTimeout(() => el.remove(), 260);
+const deck = [];
+let deckEl = null, track = null, hideT = 0;
+const hideDeck = () => {
+  clearTimeout(hideT); deck.length = 0;
+  if (deckEl) { const d = deckEl; deckEl = track = null; d.classList.add('leaving'); setTimeout(() => d.remove(), 280); }
+};
+const armHide = (ms) => { clearTimeout(hideT); hideT = setTimeout(hideDeck, ms || SHOW_MS + (deck.length > 1 ? 3000 : 0)); };
+function meta() {
+  if (!track || !deckEl) return;
+  const n = deck.length, i = Math.min(n - 1, Math.max(0, Math.round(track.scrollLeft / Math.max(1, track.clientWidth))));
+  deckEl.querySelector('.ntf-pos').textContent = n > 1 ? `${i + 1} / ${n}` : '';
+  const shown = Math.min(n, 8);
+  deckEl.querySelector('.ntf-dots').innerHTML = n > 1 ? Array.from({ length: shown }, (_, k) => `<i${k === Math.min(i, shown - 1) ? ' class="on"' : ''}></i>`).join('') : '';
+  deckEl.classList.toggle('multi', n > 1);
+}
+function slide(it) {
+  const n = it.n, el = document.createElement('div');
+  el.className = 'ntf'; el.dataset.type = it.type; el.dataset.at = String(it.at); el.dataset.count = String(it.count);
+  if (it.key) el.dataset.key = it.key;
+  el.setAttribute('role', 'status');
+  el.innerHTML =
+    `<span class="ntf-ic">${esc(n.icon || '💖')}</span>` +
+    `<span class="ntf-tx"><span class="ntf-top"><em>${esc(n.label || LABELS[it.type])}</em><span class="ntf-time">${ago(it.at)}</span></span>` +
+    `<b>${esc(n.title)}${it.count > 1 ? `<span class="ntf-n">${it.count} new</span>` : ''}</b><i>${esc(n.body || '')}</i></span>` +
+    `<button class="ntf-x" aria-label="Dismiss">✕</button>`;
+  el.addEventListener('click', (e) => { const x = e.target.closest('.ntf-x'); removeItem(it); if (!x) n.onTap?.(); });
+  return el;
+}
+/* Pop-ups appear in the empty space between "Our Space" and "Our Sacred Diary" on the home screen.
+   Anywhere else (chat, sheets, scrolled down) they fall back to the top of the screen. */
+const BLOCK = '#menuDrawer.active,#todoBottomSheet.active,#todoHistoryBottomSheet.active,#storyBottomSheet.active,#memNotes.active,#spaceU.active,#frPage.active,#chatApp.active,#moodPickerPopup.active,#memoryRevealOverlay.active';
+function relocate() {
+  if (!deckEl) return;
+  const slot = document.getElementById('bnSlot'), hd = document.querySelector('.bn-head'), r = hd && hd.getBoundingClientRect();
+  const home = slot && r && r.height && r.bottom > 40 && r.top < innerHeight * .6 && !document.querySelector(BLOCK);
+  const host = home ? slot : wrap;
+  if (deckEl.parentNode !== host) { if (home) host.prepend(deckEl); else host.appendChild(deckEl); }
+}
+setInterval(relocate, 400);
+function render() {
+  if (!deck.length) { hideDeck(); return; }
+  if (!deckEl) {
+    wrap.insertAdjacentHTML('beforeend', '<div class="ntf-deck"><div class="ntf-track"></div><div class="ntf-meta"><span class="ntf-pos"></span><span class="ntf-dots"></span></div></div>');
+    deckEl = wrap.lastElementChild; track = deckEl.querySelector('.ntf-track'); relocate();
+    track.addEventListener('scroll', () => { meta(); armHide(4500); }, { passive: true });
+    deckEl.addEventListener('pointerdown', () => clearTimeout(hideT));
+    ['pointerup', 'pointercancel'].forEach((k) => deckEl.addEventListener(k, () => armHide(4500)));
+  }
+  track.innerHTML = '';
+  deck.forEach((it) => track.appendChild(slide(it)));
+  meta();
+}
+function removeItem(it) {
+  const i = deck.indexOf(it); if (i < 0) return;
+  const keep = track ? track.scrollLeft : 0;
+  deck.splice(i, 1); render();
+  if (track && deck.length) track.scrollLeft = Math.min(keep, (deck.length - 1) * track.clientWidth);
+  if (deck.length) armHide(4500);
 }
 function push(n) {
   if (document.getElementById('introSplash')) { setTimeout(() => push(n), 1200); return; }   // wait until the splash has finished
   const type = typeOf(n.key);
   let count = 1;
-  // same key = same conversation / item: replace it instead of stacking duplicates
-  if (n.key) wrap.querySelectorAll('.ntf').forEach((x) => {
-    if (x.dataset.key === n.key) { if (type === 'chat') count = (+x.dataset.count || 1) + 1; clearTimeout(x._t); x.remove(); }
-  });
-  const at = n.at || Date.now();
-  const el = document.createElement('div');
-  el.className = 'ntf'; el.dataset.type = type; el.dataset.at = String(at); el.dataset.count = String(count);
-  if (n.key) el.dataset.key = n.key;
-  el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
-  el.innerHTML =
-    `<span class="ntf-ic">${esc(n.icon || '💖')}</span>` +
-    `<span class="ntf-tx"><span class="ntf-top"><em>${esc(n.label || LABELS[type])}</em><span class="ntf-time">${ago(at)}</span></span>` +
-    `<b>${esc(n.title)}${count > 1 ? `<span class="ntf-n">${count} new</span>` : ''}</b><i>${esc(n.body || '')}</i></span>` +
-    `<button class="ntf-x" aria-label="Dismiss">✕</button>`;
-  wrap.prepend(el);
-  while (wrap.children.length > 3) wrap.lastChild.remove();
+  if (n.key) {
+    const old = deck.find((x) => x.key === n.key);
+    if (old) { if (type === 'chat') count = (old.count || 1) + 1; deck.splice(deck.indexOf(old), 1); }
+  }
+  deck.unshift({ key: n.key, type, at: n.at || Date.now(), count, n });
+  if (deck.length > 8) deck.length = 8;
+  render(); track.scrollLeft = 0;
   navigator.vibrate?.(12);
-  /* auto-hide timer that pauses while you hold / hover */
-  let left = SHOW_MS, t0 = 0;
-  const arm = () => { t0 = Date.now(); el._t = setTimeout(() => dismiss(el), left); };
-  const pause = () => { clearTimeout(el._t); left -= Date.now() - t0; el.classList.add('hold'); };
-  const resume = () => { if (el.dataset.gone) return; left = Math.max(left, 1200); el.classList.remove('hold'); arm(); };
-  arm();
-  el.addEventListener('mouseenter', pause); el.addEventListener('mouseleave', resume);
-  /* swipe (left / right / up) or tap */
-  let x0 = 0, y0 = 0, dx = 0, dy = 0, down = false, onX = false;
-  el.addEventListener('pointerdown', (e) => {
-    down = true; onX = !!e.target.closest('.ntf-x'); x0 = e.clientX; y0 = e.clientY; dx = dy = 0;
-    el.setPointerCapture(e.pointerId); el.style.transition = 'none'; pause();
-  });
-  el.addEventListener('pointermove', (e) => {
-    if (!down) return; dx = e.clientX - x0; dy = Math.min(0, e.clientY - y0);
-    el.style.transform = `translate(${dx}px, ${dy}px)`; el.style.opacity = String(Math.max(.2, 1 - Math.abs(dx) / 260));
-  });
-  const up = () => {
-    if (!down) return; down = false;
-    if (Math.abs(dx) > 70 || dy < -35) return dismiss(el, dx > 0 ? 400 : dx < 0 ? -400 : 0, dy < -35 ? -90 : 0);
-    el.style.transition = 'transform .2s ease, opacity .2s ease'; el.style.transform = ''; el.style.opacity = '';
-    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) { dismiss(el, 0, -40); if (!onX) n.onTap?.(); return; }
-    resume();
-  };
-  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  armHide();
   /* background tab: also show a system notification if allowed (unchanged behaviour) */
   if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
     navigator.serviceWorker?.ready.then((r) => r.showNotification(n.title, { body: n.body || '', icon: 'icons/icon-192.png', tag: n.key || 'os' })).catch(() => {});
