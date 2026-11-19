@@ -1,8 +1,9 @@
-const CACHE = 'our-space-v16';
+const CACHE = 'our-space-v17';
 const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.js', './chat.css', './chat.js', './notify.js', './manifest.json',
 './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', (e) => {
-e.waitUntil(caches.open(CACHE).then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
+// 'reload' skips the browser's own cache so a fresh copy of every file is saved
+e.waitUntil(caches.open(CACHE).then((c) => Promise.all(SHELL.map((u) => c.add(new Request(u, { cache: 'reload' })).catch(() => {})))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
 e.waitUntil(
@@ -25,7 +26,17 @@ if (req.mode === 'navigate') {
 e.respondWith(fetch(req).catch(() => caches.match('./index.html')));
 return;
 }
-// Everything else: serve cache fast, refresh in background
+// Our own files (code, styles, icons): ask the server first so every update shows straight away; use the saved copy only when offline
+if (url.origin === location.origin) {
+e.respondWith(
+fetch(req, { cache: 'no-cache' }).then((res) => {
+if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+return res;
+}).catch(() => caches.match(req))
+);
+return;
+}
+// Everything else (fonts, libraries): serve the saved copy fast, refresh in the background
 e.respondWith(
 caches.match(req).then((cached) => {
 const net = fetch(req).then((res) => {
