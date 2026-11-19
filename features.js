@@ -379,8 +379,8 @@ SPECIAL DAYS + "OUR SPACE" WELCOME
 - Test any day without waiting:  open the site with  ?fx=xmas  (see the key list below).
 ========================================================= */
 const SPECIAL = [
-{ k: 'idea', m: 11, d: 18, theme: 'gold', icon: '💡', small: 'A day to remember', title: 'Today’s our birth of this idea',
-msg: 'Every beautiful story starts with one small spark, and this is ours. Here’s to everything we’ll build, keep and love in this little space of ours.' },
+{ k: 'birth', m: 11, d: 19, theme: 'gold', icon: '🌟', small: 'The birth of our website', title: 'Today’s the birth of Our Space',
+msg: 'Today our little website came to life: a corner of the internet made only for us, for our memories, our stories and everything we’ll keep. Here’s to many more days inside it.' },
 { k: 'xmas', m: 12, d: 25, theme: 'xmas', icon: '🎄', small: 'Merry Christmas', title: 'Happy Christmas',
 msg: 'May your day glow with warmth, wonder and everything you love the most. Wishing you a Christmas as magical as you are.' },
 { k: 'newyear', m: 1, d: 1, theme: 'ny', icon: '🎆', small: 'A brand-new chapter', title: 'Happy New Year',
