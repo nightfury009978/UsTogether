@@ -134,6 +134,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <div id="csScroll" class="cs-scroll"></div>
 </aside>
 <section class="chat-pane">
+<div class="cbg" id="csDust" aria-hidden="true"></div>
 <header class="cp-head">
 <button id="cpToggle" class="cp-btn" aria-label="Friends">${IC.panel}</button>
 <button id="cpWho" class="cp-who"></button>
@@ -152,6 +153,7 @@ document.body.insertAdjacentHTML('beforeend', `
 </header>
 <div id="cpEmpty" class="cp-empty"><div><span id="cpEmptyTxt">Add a friend<br>to start chatting</span><small id="cpNote">🔒 Messages are end-to-end encrypted</small></div></div>
 <div id="cpMsgs" class="cp-msgs hidden"></div>
+<div id="cpReply" class="cp-reply hidden"></div>
 <footer id="cpComp" class="cp-comp">
 <button id="cpFileBtn" class="cp-circle" aria-label="Send photo or video">${IC.img}</button>
 <input id="cpFile" type="file" accept="image/*,video/*" hidden>
@@ -532,7 +534,7 @@ $('cpWho').onclick = () => { if (state.active) openFriendSheet(state.active); };
 Conversation
 ========================================================= */
 function closeConversation() {
-exitSelect(); stopTyping();
+exitSelect(); stopTyping(); state.reply = null; renderReply();
 state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = ''; pane.classList.remove('active');
 $('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden'); renderHeader();
 }
@@ -540,7 +542,7 @@ async function openConversation(uid) {
 await state.bootP;
 if (!state.priv) return route();
 state.unsubMsgs?.();
-state.active = uid; state.msgDocs = []; state.sig = ''; state.first = true;
+state.active = uid; state.msgDocs = []; state.sig = ''; state.first = true; state.reply = null; renderReply();
 pane.classList.add('active');
 hideSideMobile();
 $('cpEmpty').classList.add('hidden'); $('cpMsgs').classList.remove('hidden'); comp.classList.remove('hidden');
@@ -563,6 +565,37 @@ const dayLabel = (d) => {
 const diff = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 864e5);
 return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
 }; const fmtSize = (n) => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round((n || 0) / 1024)) + ' KB';
+/* ---------- starry gold background (same sparkles as the Our Space welcome) ---------- */
+function dust(el, n) {
+if (!el) return;
+const g = ['✦', '·', '✧'], few = matchMedia('(prefers-reduced-motion: reduce)').matches;
+el.innerHTML = Array.from({ length: few ? 8 : n }, () => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--s:${(8 + Math.random() * 14).toFixed(0)}px;--t:${(7 + Math.random() * 8).toFixed(1)}s;--dl:${(-Math.random() * 12).toFixed(1)}s;--sw:${((Math.random() - .5) * 60).toFixed(0)}px">${g[(Math.random() * 3) | 0]}</i>`).join('');
+}
+dust($('csDust'), 22); dust($('frDust'), 26);
+/* ---------- reply to a message (the ↩ arrow beside every message) ---------- */
+const REPLY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>';
+const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 Video' : r.k === 'aud' ? '🎧 Voice message' : (r.x || 'Message');
+const replyWho = (r) => r.f === state.uid ? 'You' : displayName(r.f);
+function renderReply() {
+const box = $('cpReply'); if (!box) return;
+const r = state.reply;
+box.classList.toggle('hidden', !r);
+box.innerHTML = r ? `<span class="cr-bar"></span><span class="cr-t"><b>Replying to ${esc(replyWho(r))}</b><span>${esc(replyLabel(r))}</span></span><button type="button" id="crX" aria-label="Cancel reply">${IC.close(18)}</button>` : '';
+$('crX')?.addEventListener('click', () => { state.reply = null; renderReply(); });
+}
+function startReply(id) {
+const m = (state.msgDocs || []).find((x) => x.id === id), p = plain.get(id);
+if (!m || !p || p.k === 'err') { toast('Can’t reply to this message', 'info'); return; }
+state.reply = { id, f: m.from, k: p.k, x: p.k === 't' ? String(p.x || '').slice(0, 90) : '' };
+renderReply(); input.focus();
+}
+function jumpToMsg(id) {
+const el = $('cpMsgs').querySelector('[data-mid="' + String(id).replace(/"/g, '') + '"]');
+if (!el) { toast('That message is further up than what’s loaded', 'info'); return; }
+el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+setTimeout(() => el.classList.remove('flash'), 1700);
+}
 function msgHTML(m, p, url, mine, t) {
 const time = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 let inner;
@@ -575,7 +608,9 @@ inner = p.k === 'img' ? `<div class="bub media"><img class="m-img" data-view src
 } else {
 inner = `<div class="bub media"><button class="m-load" data-load="${m.id}">${p.k === 'vid' ? '▶ Video' : p.k === 'aud' ? '🎧 Voice message' : '🖼️ Photo'} · ${fmtSize(p.sz)}<br>Tap to load</button></div>`;
 }
-return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${inner}<span class="mt">${time}</span></div>`;
+const rq = p.r && p.r.id ? `<div class="rq" data-rq="${esc(p.r.id)}"><b>${esc(replyWho(p.r))}</b><span>${esc(replyLabel(p.r))}</span></div>` : '';
+const rp = p.k === 'err' ? '' : `<button type="button" class="rp" data-reply="${m.id}" aria-label="Reply">${REPLY_SVG}</button>`;
+return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${rq}${inner}<span class="mt">${time}</span>${rp}</div>`;
 }
 let paintTok = 0;
 async function paint() {
@@ -618,7 +653,9 @@ paint();
 } catch (e) { console.error(e); toast('Download failed', 'error'); }
 }
 $('cpMsgs').addEventListener('click', (e) => {
-if (state.selecting) { const mm = e.target.closest('.msg'); if (mm) toggleSel(mm.dataset.mid); return; } const v = e.target.closest('[data-view]'), l = e.target.closest('[data-load]'); if (v) { light.querySelector('img').src = v.src; light.classList.add('active'); }
+if (state.selecting) { const mm = e.target.closest('.msg'); if (mm) toggleSel(mm.dataset.mid); return; } const rpb = e.target.closest('[data-reply]'); if (rpb) { startReply(rpb.dataset.reply); return; }
+const rqb = e.target.closest('[data-rq]'); if (rqb) { jumpToMsg(rqb.dataset.rq); return; }
+const v = e.target.closest('[data-view]'), l = e.target.closest('[data-load]'); if (v) { light.querySelector('img').src = v.src; light.classList.add('active'); }
 else if (l) loadChunked(l.dataset.load);
 });
 /* =========================================================
@@ -626,6 +663,7 @@ Sending
 ========================================================= */
 async function sendPayload(payload, extra) {
 const uid = state.active; if (!uid) return;
+if (state.reply) { payload = { ...payload, r: state.reply }; state.reply = null; renderReply(); }
 const key = await sharedKey(uid), cid = chatId(state.uid, uid), { iv, ct } = await encJSON(key, payload); await setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort(), lastAt: serverTimestamp(), lastFrom: state.uid }, { merge: true });
 await addDoc(collection(D(), 'chats', cid, 'messages'), { from: state.uid, at: serverTimestamp(), iv, ct, ...(extra || {}) });
 } function needFriend() {
@@ -1025,7 +1063,7 @@ el.innerHTML =
 '<div class="bn-slot empty" id="bnSlot"></div>' +
 '<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
 tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
-tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Open chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') + // CHAT-VISIBLE
+tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Welcome to chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') + // CHAT-VISIBLE
 tile('bnTodo', 'To-do', '<span class="bn-big" id="bnTodoN" style="font-size:1.7rem;margin-top:6px">0</span><span class="bn-sm">left today</span>') +
 tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
 tile('bnAnn', 'Next milestone', '<span class="bn-big" id="bnAnnN" style="font-size:1.7rem;margin-top:6px">–</span><span class="bn-sm" id="bnAnnS">days to go</span>');
@@ -1066,7 +1104,9 @@ const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
 set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
 set('bnStoryS', chs[0]?.querySelector('.story-accordion-title')?.textContent || '');
 const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
-set('bnChatT', un ? un + ' unread' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'All caught up');
+const ct = $('bnChatT'), ctxt = un ? 'New message' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'Welcome to chat';
+if (ct && ct.textContent !== ctxt) { ct.textContent = ctxt; ct.classList.remove('swap'); void ct.offsetWidth; ct.classList.add('swap'); }
+ct?.classList.toggle('bn-new', !!un); $('bnChat')?.classList.toggle('has-new', !!un);
 const dot = !!(un || rq);
 $('bnChatDot').classList.toggle('hidden', !dot);
 }
@@ -1076,10 +1116,10 @@ tick(); setInterval(tick, 1000);
 FRIEND LIST (beside the home button) — only accepted friends
 ========================================================= */
 var frPage = null;
-document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
+document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div><div class="cbg" id="frDust" aria-hidden="true"></div>
 <header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div class="fp-title">Friends</div><span id="frCount" class="fp-count">0</span></header>
 <div id="frList" class="fp-list"></div></div>`);
-frPage = $('frPage');
+frPage = $('frPage'); dust($('frDust'), 26);
 function renderFriendsPage() {
 if (!frPage || !frPage.classList.contains('active')) return;
 const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
