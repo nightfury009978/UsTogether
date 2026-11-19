@@ -10,27 +10,25 @@ const $ = (id) => document.getElementById(id);
 /* the newest styles are also injected from here, so they still apply even if an older chat.css is cached on the phone */
 (() => { if (document.getElementById('v11css')) return; const s = document.createElement('style'); s.id = 'v11css'; s.textContent = `
 /* =========================================================
-   v11 — header title · Chat tile · starry chats · reply arrow
-   ========================================================= */
+v11 — header title · Chat tile · starry chats · reply arrow
+========================================================= */
 html body .top-nav { justify-content: space-between; }
 html body .nav-brand { font-size: 1.3rem; white-space: nowrap; cursor: default; }
 html body .nav-brand:active { transform: none; }
-
-/* Chat tile: "Welcome to chat"  <->  red shining "New message" */
+/* Chat tile: "Welcome to chat" <-> red shining "New message" */
 #bnChatT.swap { animation: bnSwap .5s cubic-bezier(.2,.9,.3,1); }
 @keyframes bnSwap { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 #bnChatT.bn-new { font-weight: 700; color: transparent; -webkit-text-fill-color: transparent; -webkit-background-clip: text; background-clip: text;
-  background-image: linear-gradient(100deg, #ff2d46 0%, #ff2d46 36%, #ffd3d9 50%, #ff2d46 64%, #ff2d46 100%); background-size: 260% 100%;
-  filter: drop-shadow(0 0 6px rgba(255,45,70,.7)); animation: bnRedShine 2.2s linear infinite; }
+background-image: linear-gradient(100deg, #ff2d46 0%, #ff2d46 36%, #ffd3d9 50%, #ff2d46 64%, #ff2d46 100%); background-size: 260% 100%;
+filter: drop-shadow(0 0 6px rgba(255,45,70,.7)); animation: bnRedShine 2.2s linear infinite; }
 #bnChatT.bn-new.swap { animation: bnSwap .5s cubic-bezier(.2,.9,.3,1), bnRedShine 2.2s linear infinite; }
 @keyframes bnRedShine { from { background-position: 130% 0; } to { background-position: -130% 0; } }
 html body .bn-tile.has-new { border-color: rgba(255,45,70,.4); box-shadow: 0 0 0 1px rgba(255,45,70,.25), 0 0 24px rgba(255,45,70,.16); }
-
 /* starry gold background — same sparkles as the Our Space welcome */
 .cbg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-  background: radial-gradient(120% 90% at 50% 28%, #3a2418 0%, #150c08 58%, #0b0504 100%); }
+background: radial-gradient(120% 90% at 50% 28%, #3a2418 0%, #150c08 58%, #0b0504 100%); }
 .cbg i { position: absolute; left: var(--x); bottom: -6%; font-style: normal; font-size: var(--s); color: #e9bf8f; text-shadow: 0 0 10px rgba(233,191,143,.9);
-  opacity: 0; animation: cbgRise var(--t) linear var(--dl) infinite; will-change: transform, opacity; }
+opacity: 0; animation: cbgRise var(--t) linear var(--dl) infinite; will-change: transform, opacity; }
 @keyframes cbgRise { 0% { transform: translate(0,0) rotate(0); opacity: 0; } 12% { opacity: .85; } 85% { opacity: .6; } 100% { transform: translate(var(--sw), -112vh) rotate(180deg); opacity: 0; } }
 .chat-app:not(.active) .cbg i, .fp:not(.active) .cbg i { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .cbg i { animation-duration: 20s; } }
@@ -38,7 +36,6 @@ html body .bn-tile.has-new { border-color: rgba(255,45,70,.4); box-shadow: 0 0 0
 .chat-pane > .cp-head, .chat-pane > .cp-comp { background: rgba(16,11,9,.74); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-color: rgba(227,192,141,.18); box-shadow: none; }
 .chat-pane > .cp-msgs { background: transparent; }
 .fp > .fp-top, .fp > .fp-list { position: relative; z-index: 1; }
-
 /* message text that matches the golden background */
 html body .chat-app .me .bub { color: #2b190b; text-shadow: none; background: linear-gradient(135deg, #f3d9ae 0%, #e0b377 55%, #c9965a 100%); box-shadow: 0 6px 18px rgba(201,150,90,.32), inset 0 1px 0 rgba(255,255,255,.45); }
 html body .chat-app .them .bub { color: #f7ecdc; background: rgba(42,30,24,.78); border: 1px solid rgba(227,192,141,.24); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -48,10 +45,9 @@ html body .chat-app .mt .rd { color: #d3b98c; font-weight: 600; letter-spacing: 
 html body .chat-app .mt .rd.seen { color: #ffe3a6; text-shadow: 0 0 8px rgba(255,214,140,.75); }
 html body .chat-app .day-sep { color: #e9cd9f; background: rgba(22,15,11,.7); border: 1px solid rgba(227,192,141,.22); }
 html body .chat-app .cp-who i { color: #bfa98b; }
-
 /* reply arrow + quoted reply */
 .msg .rp { position: absolute; top: calc(50% - 22px); width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
-  border: 1px solid rgba(227,192,141,.3); background: rgba(22,15,11,.72); color: #e9cd9f; opacity: .78; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .15s ease, opacity .15s ease; }
+border: 1px solid rgba(227,192,141,.3); background: rgba(22,15,11,.72); color: #e9cd9f; opacity: .78; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .15s ease, opacity .15s ease; }
 .msg .rp svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .msg.me .rp { left: -35px; } .msg.them .rp { right: -35px; }
 .msg .rp:active { transform: scale(.88); opacity: 1; background: rgba(227,192,141,.35); }
@@ -69,7 +65,6 @@ html body .chat-app .cp-who i { color: #bfa98b; }
 .cr-t span { font-size: .8rem; color: #d8c8b2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cp-reply button { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(227,192,141,.3); background: transparent; color: #e9cd9f; cursor: pointer; }
 .chat-pane.selecting .cp-reply { display: none; }
-
 `; document.head.appendChild(s); })();
 const O = () => window.OS;
 const D = () => O().db;
@@ -282,10 +277,11 @@ if (open && dx < 0) hideSideMobile();
 else if (!open && dx > 0 && !main.classList.contains('hidden')) openSide();
 }, { passive: true });
 /* keyboard-aware sizing (so the composer never hides behind the keyboard) */
-const fit = () => {
+let fitRaf = 0;
+const fit = () => { if (fitRaf) return; fitRaf = requestAnimationFrame(() => { fitRaf = 0;
 const v = window.visualViewport; if (!v || !app.classList.contains('active')) return;
 app.style.height = v.height + 'px'; app.style.top = v.offsetTop + 'px';
-if (document.activeElement === input) { const b = $('cpMsgs'); b.scrollTop = b.scrollHeight; } };
+if (document.activeElement === input) { const b = $('cpMsgs'); b.scrollTop = b.scrollHeight; } }); };
 window.visualViewport?.addEventListener('resize', fit);
 window.visualViewport?.addEventListener('scroll', fit);
 /* =========================================================
@@ -414,20 +410,20 @@ state.unsubs.push(onSnapshot(query(collection(D(), 'chats'), where('members', 'a
 s.docChanges().forEach((ch) => { if (ch.type === 'removed' || !state.chatsReady || ch.doc.metadata.hasPendingWrites) return;
 const c = ch.doc.data(), prev = state.chats.get(ch.doc.id);
 if (c.lastFrom && c.lastFrom !== me && c.lastAt && prev?.lastAt?.seconds !== c.lastAt.seconds) notifyMsg(ch.doc.id, c); });
-state.chats = new Map(s.docs.map((d) => [d.id, d.data()])); state.chatsReady = true; renderAll();
+state.chats = new Map(s.docs.map((d) => [d.id, d.data()])); state.chatsReady = true; renderAll(); if (state.active) queuePaint();
 }, err));
 }
 function watchProfile(uid) {
 if (state.watch.has(uid)) return;
 state.watch.set('p:' + uid, onSnapshot(doc(D(), 'chatPresence', uid), (s) => {
-const pd = s.exists() ? s.data({ serverTimestamps: 'estimate' }) : null; state.presence.set(uid, pd); trackTyping(uid, pd); renderAll();
+const pd = s.exists() ? s.data({ serverTimestamps: 'estimate' }) : null; state.presence.set(uid, pd); trackTyping(uid, pd); if (uid !== state.uid) renderAll();
 }, () => {}));
 state.watch.set(uid, onSnapshot(doc(D(), 'chatUsers', uid), (s) => {
 const d = s.exists() ? s.data() : null;
 state.profiles.set(uid, d);
 if (uid === state.uid && d) state.profile = d;
 if (uid === state.active) state.sig = '';
-renderAll(); if (uid === state.active) paint();
+renderAll(); if (uid === state.active) queuePaint();
 }));
 }
 async function getProfile(uid) {
@@ -545,29 +541,48 @@ ${bannerEl(p, 'fr-banner')}
 <span class="pfp-wrap"><span class="pfp-ring">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span>
 <span class="fr-text"><b>${esc(nm)}</b>${state.nick[uid] && un ? `<i>${esc(un)}</i>` : ''}<i class="pres${pr.on ? ' on' : ''}${pr.typing ? ' typing' : ''}">${esc(pr.txt)}</i></span>
 ${unreadFor(uid) ? '<span class="fr-dot"></span>' : ''}</button>`; }
+/* ---------- smooth lists: only rows that really changed are touched, so nothing flickers or restarts ---------- */
+const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('off', !e.isIntersecting)), { rootMargin: '60px' }) : null;
+function setList(box, items, watch) {
+const old = new Map();
+for (const el of [...box.children]) { if (el.__k == null) el.remove(); else old.set(el.__k, el); }
+let ref = box.firstElementChild;
+for (const it of items) {
+const el = old.get(it.k);
+if (el && el.__h === it.html) { old.delete(it.k); if (el === ref) ref = ref.nextElementSibling; else box.insertBefore(el, ref); continue; }
+const t = document.createElement('template'); t.innerHTML = it.html; const ne = t.content.firstElementChild; if (!ne) continue;
+ne.__k = it.k; ne.__h = it.html;
+if (el) { old.delete(it.k); if (el === ref) ref = ref.nextElementSibling; el.remove(); }
+box.insertBefore(ne, ref); if (watch && rowIO) rowIO.observe(ne);
+}
+old.forEach((el) => el.remove());
+}
+const cnt = (n) => `<div class="cs-label">${n}</div>`;
 function renderSide() {
 const p = state.profile; if (!p) return; $('csMe').innerHTML = `<span class="pfp-ring sm">${av(p, p.username)}</span><span><b>@${esc(p.username)}</b><i>Tap to edit your profile</i></span>`;
-const q = state.search.trim().toLowerCase(); let h = '';
+const q = state.search.trim().toLowerCase(), items = [];
 if (state.incoming.length) {
-h += '<div class="cs-label">Friend requests</div>';
+items.push({ k: 'l:rq', html: cnt('Friend requests') });
 state.incoming.forEach((r) => {
 const pr = state.profiles.get(r.from) || {};
-h += `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
-<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>`;
+items.push({ k: 'rq:' + r.id, html: `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
+<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>` });
 });
 }
 if (state.outgoing.length) {
-h += '<div class="cs-label">Sent requests</div>';
+items.push({ k: 'l:out', html: cnt('Sent requests') });
 state.outgoing.forEach((r) => {
-const pr = state.profiles.get(r.to) || {}; h += `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>`;
+const pr = state.profiles.get(r.to) || {};
+items.push({ k: 'ro:' + r.id, html: `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>` });
 });
 }
 const list = state.friends
 .filter((f) => !q || displayName(f.uid).toLowerCase().includes(q) || (state.profiles.get(f.uid)?.username || '').includes(q))
-.sort((a, b) => ((state.chats.get(chatId(state.uid, b.uid))?.lastAt?.seconds || 0) - (state.chats.get(chatId(state.uid, a.uid))?.lastAt?.seconds || 0)) || displayName(a.uid).localeCompare(displayName(b.uid))); h += `<div class="cs-label">Friends · ${state.friends.length}</div>`;
-h += list.length ? list.map((f) => friendRow(f.uid)).join('')
-: `<div class="cs-empty">${state.friends.length ? 'No friends match.' : 'No friends yet.<br>Tap the 👤+ button to add one by username.'}</div>`;
-$('csScroll').innerHTML = h;
+.sort((a, b) => ((state.chats.get(chatId(state.uid, b.uid))?.lastAt?.seconds || 0) - (state.chats.get(chatId(state.uid, a.uid))?.lastAt?.seconds || 0)) || displayName(a.uid).localeCompare(displayName(b.uid)));
+items.push({ k: 'l:fr', html: cnt('Friends · ' + state.friends.length) });
+if (list.length) list.forEach((f) => items.push({ k: 'fr:' + f.uid, html: friendRow(f.uid) }));
+else items.push({ k: 'empty', html: `<div class="cs-empty">${state.friends.length ? 'No friends match.' : 'No friends yet.<br>Tap the 👤+ button to add one by username.'}</div>` });
+setList($('csScroll'), items, true);
 }
 function renderHeader() {
 const uid = state.active, who = $('cpWho'), has = state.friends.length > 0;
@@ -577,7 +592,8 @@ if (!uid) { who.innerHTML = `<span style="min-width:0"><b class="cp-title">Chats
 const p = state.profiles.get(uid) || {}, nm = displayName(uid); const pr = presence(uid);
 who.innerHTML = `<span class="pfp-wrap sm"><span class="pfp-sm">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span><span style="min-width:0"><b>${esc(nm)}</b><i class="pres${pr.on ? ' on' : ''}${pr.typing ? ' typing' : ''}">${esc(pr.txt)}</i><i>🔒 End-to-end encrypted</i></span>`;
 }
-function renderAll() { if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); updateBadges(); renderFriendsPage(); }
+let raRaf = 0;
+function renderAll() { if (raRaf) return; raRaf = requestAnimationFrame(() => { raRaf = 0; if (!state.profile) { updateBadges(); return; } renderSide(); renderHeader(); updateBadges(); renderFriendsPage(); }); }
 $('csScroll').addEventListener('click', async (e) => {
 const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
 if (t.dataset.open) return openConversation(t.dataset.open); try {
@@ -613,16 +629,24 @@ $('cpEmpty').classList.add('hidden'); $('cpMsgs').classList.remove('hidden'); co
 $('cpMsgs').innerHTML = '';
 renderAll();
 const cid = chatId(state.uid, uid);
+if (!state.chats.has(cid)) { // brand-new chat: create it first. Existing chats open straight away (no waiting on the server)
 try {
 const c = await getDoc(doc(D(), 'chats', cid));
 if (!c.exists()) await setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort() });
 } catch { toast('Couldn’t open this chat', 'error'); return; }
+}
 if (state.active !== uid) return;
-state.unsubMsgs = onSnapshot(query(collection(D(), 'chats', cid, 'messages'), orderBy('at', 'desc'), limit(80)), (s) => {
+state.lim = 40; state.more = false; state.anchor = null; state.stick = false;
+subMsgs(uid, cid);
+}
+function subMsgs(uid, cid) {
+state.unsubMsgs?.();
+state.unsubMsgs = onSnapshot(query(collection(D(), 'chats', cid, 'messages'), orderBy('at', 'desc'), limit(state.lim)), { includeMetadataChanges: true }, (s) => {
+if (state.active !== uid) return;
 s.docChanges().forEach((ch) => { if (ch.type === 'removed') { const u = media.get(ch.doc.id); if (u) { URL.revokeObjectURL(u); media.delete(ch.doc.id); } plain.delete(ch.doc.id); } });
-state.msgDocs = s.docs.map((d) => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
+state.msgDocs = s.docs.map((d) => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
 if (state.sel.size) { const live = new Set(state.msgDocs.map((m) => m.id)); [...state.sel].forEach((id) => { if (!live.has(id)) state.sel.delete(id); }); updateSelUI(); }
-paint(); markSeen(cid);
+paint(); if (!s.metadata.hasPendingWrites) markSeen(cid);
 }, () => toast('Couldn’t load messages', 'error'));
 }
 const dayLabel = (d) => {
@@ -635,7 +659,7 @@ if (!el) return;
 const g = ['✦', '·', '✧'], few = matchMedia('(prefers-reduced-motion: reduce)').matches;
 el.innerHTML = Array.from({ length: few ? 8 : n }, () => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--s:${(8 + Math.random() * 14).toFixed(0)}px;--t:${(7 + Math.random() * 8).toFixed(1)}s;--dl:${(-Math.random() * 12).toFixed(1)}s;--sw:${((Math.random() - .5) * 60).toFixed(0)}px">${g[(Math.random() * 3) | 0]}</i>`).join('');
 }
-dust($('csDust'), 22); dust($('frDust'), 26);
+dust($('csDust'), 10); dust($('frDust'), 12);
 /* ---------- reply to a message (the ↩ arrow beside every message) ---------- */
 const REPLY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>';
 const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 Video' : r.k === 'aud' ? '🎧 Voice message' : (r.x || 'Message');
@@ -660,48 +684,88 @@ el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 setTimeout(() => el.classList.remove('flash'), 1700);
 }
-function msgHTML(m, p, url, mine, t) {
+const tsOf = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
+function msgHTML(m, p, url, mine, t, theirRead) {
 const time = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 let inner;
 if (p.k === 'err') inner = '<div class="bub lock">🔒 Can’t decrypt this message on this device</div>';
 else if (p.k === 't') inner = `<div class="bub">${esc(p.x)}</div>`;
 else if (url) {
-inner = p.k === 'img' ? `<div class="bub media"><img class="m-img" data-view src="${url}" alt=""></div>`
+inner = p.k === 'img' ? `<div class="bub media"><img class="m-img" data-view src="${url}" alt="" decoding="async"></div>`
 : p.k === 'vid' ? `<div class="bub media"><video controls playsinline preload="metadata" src="${url}"></video></div>`
 : `<div class="bub media"><audio controls preload="metadata" src="${url}"></audio></div>`;
 } else {
-inner = `<div class="bub media"><button class="m-load" data-load="${m.id}">${p.k === 'vid' ? '▶ Video' : p.k === 'aud' ? '🎧 Voice message' : '🖼️ Photo'} · ${fmtSize(p.sz)}<br>Tap to load</button></div>`;
+inner = `<div class="bub media"><button class="m-load" data-load="${m.id}">${p.k === 'vid' ? '▶ Video' : p.k === 'aud' ? '🎧 Voice message' : '🖼️ Photo'} · ${fmtSize(p.sz)}<br>${m.d ? 'Opening…' : 'Tap to load'}</button></div>`;
 }
 const rq = p.r && p.r.id ? `<div class="rq" data-rq="${esc(p.r.id)}"><b>${esc(replyWho(p.r))}</b><span>${esc(replyLabel(p.r))}</span></div>` : '';
 const rp = p.k === 'err' ? '' : `<button type="button" class="rp" data-reply="${m.id}" aria-label="Reply">${REPLY_SVG}</button>`;
-return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${rq}${inner}<span class="mt">${time}</span>${rp}</div>`;
+const at = tsOf(m.at), seen = !!(theirRead && at && theirRead >= at);
+const tick = !mine ? '' : m.pending ? '<em class="rd pend">🕓 Sending…</em>' : seen ? '<em class="rd seen">✓✓ Seen</em>' : '<em class="rd">✓ Delivered</em>';
+return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${rq}${inner}<span class="mt">${time}${tick}</span>${rp}</div>`;
 }
-let paintTok = 0;
+let paintTok = 0, pq = 0, hyd = 0; const badMedia = new Set();
+const queuePaint = () => { if (!pq) pq = requestAnimationFrame(() => { pq = 0; paint(); }); };
 async function paint() {
 const uid = state.active; if (!uid) return;
-const tok = ++paintTok, box = $('cpMsgs');
+const tok = ++paintTok, box = $('cpMsgs'), docs = state.msgDocs;
 let key = null; try { key = await sharedKey(uid); } catch {}
-const sig = state.msgDocs.map((m) => m.id).join('|') + '#' + media.size + (key ? 'k' : 'n') + uid;
-if (sig === state.sig) return; const near = state.first || box.scrollHeight - box.scrollTop - box.clientHeight < 160;
-let html = '', last = '';
-for (const m of state.msgDocs) {
-const t = m.at ? new Date(m.at.seconds * 1000) : new Date(), day = dayLabel(t);
-if (day !== last) { html += `<div class="day-sep">${day}</div>`; last = day; }
+if (tok !== paintTok || uid !== state.active) return;
+const bodies = new Map();
+await Promise.all(docs.map(async (m) => {
 let p = plain.get(m.id);
 if (!p) {
 if (!key) p = { k: 'err' };
-else { try { p = await decJSON(key, m.iv, m.ct); plain.set(m.id, p); } catch { p = { k: 'err' }; } } }
-let url = media.get(m.id);
-if (!url && m.d && key && p.k && p.k !== 't' && p.k !== 'err') {
-try { url = URL.createObjectURL(new Blob([await decBytes(key, p.miv, m.d)], { type: p.mime })); media.set(m.id, url); } catch {}
+else { try { p = await decJSON(key, m.iv, m.ct); plain.set(m.id, p); } catch { p = { k: 'err' }; } }
 }
-html += msgHTML(m, p, url, m.from === state.uid, t); if (tok !== paintTok) return;
+bodies.set(m.id, p);
+}));
+if (tok !== paintTok || uid !== state.active) return;
+const chat = state.chats.get(chatId(state.uid, uid)) || {}, theirRead = tsOf(chat.reads && chat.reads[uid]);
+const items = []; let last = '';
+for (const m of docs) {
+const t = m.at ? new Date(m.at.seconds * 1000) : new Date(), day = dayLabel(t);
+if (day !== last) { items.push({ k: 'd:' + day, html: `<div class="day-sep">${day}</div>` }); last = day; }
+items.push({ k: m.id, html: msgHTML(m, bodies.get(m.id), media.get(m.id), m.from === state.uid, t, theirRead) });
 }
-state.sig = state.msgDocs.map((m) => m.id).join('|') + '#' + media.size + (key ? 'k' : 'n') + uid;
-box.innerHTML = html;
-if (near) box.scrollTop = box.scrollHeight;
-state.first = false;
+const near = state.first || state.stick || box.scrollHeight - box.scrollTop - box.clientHeight < 160;
+const a = state.anchor && docs.length > state.anchor.n ? state.anchor : null;
+if (a) { state.anchor = null; state.more = false; }
+setList(box, items);
+if (a) box.scrollTop = a.t + (box.scrollHeight - a.h);
+else if (near) { box.scrollTop = box.scrollHeight; box.__pin = true; }
+state.first = false; state.stick = false;
+hydrateMedia(docs, key, uid);
 }
+/* photos / videos / voice are decrypted one by one in the background, newest first, so text is never kept waiting */
+async function hydrateMedia(docs, key, uid) {
+if (!key) return; const me = ++hyd;
+for (const m of [...docs].reverse()) {
+if (me !== hyd || uid !== state.active) return;
+if (media.has(m.id) || !m.d || badMedia.has(m.id)) continue;
+const p = plain.get(m.id); if (!p || !p.k || p.k === 't' || p.k === 'err') continue;
+try {
+const url = URL.createObjectURL(new Blob([await decBytes(key, p.miv, m.d)], { type: p.mime }));
+if (media.has(m.id)) URL.revokeObjectURL(url); else { media.set(m.id, url); queuePaint(); }
+} catch { badMedia.add(m.id); }
+await new Promise((r) => setTimeout(r, 0));
+}
+}
+/* keep the view glued to the bottom while photos finish loading; load older messages when you reach the top */
+(function () {
+const box = $('cpMsgs'); let raf = 0;
+const grow = () => { if (box.__pin) box.scrollTop = box.scrollHeight; };
+box.addEventListener('load', grow, true); box.addEventListener('loadedmetadata', grow, true);
+box.addEventListener('scroll', () => {
+if (raf) return;
+raf = requestAnimationFrame(() => {
+raf = 0; box.__pin = box.scrollHeight - box.scrollTop - box.clientHeight < 160;
+if (box.scrollTop < 60 && state.active && !state.more && state.msgDocs.length >= state.lim) {
+state.more = true; state.lim += 40; state.anchor = { h: box.scrollHeight, t: box.scrollTop, n: state.msgDocs.length };
+subMsgs(state.active, chatId(state.uid, state.active));
+}
+});
+}, { passive: true });
+})();
 async function loadChunked(id) {
 const p = plain.get(id); if (!p?.mid) return;
 const cid = chatId(state.uid, state.active), parts = new Array(p.n);
@@ -713,7 +777,7 @@ await Promise.all([...Array(Math.min(4, p.n - i))].map(async (_, j) => { parts[i
 }
 const bytes = await decBytes(await sharedKey(state.active), p.miv, parts.join(''));
 media.set(id, URL.createObjectURL(new Blob([bytes], { type: p.mime })));
-paint();
+queuePaint();
 } catch (e) { console.error(e); toast('Download failed', 'error'); }
 }
 $('cpMsgs').addEventListener('click', (e) => {
@@ -728,8 +792,12 @@ Sending
 async function sendPayload(payload, extra) {
 const uid = state.active; if (!uid) return;
 if (state.reply) { payload = { ...payload, r: state.reply }; state.reply = null; renderReply(); }
-const key = await sharedKey(uid), cid = chatId(state.uid, uid), { iv, ct } = await encJSON(key, payload); await setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort(), lastAt: serverTimestamp(), lastFrom: state.uid }, { merge: true });
-await addDoc(collection(D(), 'chats', cid, 'messages'), { from: state.uid, at: serverTimestamp(), iv, ct, ...(extra || {}) });
+state.stick = true;
+const key = await sharedKey(uid), cid = chatId(state.uid, uid), { iv, ct } = await encJSON(key, payload);
+// the message is queued locally at once (shows as "Sending…"); the chat summary goes out in parallel instead of blocking it
+const sent = addDoc(collection(D(), 'chats', cid, 'messages'), { from: state.uid, at: serverTimestamp(), iv, ct, ...(extra || {}) });
+setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort(), lastAt: serverTimestamp(), lastFrom: state.uid }, { merge: true }).catch(() => {});
+await sent;
 } function needFriend() {
 if (state.active) return false;
 toast('Add a friend to start chatting 💬', 'info');
@@ -787,11 +855,13 @@ toast('Sending video…', 'info'); sendMedia(f, 'vid');
 } else toast('Only photos and videos', 'error');
 };
 /* composer behaviour */
-function autoGrow() { input.style.height = '46px'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; }
+let agRaf = 0;
+function autoGrow() { if (agRaf) return; agRaf = requestAnimationFrame(() => { agRaf = 0; input.style.height = '46px'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; }); }
 function updateComp() {
 const has = input.value.trim().length > 0 || !!rec;
 $('cpSend').classList.toggle('hide', !has); $('cpMic').classList.toggle('hide', has && !rec ? true : false); }
-input.addEventListener('input', () => { autoGrow(); updateComp(); if (input.value.trim()) typingPing(); else stopTyping(); });
+let ucLast = null;
+input.addEventListener('input', () => { autoGrow(); const has = input.value.trim().length > 0; if (has !== ucLast) { ucLast = has; updateComp(); } if (has) typingPing(); else stopTyping(); });
 input.addEventListener('blur', () => stopTyping());
 input.addEventListener('focus', () => setTimeout(() => { fit(); $('cpMsgs').scrollTop = $('cpMsgs').scrollHeight; }, 300));
 input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches) { e.preventDefault(); sendText(); } });
@@ -1077,20 +1147,7 @@ tcL.classList.toggle('show', (state.typeUntil.get(state.active) || 0) > Date.now
 const mine = lastKey && Date.now() - lastKey < 2600 && input.value.trim() && document.activeElement === input;
 tcR.classList.toggle('show', !!mine);
 const cid = chatId(state.uid, state.active), chat = state.chats.get(cid) || {};
-const theirRead = tsMs(chat.reads && chat.reads[state.active]);
 const myRead = tsMs(chat.reads && chat.reads[state.uid]);
-const byId = new Map((state.msgDocs || []).map((m) => [m.id, m]));
-/* label every message I sent */
-msgsBox.querySelectorAll('.msg.me').forEach((el) => {
-const m = byId.get(el.dataset.mid), mt = el.querySelector('.mt');
-if (!m || !mt) return;
-let tag = mt.querySelector('.rd');
-if (!tag) { tag = document.createElement('em'); tag.className = 'rd'; mt.appendChild(tag); }
-const at = tsMs(m.at), seen = !!(theirRead && at && theirRead >= at);
-const cls = seen ? 'rd seen' : 'rd', txt = seen ? '✓✓ Seen' : '✓ Not seen';
-if (tag.className !== cls) tag.className = cls;
-if (tag.textContent !== txt) tag.textContent = txt;
-});
 /* tell my friend I've seen their latest message — only when it is really on screen */
 if (document.hidden) return;
 let last = null;
@@ -1107,9 +1164,9 @@ setDoc(doc(D(), 'chats', cid), { reads: { [state.uid]: serverTimestamp() } }, { 
 .catch(() => { marked = ''; });
 }
 new MutationObserver(refresh).observe(msgsBox, { childList: true });
-msgsBox.addEventListener('scroll', refresh, { passive: true });
+let rfRaf = 0; msgsBox.addEventListener('scroll', () => { if (!rfRaf) rfRaf = requestAnimationFrame(() => { rfRaf = 0; refresh(); }); }, { passive: true });
 document.addEventListener('visibilitychange', refresh);
-setInterval(refresh, 400);
+setInterval(refresh, 700);
 })();
 /* =========================================================
 BENTO NOIR home tiles + bottom dock (v6)
@@ -1188,26 +1245,26 @@ function renderFriendsPage() {
 if (!frPage || !frPage.classList.contains('active')) return;
 const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
 $('frCount').textContent = fr.length;
-let h = '';
+const items = [];
 if (state.incoming.length) {
-h += `<div class="cs-label">Friend requests · ${state.incoming.length}</div>`;
+items.push({ k: 'l:rq', html: cnt('Friend requests · ' + state.incoming.length) });
 state.incoming.forEach((r) => {
 const pr = state.profiles.get(r.from) || {};
-h += `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
-<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>`;
+items.push({ k: 'rq:' + r.id, html: `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
+<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>` });
 });
 }
 if (state.outgoing.length) {
-h += '<div class="cs-label">Sent requests</div>';
+items.push({ k: 'l:out', html: cnt('Sent requests') });
 state.outgoing.forEach((r) => {
 const pr = state.profiles.get(r.to) || {};
-h += `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>`;
+items.push({ k: 'ro:' + r.id, html: `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>` });
 });
 }
-h += `<div class="cs-label">Friends · ${fr.length}</div>`;
-h += fr.length ? fr.map(({ uid }) => friendRow(uid)).join('')
-: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>';
-list.innerHTML = h;
+items.push({ k: 'l:fr', html: cnt('Friends · ' + fr.length) });
+if (fr.length) fr.forEach(({ uid }) => items.push({ k: 'fr:' + uid, html: friendRow(uid) }));
+else items.push({ k: 'empty', html: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>' });
+setList(list, items, true);
 }
 function openFriends() {
 frPage.classList.add('active'); frPage.setAttribute('aria-hidden', 'false');
