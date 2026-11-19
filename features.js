@@ -374,7 +374,7 @@ if (new URLSearchParams(location.search).get('open') === 'todo') setTimeout(() =
 /* =========================================================
 SPECIAL DAYS + "OUR SPACE" WELCOME
 - Tap "Our Space" on Home -> premium "Welcome to Our Space" animation -> interface.
-- On special days (00:00 -> 23:59 of that same day, device time) golden butterflies fly
+- On special days (00:00 -> 23:59 of that same day, device time) golden sparkles fly
   across Home into "Our Space", and the interface opens with a tap-to-reveal wish.
 - Test any day without waiting:  open the site with  ?fx=xmas  (see the key list below).
 ========================================================= */
@@ -409,17 +409,36 @@ if (pv) return pv;
 const n = new Date(), m = n.getMonth() + 1, d = n.getDate();
 return SPECIAL.find((s) => s.m === m && s.d === d) || null; // same calendar day = 12:00am to 11:59pm
 }
-/* ---------- golden butterflies on Home ---------- */
-const BF = '<svg viewBox="0 0 48 40" aria-hidden="true"><g class="bw l"><path d="M24 19C14 1 1 3 3 14c1 8 13 8 21 5z"/><path d="M24 22C15 22 7 29 11 36c5 4 12-5 13-12z"/></g><g class="bw r"><g transform="translate(48 0) scale(-1 1)"><path d="M24 19C14 1 1 3 3 14c1 8 13 8 21 5z"/><path d="M24 22C15 22 7 29 11 36c5 4 12-5 13-12z"/></g></g><ellipse cx="24" cy="21" rx="1.6" ry="9" class="bb"/><path d="M23 12c-2-4-4-5-6-5M25 12c2-4 4-5 6-5" class="ba"/></svg>';
-const FX = { layer: null, list: [], sparks: 0, raf: 0, spawnAt: 0, on: false, hitAt: 0, key: null };
+/* ---------- golden sparkle sprinkle on Home ----------
+   One light canvas (no DOM particles): glowing gold sparkles drift in from the edges, fly into "Our Space",
+   and the title shines as each one arrives. Runs only on special days and pauses whenever a page is open. */
+const FX = { cv: null, ctx: null, dpr: 1, w: 0, h: 0, raf: 0, on: false, key: null, hitAt: 0, spawnAt: 0, last: 0, chkAt: 0, comets: [], dust: [], amb: [], tgt: null, blk: false, dirty: false, spr: null, pool: [] };
 const BLOCKERS = '#osStart,#menuDrawer.active,#todoBottomSheet.active,#todoHistoryBottomSheet.active,#storyBottomSheet.active,#memNotes.active,#osWelcome.active,#frPage.active,#postPage.active,#chatApp.active,#authOverlay.active';
-function fxLayer() {
-if (FX.layer) return FX.layer;
-const l = document.createElement('div');
-l.id = 'fxLayer'; l.setAttribute('aria-hidden', 'true');
-l.innerHTML = '<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="fxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff7d1"/><stop offset=".45" stop-color="#f7c95c"/><stop offset="1" stop-color="#b8771a"/></linearGradient></defs></svg>';
-document.body.appendChild(l);
-return (FX.layer = l);
+function fxSprites() {
+if (FX.spr) return FX.spr;
+const mk = (draw) => { const c = document.createElement('canvas'); c.width = c.height = 64; draw(c.getContext('2d')); return c; };
+const star = mk((g) => {
+const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,248,214,.9)'); r.addColorStop(.22, 'rgba(255,214,120,.42)'); r.addColorStop(1, 'rgba(255,190,70,0)');
+g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+g.fillStyle = '#fff8dc'; g.beginPath(); g.moveTo(32, 3); g.quadraticCurveTo(34, 30, 61, 32); g.quadraticCurveTo(34, 34, 32, 61); g.quadraticCurveTo(30, 34, 3, 32); g.quadraticCurveTo(30, 30, 32, 3); g.fill();
+});
+const dot = mk((g) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,244,200,1)'); r.addColorStop(.3, 'rgba(255,205,100,.55)'); r.addColorStop(1, 'rgba(255,180,60,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+return (FX.spr = { star, dot });
+}
+function fxResize() {
+if (!FX.cv) return;
+FX.dpr = Math.min(window.devicePixelRatio || 1, 1.5); FX.w = innerWidth; FX.h = innerHeight;
+FX.cv.width = Math.round(FX.w * FX.dpr); FX.cv.height = Math.round(FX.h * FX.dpr);
+FX.ctx.setTransform(FX.dpr, 0, 0, FX.dpr, 0, 0);
+}
+function fxCanvas() {
+if (FX.cv) return FX.cv;
+const c = document.createElement('canvas');
+c.id = 'fxCanvas'; c.setAttribute('aria-hidden', 'true');
+c.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:120';
+document.body.appendChild(c);
+FX.cv = c; FX.ctx = c.getContext('2d'); fxResize(); addEventListener('resize', fxResize);
+return c;
 }
 function fxTarget() {
 const t = $('bnTitle'); if (!t) return null;
@@ -427,69 +446,87 @@ const r = t.getBoundingClientRect();
 if (!r.width || r.bottom < 40 || r.top > innerHeight - 90) return null;
 return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
-function sparkle(x, y, big) {
-if (FX.sparks > 150) return;
-const i = document.createElement('i');
-i.className = 'fx-sp'; FX.sparks++;
-const s = (big ? 4 : 2) + Math.random() * (big ? 5 : 3);
-i.style.cssText = `left:${x}px;top:${y}px;width:${s}px;height:${s}px;--dx:${(Math.random() - .5) * (big ? 90 : 34)}px;--dy:${(Math.random() - .3) * (big ? 90 : 40) + 10}px`;
-if (Math.random() < .25) i.classList.add('star');
-FX.layer.appendChild(i);
-i.addEventListener('animationend', () => { i.remove(); FX.sparks--; }, { once: true });
+const fxNew = () => FX.pool.pop() || {};
+function fxDust(x, y, vx, vy, life, size, star, grav) {
+if (FX.dust.length > 240) return;
+const p = fxNew(); p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.life = p.max = life; p.s = size; p.star = star; p.g = grav; p.rot = Math.random() * 6.28;
+FX.dust.push(p);
 }
 function hitTitle(t) {
 const el = $('bnTitle'), now = performance.now();
 if (!el || now - FX.hitAt < 260) return;
 FX.hitAt = now;
 el.classList.remove('fx-hit'); void el.offsetWidth; el.classList.add('fx-hit');
-for (let k = 0; k < 9; k++) sparkle(t.x, t.y, true);
+fxDust(t.x, t.y, 0, 0, .4, 90, false, 0);                               // soft flash
+for (let k = 0; k < 14; k++) { const a = Math.random() * 6.283, v = 50 + Math.random() * 120; fxDust(t.x, t.y, Math.cos(a) * v, Math.sin(a) * v, .6 + Math.random() * .5, 7 + Math.random() * 9, Math.random() < .55, 30); }
 }
-function spawnButterfly() {
-const W = innerWidth, H = innerHeight, r = Math.random(), size = 24 + Math.random() * 22;
+function spawnComet(now) {
+const W = FX.w, H = FX.h, r = Math.random();
 let x0, y0;
-if (r < .38) { x0 = -50; y0 = H * (.2 + Math.random() * .7); }
-else if (r < .76) { x0 = W + 50; y0 = H * (.2 + Math.random() * .7); }
-else { x0 = W * Math.random(); y0 = H + 50; }
-const el = document.createElement('div');
-el.className = 'fx-b'; el.innerHTML = BF;
-el.style.width = size + 'px'; el.style.height = size * .83 + 'px';
-el.style.setProperty('--fl', (0.2 + Math.random() * .2).toFixed(2) + 's');
-fxLayer().appendChild(el);
-FX.list.push({ el, size, x0, y0, c1x: W * Math.random(), c1y: H * (.25 + Math.random() * .6), c2x: W * Math.random(), c2y: H * (.05 + Math.random() * .5), t0: performance.now(), dur: 5200 + Math.random() * 3600, ph: Math.random() * 6.28, amp: 16 + Math.random() * 24, last: 0 });
+if (r < .38) { x0 = -30; y0 = H * (.2 + Math.random() * .7); }
+else if (r < .76) { x0 = W + 30; y0 = H * (.2 + Math.random() * .7); }
+else { x0 = W * Math.random(); y0 = H + 30; }
+const c = fxNew();
+c.x0 = x0; c.y0 = y0; c.c1x = W * Math.random(); c.c1y = H * (.25 + Math.random() * .6); c.c2x = W * Math.random(); c.c2y = H * (.05 + Math.random() * .5);
+c.t0 = now; c.dur = 3200 + Math.random() * 2400; c.ph = Math.random() * 6.28; c.amp = 12 + Math.random() * 22; c.size = 14 + Math.random() * 14; c.last = 0;
+FX.comets.push(c);
 }
-function clearButterflies() {
-FX.list.forEach((b) => b.el.remove()); FX.list = [];
+function fxClear() {
+FX.pool.push(...FX.comets, ...FX.dust, ...FX.amb); FX.comets.length = FX.dust.length = FX.amb.length = 0;
+if (FX.ctx && FX.dirty) { FX.ctx.clearRect(0, 0, FX.w, FX.h); FX.dirty = false; }
 }
 function fxFrame(now) {
 FX.raf = requestAnimationFrame(fxFrame);
-const blocked = document.hidden || document.querySelector(BLOCKERS);
-const t = blocked ? null : fxTarget();
-if (!t) { if (FX.list.length) clearButterflies(); return; }
-if (now > FX.spawnAt && FX.list.length < (reduceMotion ? 8 : 26)) {
-spawnButterfly(); if (Math.random() < .35 && !reduceMotion) spawnButterfly();
-FX.spawnAt = now + (reduceMotion ? 1100 : 330 + Math.random() * 300);
+if (now - FX.chkAt > 150) { FX.chkAt = now; FX.blk = document.hidden || !!document.querySelector(BLOCKERS); FX.tgt = FX.blk ? null : fxTarget(); }
+const t = FX.tgt;
+if (!t) { fxClear(); FX.last = now; return; }
+const dt = Math.min(.05, (now - FX.last) / 1000); FX.last = now;
+const ctx = FX.ctx, spr = FX.spr;
+if (now > FX.spawnAt && FX.comets.length < (reduceMotion ? 5 : 15)) {
+spawnComet(now); if (!reduceMotion && Math.random() < .4) spawnComet(now);
+FX.spawnAt = now + (reduceMotion ? 900 : 230 + Math.random() * 260);
 }
-for (let i = FX.list.length - 1; i >= 0; i--) {
-const b = FX.list[i], u = (now - b.t0) / b.dur;
-if (u >= 1) { b.el.remove(); FX.list.splice(i, 1); hitTitle(t); continue; }
+if (!reduceMotion && FX.amb.length < 16 && Math.random() < .12) {
+const a = fxNew(); a.x = Math.random() * FX.w; a.y = FX.h * (.12 + Math.random() * .78); a.life = a.max = 1.6 + Math.random() * 1.6; a.s = 8 + Math.random() * 14; FX.amb.push(a);
+}
+ctx.clearRect(0, 0, FX.w, FX.h); ctx.globalCompositeOperation = 'lighter'; FX.dirty = true;
+for (let i = FX.amb.length - 1; i >= 0; i--) {
+const a = FX.amb[i]; a.life -= dt;
+if (a.life <= 0) { FX.pool.push(a); FX.amb[i] = FX.amb[FX.amb.length - 1]; FX.amb.pop(); continue; }
+ctx.globalAlpha = Math.sin(Math.PI * (1 - a.life / a.max)) * .85;
+ctx.drawImage(spr.star, a.x - a.s / 2, a.y - a.s / 2, a.s, a.s);
+}
+for (let i = FX.comets.length - 1; i >= 0; i--) {
+const b = FX.comets[i], u = (now - b.t0) / b.dur;
+if (u >= 1) { FX.pool.push(b); FX.comets[i] = FX.comets[FX.comets.length - 1]; FX.comets.pop(); hitTitle(t); continue; }
 const e = u * u * (3 - 2 * u) * .35 + u * .65, iu = 1 - e;
 let x = iu ** 3 * b.x0 + 3 * iu * iu * e * b.c1x + 3 * iu * e * e * b.c2x + e ** 3 * t.x;
 let y = iu ** 3 * b.y0 + 3 * iu * iu * e * b.c1y + 3 * iu * e * e * b.c2y + e ** 3 * t.y;
 const dx = 3 * iu * iu * (b.c1x - b.x0) + 6 * iu * e * (b.c2x - b.c1x) + 3 * e * e * (t.x - b.c2x);
 const dy = 3 * iu * iu * (b.c1y - b.y0) + 6 * iu * e * (b.c2y - b.c1y) + 3 * e * e * (t.y - b.c2y);
-const len = Math.hypot(dx, dy) || 1, wob = Math.sin(u * 14 + b.ph) * b.amp * (1 - u * .85);
+const len = Math.hypot(dx, dy) || 1, wob = Math.sin(u * 12 + b.ph) * b.amp * (1 - u * .85);
 x += (-dy / len) * wob; y += (dx / len) * wob;
-const sc = u > .9 ? Math.max(.15, 1 - (u - .9) * 8.5) : 1, op = u < .05 ? u / .05 : u > .94 ? (1 - u) / .06 : 1;
-b.el.style.transform = `translate3d(${x - b.size / 2}px,${y - b.size * .41}px,0) rotate(${Math.atan2(dy, dx) * 57.2958 + 90}deg) scale(${sc})`;
-b.el.style.opacity = op;
-if (now - b.last > 85) { b.last = now; sparkle(x, y, false); }
+const sc = u > .9 ? Math.max(.2, 1 - (u - .9) * 8) : 1, op = u < .05 ? u / .05 : u > .94 ? (1 - u) / .06 : 1;
+const s = b.size * sc * (.85 + .25 * Math.sin(now * .018 + b.ph));
+ctx.globalAlpha = op * .55; ctx.drawImage(spr.dot, x - s, y - s, s * 2, s * 2);
+ctx.globalAlpha = op; ctx.drawImage(spr.star, x - s / 2, y - s / 2, s, s);
+if (now - b.last > 42) { b.last = now; fxDust(x + (Math.random() - .5) * 6, y + (Math.random() - .5) * 6, (Math.random() - .5) * 20, 6 + Math.random() * 16, .7 + Math.random() * .5, 5 + Math.random() * 7, Math.random() < .3, 14); }
 }
+for (let i = FX.dust.length - 1; i >= 0; i--) {
+const p = FX.dust[i]; p.life -= dt;
+if (p.life <= 0) { FX.pool.push(p); FX.dust[i] = FX.dust[FX.dust.length - 1]; FX.dust.pop(); continue; }
+p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.vx *= .985;
+const k = p.life / p.max, s = p.s * (.4 + .6 * k);
+ctx.globalAlpha = k * k * .95;
+ctx.drawImage(p.star ? spr.star : spr.dot, p.x - s / 2, p.y - s / 2, s, s);
+}
+ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 }
 function syncFx() {
 const sp = activeSpecial(), t = $('bnTitle');
 t?.classList.toggle('fx-on', !!sp);
-if (sp && !FX.on) { FX.on = true; fxLayer(); FX.raf = requestAnimationFrame(fxFrame); }
-if (!sp && FX.on) { FX.on = false; cancelAnimationFrame(FX.raf); clearButterflies(); t?.classList.remove('fx-hit'); }
+if (sp && !FX.on) { FX.on = true; fxCanvas(); fxSprites(); FX.last = performance.now(); FX.raf = requestAnimationFrame(fxFrame); }
+if (!sp && FX.on) { FX.on = false; cancelAnimationFrame(FX.raf); fxClear(); t?.classList.remove('fx-hit'); }
 FX.key = sp ? sp.k : null;
 }
 syncFx(); setInterval(syncFx, 15000);
