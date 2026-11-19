@@ -193,7 +193,6 @@ document.body.insertAdjacentHTML('beforeend', `
 <div id="csScroll" class="cs-scroll"></div>
 </aside>
 <section class="chat-pane">
-<div class="cbg" id="csDust" aria-hidden="true"></div>
 <header class="cp-head">
 <button id="cpToggle" class="cp-btn" aria-label="Friends">${IC.panel}</button>
 <button id="cpWho" class="cp-who"></button>
@@ -659,7 +658,7 @@ if (!el) return;
 const g = ['✦', '·', '✧'], few = matchMedia('(prefers-reduced-motion: reduce)').matches;
 el.innerHTML = Array.from({ length: few ? 8 : n }, () => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--s:${(8 + Math.random() * 14).toFixed(0)}px;--t:${(7 + Math.random() * 8).toFixed(1)}s;--dl:${(-Math.random() * 12).toFixed(1)}s;--sw:${((Math.random() - .5) * 60).toFixed(0)}px">${g[(Math.random() * 3) | 0]}</i>`).join('');
 }
-dust($('csDust'), 10); dust($('frDust'), 12);
+
 /* ---------- reply to a message (the ↩ arrow beside every message) ---------- */
 const REPLY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>';
 const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 Video' : r.k === 'aud' ? '🎧 Voice message' : (r.x || 'Message');
@@ -1237,10 +1236,10 @@ tick(); setInterval(tick, 1000);
 FRIEND LIST (beside the home button) — only accepted friends
 ========================================================= */
 var frPage = null;
-document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div><div class="cbg" id="frDust" aria-hidden="true"></div>
+document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
 <header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div class="fp-title">Friends</div><span id="frCount" class="fp-count">0</span></header>
 <div id="frList" class="fp-list"></div></div>`);
-frPage = $('frPage'); dust($('frDust'), 26);
+frPage = $('frPage');
 function renderFriendsPage() {
 if (!frPage || !frPage.classList.contains('active')) return;
 const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
