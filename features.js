@@ -371,7 +371,6 @@ setInterval(checkReminders, 15 * 60 * 1000);
 document.addEventListener('visibilitychange', () => !document.hidden && checkReminders());
 if (new URLSearchParams(location.search).get('open') === 'todo') setTimeout(() => O().openTodo?.(), 700);
 });
-
 /* =========================================================
 SPECIAL DAYS + "OUR SPACE" WELCOME
 - Tap "Our Space" on Home -> premium "Welcome to Our Space" animation -> interface.
@@ -410,11 +409,10 @@ if (pv) return pv;
 const n = new Date(), m = n.getMonth() + 1, d = n.getDate();
 return SPECIAL.find((s) => s.m === m && s.d === d) || null; // same calendar day = 12:00am to 11:59pm
 }
-
 /* ---------- golden butterflies on Home ---------- */
 const BF = '<svg viewBox="0 0 48 40" aria-hidden="true"><g class="bw l"><path d="M24 19C14 1 1 3 3 14c1 8 13 8 21 5z"/><path d="M24 22C15 22 7 29 11 36c5 4 12-5 13-12z"/></g><g class="bw r"><g transform="translate(48 0) scale(-1 1)"><path d="M24 19C14 1 1 3 3 14c1 8 13 8 21 5z"/><path d="M24 22C15 22 7 29 11 36c5 4 12-5 13-12z"/></g></g><ellipse cx="24" cy="21" rx="1.6" ry="9" class="bb"/><path d="M23 12c-2-4-4-5-6-5M25 12c2-4 4-5 6-5" class="ba"/></svg>';
 const FX = { layer: null, list: [], sparks: 0, raf: 0, spawnAt: 0, on: false, hitAt: 0, key: null };
-const BLOCKERS = '#menuDrawer.active,#todoBottomSheet.active,#todoHistoryBottomSheet.active,#storyBottomSheet.active,#memNotes.active,#osWelcome.active,#frPage.active,#postPage.active,#chatApp.active,#authOverlay.active';
+const BLOCKERS = '#osStart,#menuDrawer.active,#todoBottomSheet.active,#todoHistoryBottomSheet.active,#storyBottomSheet.active,#memNotes.active,#osWelcome.active,#frPage.active,#postPage.active,#chatApp.active,#authOverlay.active';
 function fxLayer() {
 if (FX.layer) return FX.layer;
 const l = document.createElement('div');
@@ -498,7 +496,14 @@ syncFx(); setInterval(syncFx, 15000);
 document.addEventListener('visibilitychange', syncFx);
 // the title is created by chat.js a moment later, so check once more shortly after start
 setTimeout(syncFx, 1500); setTimeout(syncFx, 4000);
-
+/* ---------- Opening animation: tap to skip, then remove it ---------- */
+(() => {
+const st = $('osStart'); if (!st) return;
+const t0 = performance.now();
+const done = () => { st.remove(); };
+st.addEventListener('click', () => { if (performance.now() - t0 > 1200) { st.style.transition = 'opacity .4s ease'; st.style.opacity = '0'; st.style.pointerEvents = 'none'; setTimeout(done, 450); } });
+setTimeout(done, 5700);
+})();
 /* ---------- Our Space welcome + interface ---------- */
 const ow = $('osWelcome');
 const OW_GLYPHS = { gold: ['✦', '·', '✧'], xmas: ['❄', '❅', '✦'], ny: ['✦', '✧', '★'], val: ['❤', '✿', '♥'] };
