@@ -22,16 +22,16 @@ const BOLT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l
 const bolts = () => [['0s', 19], ['-2s', 15], ['-4s', 15]].map(([l, s]) => `<em class="ob" style="--d:6s;--dl:${l};--s:${s}px"><u>${BOLT}</u></em>`).join('');
 const rocks = (a) => a.map(([s, d, l, dir, sh]) => `<em class="ob" style="--d:${d}s;--dl:${l}s;--dir:${dir};--s:${s}px"><u class="rk ${sh}"></u></em>`).join('');
 const bubbles = [[8, 8, 6, -1, 4], [19, 13, 8, -4, -6], [31, 7, 5.5, -2, 5], [44, 11, 7.5, -6, -5], [57, 15, 9, -3, 6], [68, 8, 6.5, -5, -4], [79, 12, 8, -1.5, 5], [90, 9, 6, -4.5, -5], [50, 6, 5, -.5, 3]]
-  .map(([x, s, d, l, dx]) => `<em class="bb" style="left:${x}%;--s:${s}px;--d:${d}s;--dl:${l}s;--x:${dx}px"></em>`).join('');
+.map(([x, s, d, l, dx]) => `<em class="bb" style="left:${x}%;--s:${s}px;--d:${d}s;--dl:${l}s;--x:${dx}px"></em>`).join('');
 const BX = '<b class="rg"></b><b class="cv"></b>';
 const BNFX = {
-  volt: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
-  storm: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
-  aurora: BX + '<b class="fx"><b class="st"></b><em class="au a1"></em><em class="au a2"></em><em class="au a3"></em></b><b class="glo"></b><b class="shn"></b>',
-  tide: BX + '<b class="fx"><em class="wv"></em>' + bubbles + '</b><b class="glo"></b><b class="pth"><em class="ob" style="--d:7s;--s:12px"><u class="dr"></u></em><em class="ob" style="--d:7s;--dl:-3.5s;--s:10px"><u class="dr"></u></em></b><b class="shn"></b>',
-  cosmos: BX + '<b class="fx"><b class="st"></b><b class="st s2"></b></b><b class="glo"></b><b class="pth">' +
-    rocks([[9, 11, 0, 'normal', 'r1'], [6, 8, -3, 'reverse', 'r2'], [11, 14, -6, 'normal', 'r3'], [7, 9.5, -8, 'reverse', 'r1']]) +
-    '</b><b class="pth p2">' + rocks([[5, 7, -1, 'normal', 'r2'], [8, 12, -5, 'reverse', 'r3'], [6, 10, -9, 'normal', 'r1']]) + '</b><b class="shn"></b>'
+volt: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
+storm: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
+aurora: BX + '<b class="fx"><b class="st"></b><em class="au a1"></em><em class="au a2"></em><em class="au a3"></em></b><b class="glo"></b><b class="shn"></b>',
+tide: BX + '<b class="fx"><em class="wv"></em>' + bubbles + '</b><b class="glo"></b><b class="pth"><em class="ob" style="--d:7s;--s:12px"><u class="dr"></u></em><em class="ob" style="--d:7s;--dl:-3.5s;--s:10px"><u class="dr"></u></em></b><b class="shn"></b>',
+cosmos: BX + '<b class="fx"><b class="st"></b><b class="st s2"></b></b><b class="glo"></b><b class="pth">' +
+rocks([[9, 11, 0, 'normal', 'r1'], [6, 8, -3, 'reverse', 'r2'], [11, 14, -6, 'normal', 'r3'], [7, 9.5, -8, 'reverse', 'r1']]) +
+'</b><b class="pth p2">' + rocks([[5, 7, -1, 'normal', 'r2'], [8, 12, -5, 'reverse', 'r3'], [6, 10, -9, 'normal', 'r1']]) + '</b><b class="shn"></b>'
 };
 const bannerEl = (p, cls) => {
 if (p?.bannerId && BNFX[p.bannerId]) return `<span class="${cls} bn bnx bn-${p.bannerId}">${BNFX[p.bannerId]}</span>`;
@@ -44,8 +44,8 @@ mic: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0
 send: svg('<path d="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z"/>'),
 panel: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>'),
 dots: svg('<circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>'),
- trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
- close: (s = 22) => svg('<path d="M6 6l12 12M18 6L6 18"/>', s)
+trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+close: (s = 22) => svg('<path d="M6 6l12 12M18 6L6 18"/>', s)
 };
 /* =========================================================
 Crypto (end-to-end): ECDH P-256 -> HKDF -> AES-GCM
@@ -105,7 +105,7 @@ reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [],
 profiles: new Map(), watch: new Map(), chats: new Map(), active: null, msgDocs: [], unsubs: [], unsubMsgs: null, listening: false, warned: false,
 celebrated: new Set(), search: '', sig: '',
 presence: new Map(), gotTo: false, chatsReady: false,
- sel: new Set(), typeUntil: new Map(), typeStamp: new Map()
+sel: new Set(), typeUntil: new Map(), typeStamp: new Map()
 };
 let hbTimer = null, presenceBound = false;
 let typeLast = 0, typeOff = null; // typing indicator (sender side)
@@ -139,15 +139,15 @@ document.body.insertAdjacentHTML('beforeend', `
 <button id="cpWho" class="cp-who"></button>
 <button id="cpMore" class="cp-btn" aria-label="More options">${IC.dots}</button>
 <div id="cpMenu" class="cs-menu cp-menu">
- <button id="cpmSelect">☑️ Delete messages</button>
- <button id="cpmAll" class="danger">🗑️ Delete all chats</button>
- <button id="cpmClose">✕ Close chat</button>
+<button id="cpmSelect">☑️ Delete messages</button>
+<button id="cpmAll" class="danger">🗑️ Delete all chats</button>
+<button id="cpmClose">✕ Close chat</button>
 </div>
 <div id="cpSelBar" class="cp-selbar">
- <button id="selCancel" class="cp-btn" aria-label="Cancel selection">${IC.close(20)}</button>
- <b id="selCount" class="sel-count">Select messages</b>
- <button id="selAll" class="cp-link">Select all</button>
- <button id="selDel" class="cp-btn danger" aria-label="Delete selected" disabled>${IC.trash}</button>
+<button id="selCancel" class="cp-btn" aria-label="Cancel selection">${IC.close(20)}</button>
+<b id="selCount" class="sel-count">Select messages</b>
+<button id="selAll" class="cp-link">Select all</button>
+<button id="selDel" class="cp-btn danger" aria-label="Delete selected" disabled>${IC.trash}</button>
 </div>
 </header>
 <div id="cpEmpty" class="cp-empty"><div><span id="cpEmptyTxt">Add a friend<br>to start chatting</span><small id="cpNote">🔒 Messages are end-to-end encrypted</small></div></div>
@@ -169,6 +169,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <div class="cc-card"> <div id="ccPfp" class="cc-pfp"></div>
 <h2>Congrats! 🎉</h2>
 <p id="ccText"></p>
+<small id="ccSub" class="cc-sub"></small>
 <button id="ccChat" class="gate-btn">Say hi 💬</button>
 <button id="ccClose" class="gate-link">Later</button>
 </div>
@@ -187,7 +188,7 @@ $('ccClose').onclick = closeCongrats;
 const openSide = () => { if (wide()) $('chatMain').classList.remove('collapsed'); else { side.classList.add('active'); scrim.classList.add('active'); } };
 const hideSideMobile = () => { side.classList.remove('active'); scrim.classList.remove('active'); };
 scrim.onclick = hideSideMobile; function closeChat() {
- exitSelect(); stopTyping(); $('cpMenu')?.classList.remove('open');
+exitSelect(); stopTyping(); $('cpMenu')?.classList.remove('open');
 stopRec(false); if (state.active) closeConversation();
 closeSheet(); closeLight(); hideSideMobile();
 app.classList.remove('active');
@@ -382,7 +383,7 @@ state.friends.forEach(({ uid, req }) => {
 const flag = req.from === me ? 'seenFrom' : 'seenTo';
 if (req[flag] || state.celebrated.has(req.id)) return;
 state.celebrated.add(req.id); updateDoc(doc(D(), 'chatRequests', req.id), { [flag]: true }).catch(() => {});
-celebrate(uid);
+celebrate(uid, req.to === me); // true = I accepted, false = they accepted mine
 });
 }
 /* ---------- presence (online / last seen) ---------- */
@@ -398,24 +399,24 @@ addEventListener('pagehide', () => beat(false));
 }
 /* ---------- typing indicator ---------- */
 function trackTyping(uid, d) {
- if (d && d.typing === true && d.typingTo === state.uid) {
-  const t = d.typingAt, st = t ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
-  if (st !== state.typeStamp.get(uid)) { state.typeStamp.set(uid, st); state.typeUntil.set(uid, Date.now() + 6000); setTimeout(() => { if (state.profile) renderAll(); }, 6200); }
- } else { state.typeUntil.delete(uid); state.typeStamp.delete(uid); }
+if (d && d.typing === true && d.typingTo === state.uid) {
+const t = d.typingAt, st = t ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
+if (st !== state.typeStamp.get(uid)) { state.typeStamp.set(uid, st); state.typeUntil.set(uid, Date.now() + 6000); setTimeout(() => { if (state.profile) renderAll(); }, 6200); }
+} else { state.typeUntil.delete(uid); state.typeStamp.delete(uid); }
 }
 function setTyping(on) {
- if (!state.uid) return;
- setDoc(doc(D(), 'chatPresence', state.uid), on ? { typing: true, typingTo: state.active, typingAt: serverTimestamp() } : { typing: false, typingTo: null }, { merge: true }).catch(() => {});
+if (!state.uid) return;
+setDoc(doc(D(), 'chatPresence', state.uid), on ? { typing: true, typingTo: state.active, typingAt: serverTimestamp() } : { typing: false, typingTo: null }, { merge: true }).catch(() => {});
 }
 function typingPing() {
- if (!state.active) return;
- const now = Date.now();
- if (now - typeLast > 2500) { typeLast = now; setTyping(true); }
- clearTimeout(typeOff); typeOff = setTimeout(stopTyping, 3000);
+if (!state.active) return;
+const now = Date.now();
+if (now - typeLast > 2500) { typeLast = now; setTyping(true); }
+clearTimeout(typeOff); typeOff = setTimeout(stopTyping, 3000);
 }
 function stopTyping() {
- clearTimeout(typeOff); typeOff = null;
- if (typeLast) { typeLast = 0; setTyping(false); }
+clearTimeout(typeOff); typeOff = null;
+if (typeLast) { typeLast = 0; setTyping(false); }
 }
 function presence(uid) { const p = state.presence.get(uid);
 if ((state.typeUntil.get(uid) || 0) > Date.now()) return { on: true, typing: true, txt: 'typing…' };
@@ -440,11 +441,13 @@ if (m) { const p = await decJSON(await sharedKey(uid), m.iv, m.ct); body = p.k =
 } catch {}
 window.OSNotify?.push({ icon: '💬', title: displayName(uid), body, key: 'chat:' + cid, onTap: async () => { await openChat(); openConversation(uid); } });
 }
-async function celebrate(uid) {
+async function celebrate(uid, iAccepted) {
 const p = await getProfile(uid), nm = p?.username || 'your friend';
 $('ccPfp').innerHTML = av(p, nm);
-$('ccText').innerHTML = `<b>@${esc(nm)}</b> and you are friends now`;
+$('ccText').innerHTML = iAccepted ? `You accepted <b>@${esc(nm)}</b>’s friend request` : `<b>@${esc(nm)}</b> has accepted your friend request`;
+$('ccSub').textContent = iAccepted ? 'You two are friends now 💞' : 'Your friendship is official 💞';
 $('ccChat').onclick = async () => { closeCongrats(); await openChat(); openConversation(uid); };
+congrats.classList.remove('active'); void congrats.offsetWidth; // replay the animation every time
 congrats.classList.add('active');
 }
 /* =========================================================
@@ -484,7 +487,7 @@ h += '<div class="cs-label">Friend requests</div>';
 state.incoming.forEach((r) => {
 const pr = state.profiles.get(r.from) || {};
 h += `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
-<button class="rq-ok" data-acc="${r.id}">Accept</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">✕</button></div>`;
+<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>`;
 });
 }
 if (state.outgoing.length) {
@@ -529,7 +532,7 @@ $('cpWho').onclick = () => { if (state.active) openFriendSheet(state.active); };
 Conversation
 ========================================================= */
 function closeConversation() {
- exitSelect(); stopTyping();
+exitSelect(); stopTyping();
 state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = ''; pane.classList.remove('active');
 $('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden'); renderHeader();
 }
@@ -615,7 +618,7 @@ paint();
 } catch (e) { console.error(e); toast('Download failed', 'error'); }
 }
 $('cpMsgs').addEventListener('click', (e) => {
- if (state.selecting) { const mm = e.target.closest('.msg'); if (mm) toggleSel(mm.dataset.mid); return; } const v = e.target.closest('[data-view]'), l = e.target.closest('[data-load]'); if (v) { light.querySelector('img').src = v.src; light.classList.add('active'); }
+if (state.selecting) { const mm = e.target.closest('.msg'); if (mm) toggleSel(mm.dataset.mid); return; } const v = e.target.closest('[data-view]'), l = e.target.closest('[data-load]'); if (v) { light.querySelector('img').src = v.src; light.classList.add('active'); }
 else if (l) loadChunked(l.dataset.load);
 });
 /* =========================================================
@@ -842,100 +845,100 @@ toast('Username updated', 'success'); closeSheet();
 };
 }
 /* =========================================================
-    Delete messages / delete all chats (wipes Firestore docs too)
-    ========================================================= */
+Delete messages / delete all chats (wipes Firestore docs too)
+========================================================= */
 function updateSelUI() {
- const n = state.sel.size;
- $('selCount').textContent = n ? `${n} selected` : 'Select messages';
- $('selDel').disabled = !n;
- const all = state.msgDocs.length > 0 && n >= state.msgDocs.length;
- $('selAll').textContent = all ? 'Clear' : 'Select all';
+const n = state.sel.size;
+$('selCount').textContent = n ? `${n} selected` : 'Select messages';
+$('selDel').disabled = !n;
+const all = state.msgDocs.length > 0 && n >= state.msgDocs.length;
+$('selAll').textContent = all ? 'Clear' : 'Select all';
 }
 function enterSelect() {
- if (!state.active) return toast('Open a chat first', 'info');
- state.selecting = true; state.sel.clear();
- pane.classList.add('selecting'); $('cpMsgs').classList.add('selecting');
- stopTyping(); updateSelUI();
+if (!state.active) return toast('Open a chat first', 'info');
+state.selecting = true; state.sel.clear();
+pane.classList.add('selecting'); $('cpMsgs').classList.add('selecting');
+stopTyping(); updateSelUI();
 }
 function exitSelect() {
- if (!state.selecting && !state.sel.size) return;
- state.selecting = false; state.sel.clear();
- pane.classList.remove('selecting'); $('cpMsgs').classList.remove('selecting');
- $('cpMsgs').querySelectorAll('.msg.picked').forEach((el) => el.classList.remove('picked'));
- updateSelUI();
+if (!state.selecting && !state.sel.size) return;
+state.selecting = false; state.sel.clear();
+pane.classList.remove('selecting'); $('cpMsgs').classList.remove('selecting');
+$('cpMsgs').querySelectorAll('.msg.picked').forEach((el) => el.classList.remove('picked'));
+updateSelUI();
 }
 function toggleSel(id) {
- if (!id) return;
- if (state.sel.has(id)) state.sel.delete(id); else state.sel.add(id);
- const el = $('cpMsgs').querySelector(`.msg[data-mid="${id}"]`);
- if (el) el.classList.toggle('picked', state.sel.has(id));
- updateSelUI();
+if (!id) return;
+if (state.sel.has(id)) state.sel.delete(id); else state.sel.add(id);
+const el = $('cpMsgs').querySelector(`.msg[data-mid="${id}"]`);
+if (el) el.classList.toggle('picked', state.sel.has(id));
+updateSelUI();
 }
 function toggleSelAll() {
- const all = state.msgDocs.length > 0 && state.sel.size >= state.msgDocs.length;
- state.sel.clear();
- if (!all) state.msgDocs.forEach((m) => state.sel.add(m.id));
- $('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid)));
- updateSelUI();
+const all = state.msgDocs.length > 0 && state.sel.size >= state.msgDocs.length;
+state.sel.clear();
+if (!all) state.msgDocs.forEach((m) => state.sel.add(m.id));
+$('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid)));
+updateSelUI();
 }
 /* run deletes a few at a time (each delete is checked by the security rules) */
 async function delRefs(refs) {
- for (let i = 0; i < refs.length; i += 20) await Promise.all(refs.slice(i, i + 20).map((r) => deleteDoc(r)));
+for (let i = 0; i < refs.length; i += 20) await Promise.all(refs.slice(i, i + 20).map((r) => deleteDoc(r)));
 }
 function forgetLocal(ids) {
- ids.forEach((id) => { const u = media.get(id); if (u) { URL.revokeObjectURL(u); media.delete(id); } plain.delete(id); });
- state.sig = '';
+ids.forEach((id) => { const u = media.get(id); if (u) { URL.revokeObjectURL(u); media.delete(id); } plain.delete(id); });
+state.sig = '';
 }
 async function deleteSelected() {
- const uid = state.active, ids = [...state.sel];
- if (!uid || !ids.length) return;
- if (!confirm(`Delete ${ids.length} message${ids.length > 1 ? 's' : ''} for both of you? This can’t be undone.`)) return;
- const cid = chatId(state.uid, uid), btn = $('selDel'); btn.disabled = true;
- try {
-  const refs = [];
-  ids.forEach((id) => {
-   const m = state.msgDocs.find((x) => x.id === id), p = plain.get(id), mid = m?.mid || p?.mid, n = m?.n || p?.n || 0;
-   for (let i = 0; mid && i < n; i++) refs.push(doc(D(), 'chats', cid, 'blobs', `${mid}_${i}`)); // big media chunks first
-  });
-  await delRefs(refs);
-  await delRefs(ids.map((id) => doc(D(), 'chats', cid, 'messages', id))); // then the messages themselves
-  forgetLocal(ids); exitSelect(); toast('Deleted for both of you 🗑️', 'success');
- } catch (e) {
-  console.error(e); btn.disabled = !state.sel.size;
-  toast('Couldn’t delete — publish the updated Firestore rules', 'error');
- }
+const uid = state.active, ids = [...state.sel];
+if (!uid || !ids.length) return;
+if (!confirm(`Delete ${ids.length} message${ids.length > 1 ? 's' : ''} for both of you? This can’t be undone.`)) return;
+const cid = chatId(state.uid, uid), btn = $('selDel'); btn.disabled = true;
+try {
+const refs = [];
+ids.forEach((id) => {
+const m = state.msgDocs.find((x) => x.id === id), p = plain.get(id), mid = m?.mid || p?.mid, n = m?.n || p?.n || 0;
+for (let i = 0; mid && i < n; i++) refs.push(doc(D(), 'chats', cid, 'blobs', `${mid}_${i}`)); // big media chunks first
+});
+await delRefs(refs);
+await delRefs(ids.map((id) => doc(D(), 'chats', cid, 'messages', id))); // then the messages themselves
+forgetLocal(ids); exitSelect(); toast('Deleted for both of you 🗑️', 'success');
+} catch (e) {
+console.error(e); btn.disabled = !state.sel.size;
+toast('Couldn’t delete — publish the updated Firestore rules', 'error');
+}
 }
 /* wipe EVERYTHING in one conversation: messages (incl. inline photos/voice) + media chunks */
 async function wipeChat(uid) {
- const cid = chatId(state.uid, uid);
- for (const [sub, size] of [['messages', 40], ['blobs', 8]]) {
-  for (;;) {
-   const s = await getDocs(query(collection(D(), 'chats', cid, sub), limit(size)));
-   if (s.empty) break;
-   await delRefs(s.docs.map((d) => d.ref));
-  }
- }
- try { await updateDoc(doc(D(), 'chats', cid), { lastAt: deleteField(), lastFrom: deleteField() }); } catch {}
+const cid = chatId(state.uid, uid);
+for (const [sub, size] of [['messages', 40], ['blobs', 8]]) {
+for (;;) {
+const s = await getDocs(query(collection(D(), 'chats', cid, sub), limit(size)));
+if (s.empty) break;
+await delRefs(s.docs.map((d) => d.ref));
+}
+}
+try { await updateDoc(doc(D(), 'chats', cid), { lastAt: deleteField(), lastFrom: deleteField() }); } catch {}
 }
 function openDeleteAllSheet() {
- const cur = state.active;
- openSheet('Delete all chats', `<p class="sh-note">Every message, photo, video and voice message is permanently erased from the database — for <b>both</b> of you. This can’t be undone.</p>
- ${cur ? `<button id="daThis" class="sh-btn danger">Delete this chat · ${esc(displayName(cur))}</button>` : ''}
- <button id="daAll" class="sh-btn danger">Delete chats with everyone (${state.friends.length})</button>
- <button id="daNo" class="sh-btn">Cancel</button>`);
- const run = async (list, label) => {
-  if (!list.length) return toast('No chats to delete', 'info');
-  if (!confirm(`${label}? This can’t be undone.`)) return;
-  exitSelect(); closeSheet(); toast('Deleting…', 'info');
-  try {
-   for (const u of list) await wipeChat(u);
-   media.forEach((u) => URL.revokeObjectURL(u)); media.clear(); plain.clear(); state.sig = ''; paint();
-   toast('Chats deleted for both of you 🗑️', 'success');
-  } catch (e) { console.error(e); toast('Couldn’t delete everything — publish the updated Firestore rules', 'error'); }
- };
- $('daNo').onclick = closeSheet;
- if (cur) $('daThis').onclick = () => run([cur], `Delete the whole chat with ${displayName(cur)}`);
- $('daAll').onclick = () => run(state.friends.map((f) => f.uid), 'Delete ALL your chats with every friend');
+const cur = state.active;
+openSheet('Delete all chats', `<p class="sh-note">Every message, photo, video and voice message is permanently erased from the database — for <b>both</b> of you. This can’t be undone.</p>
+${cur ? `<button id="daThis" class="sh-btn danger">Delete this chat · ${esc(displayName(cur))}</button>` : ''}
+<button id="daAll" class="sh-btn danger">Delete chats with everyone (${state.friends.length})</button>
+<button id="daNo" class="sh-btn">Cancel</button>`);
+const run = async (list, label) => {
+if (!list.length) return toast('No chats to delete', 'info');
+if (!confirm(`${label}? This can’t be undone.`)) return;
+exitSelect(); closeSheet(); toast('Deleting…', 'info');
+try {
+for (const u of list) await wipeChat(u);
+media.forEach((u) => URL.revokeObjectURL(u)); media.clear(); plain.clear(); state.sig = ''; paint();
+toast('Chats deleted for both of you 🗑️', 'success');
+} catch (e) { console.error(e); toast('Couldn’t delete everything — publish the updated Firestore rules', 'error'); }
+};
+$('daNo').onclick = closeSheet;
+if (cur) $('daThis').onclick = () => run([cur], `Delete the whole chat with ${displayName(cur)}`);
+$('daAll').onclick = () => run(state.friends.map((f) => f.uid), 'Delete ALL your chats with every friend');
 }
 /* 3-dots menu + selection bar wiring */
 $('cpMore').onclick = (e) => { e.stopPropagation(); $('cpMenu').classList.toggle('open'); };
@@ -948,165 +951,193 @@ $('selAll').onclick = toggleSelAll;
 $('selDel').onclick = deleteSelected;
 window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(uid)) };
 /* =========================================================
-   v5 — typing cloud + Seen / Not seen  (paste at the VERY END of chat.js)
-   ========================================================= */
+v5 — typing cloud + Seen / Not seen (paste at the VERY END of chat.js)
+========================================================= */
 (function () {
-  const msgsBox = $('cpMsgs');
-  const tsMs = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
-  /* typing clouds: friend = bottom-left (near photos) · me = bottom-right (near mic) */
-  comp.insertAdjacentHTML('beforeend',
-    '<div id="tcL" class="tcloud l" aria-hidden="true"><i></i><i></i><i></i></div>' +
-    '<div id="tcR" class="tcloud r" aria-hidden="true"><i></i><i></i><i></i></div>');
-  const tcL = $('tcL'), tcR = $('tcR');
-  let lastKey = 0, marked = '';
-  input.addEventListener('input', () => { lastKey = input.value.trim() ? Date.now() : 0; });
-  input.addEventListener('blur', () => { lastKey = 0; });
-  const inView = (el) => {
-    const r = el.getBoundingClientRect(), b = msgsBox.getBoundingClientRect();
-    return r.bottom > b.top + 4 && r.top < b.bottom - 4;
-  };
-  function refresh() {
-    const open = app.classList.contains('active') && state.active && !msgsBox.classList.contains('hidden');
-    if (!open) { tcL.classList.remove('show'); tcR.classList.remove('show'); return; }
-    tcL.classList.toggle('show', (state.typeUntil.get(state.active) || 0) > Date.now());
-    const mine = lastKey && Date.now() - lastKey < 2600 && input.value.trim() && document.activeElement === input;
-    tcR.classList.toggle('show', !!mine);
-    const cid = chatId(state.uid, state.active), chat = state.chats.get(cid) || {};
-    const theirRead = tsMs(chat.reads && chat.reads[state.active]);
-    const myRead = tsMs(chat.reads && chat.reads[state.uid]);
-    const byId = new Map((state.msgDocs || []).map((m) => [m.id, m]));
-    /* label every message I sent */
-    msgsBox.querySelectorAll('.msg.me').forEach((el) => {
-      const m = byId.get(el.dataset.mid), mt = el.querySelector('.mt');
-      if (!m || !mt) return;
-      let tag = mt.querySelector('.rd');
-      if (!tag) { tag = document.createElement('em'); tag.className = 'rd'; mt.appendChild(tag); }
-      const at = tsMs(m.at), seen = !!(theirRead && at && theirRead >= at);
-      const cls = seen ? 'rd seen' : 'rd', txt = seen ? '✓✓ Seen' : '✓ Not seen';
-      if (tag.className !== cls) tag.className = cls;
-      if (tag.textContent !== txt) tag.textContent = txt;
-    });
-    /* tell my friend I've seen their latest message — only when it is really on screen */
-    if (document.hidden) return;
-    let last = null;
-    for (let i = (state.msgDocs || []).length - 1; i >= 0; i--) {
-      if (state.msgDocs[i].from === state.active) { last = state.msgDocs[i]; break; }
-    }
-    if (!last) return;
-    const el = msgsBox.querySelector('[data-mid="' + last.id + '"]');
-    if (!el || !inView(el)) return;
-    const key = cid + ':' + last.id;
-    if (key === marked || tsMs(last.at) <= myRead) { marked = key; return; }
-    marked = key;
-    setDoc(doc(D(), 'chats', cid), { reads: { [state.uid]: serverTimestamp() } }, { merge: true })
-      .catch(() => { marked = ''; });
-  }
-  new MutationObserver(refresh).observe(msgsBox, { childList: true });
-  msgsBox.addEventListener('scroll', refresh, { passive: true });
-  document.addEventListener('visibilitychange', refresh);
-  setInterval(refresh, 400);
+const msgsBox = $('cpMsgs');
+const tsMs = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
+/* typing clouds: friend = bottom-left (near photos) · me = bottom-right (near mic) */
+comp.insertAdjacentHTML('beforeend',
+'<div id="tcL" class="tcloud l" aria-hidden="true"><i></i><i></i><i></i></div>' +
+'<div id="tcR" class="tcloud r" aria-hidden="true"><i></i><i></i><i></i></div>');
+const tcL = $('tcL'), tcR = $('tcR');
+let lastKey = 0, marked = '';
+input.addEventListener('input', () => { lastKey = input.value.trim() ? Date.now() : 0; });
+input.addEventListener('blur', () => { lastKey = 0; });
+const inView = (el) => {
+const r = el.getBoundingClientRect(), b = msgsBox.getBoundingClientRect();
+return r.bottom > b.top + 4 && r.top < b.bottom - 4;
+};
+function refresh() {
+const open = app.classList.contains('active') && state.active && !msgsBox.classList.contains('hidden');
+if (!open) { tcL.classList.remove('show'); tcR.classList.remove('show'); return; }
+tcL.classList.toggle('show', (state.typeUntil.get(state.active) || 0) > Date.now());
+const mine = lastKey && Date.now() - lastKey < 2600 && input.value.trim() && document.activeElement === input;
+tcR.classList.toggle('show', !!mine);
+const cid = chatId(state.uid, state.active), chat = state.chats.get(cid) || {};
+const theirRead = tsMs(chat.reads && chat.reads[state.active]);
+const myRead = tsMs(chat.reads && chat.reads[state.uid]);
+const byId = new Map((state.msgDocs || []).map((m) => [m.id, m]));
+/* label every message I sent */
+msgsBox.querySelectorAll('.msg.me').forEach((el) => {
+const m = byId.get(el.dataset.mid), mt = el.querySelector('.mt');
+if (!m || !mt) return;
+let tag = mt.querySelector('.rd');
+if (!tag) { tag = document.createElement('em'); tag.className = 'rd'; mt.appendChild(tag); }
+const at = tsMs(m.at), seen = !!(theirRead && at && theirRead >= at);
+const cls = seen ? 'rd seen' : 'rd', txt = seen ? '✓✓ Seen' : '✓ Not seen';
+if (tag.className !== cls) tag.className = cls;
+if (tag.textContent !== txt) tag.textContent = txt;
+});
+/* tell my friend I've seen their latest message — only when it is really on screen */
+if (document.hidden) return;
+let last = null;
+for (let i = (state.msgDocs || []).length - 1; i >= 0; i--) {
+if (state.msgDocs[i].from === state.active) { last = state.msgDocs[i]; break; }
+}
+if (!last) return;
+const el = msgsBox.querySelector('[data-mid="' + last.id + '"]');
+if (!el || !inView(el)) return;
+const key = cid + ':' + last.id;
+if (key === marked || tsMs(last.at) <= myRead) { marked = key; return; }
+marked = key;
+setDoc(doc(D(), 'chats', cid), { reads: { [state.uid]: serverTimestamp() } }, { merge: true })
+.catch(() => { marked = ''; });
+}
+new MutationObserver(refresh).observe(msgsBox, { childList: true });
+msgsBox.addEventListener('scroll', refresh, { passive: true });
+document.addEventListener('visibilitychange', refresh);
+setInterval(refresh, 400);
 })();
 /* =========================================================
-   BENTO NOIR home tiles + bottom dock  (v6)
-   Chat opens from the "Chat" tile. A red shining dot on that tile shows when something unread is waiting.
-   ========================================================= */
+BENTO NOIR home tiles + bottom dock (v6)
+Chat opens from the "Chat" tile. A red shining dot on that tile shows when something unread is waiting.
+========================================================= */
 (function () {
-  const root = document.querySelector('.app-container'), header = document.querySelector('.app-header');
-  if (!root || !header || document.getElementById('bento')) return;
-  const hb = document.querySelector('.glowing-badge'), sub = header.querySelector('.subtitle');
-  const tile = (id, lab, inner, cls = '') => `<button type="button" id="${id}" class="bn-tile ${cls}"><span class="bn-lab">${lab}</span>${inner}</button>`;
-  const el = document.createElement('section');
-  el.id = 'bento'; el.className = 'bento';
-  el.innerHTML =
-    '<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title" id="bnTitle" role="button" tabindex="0" aria-label="Open Space Universe">Our Space<span class="bn-orbit" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="10.5" ry="3.6" transform="rotate(-24 12 12)"/></svg></span></div></div></div>' +
-    '<div class="bn-slot empty" id="bnSlot"></div>' +
-    '<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
-    tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
-    tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Open chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') +   // CHAT-VISIBLE
-    tile('bnTodo', 'To-do', '<span class="bn-big" id="bnTodoN" style="font-size:1.7rem;margin-top:6px">0</span><span class="bn-sm">left today</span>') +
-    tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
-    tile('bnAnn', 'Next milestone', '<span class="bn-big" id="bnAnnN" style="font-size:1.7rem;margin-top:6px">–</span><span class="bn-sm" id="bnAnnS">days to go</span>');
-  header.after(el); header.style.display = 'none';
-  const rmCard = document.getElementById('mainPageReminder');
-  if (rmCard) { const slot = el.querySelector('#bnSlot'); slot.appendChild(rmCard); slot.classList.toggle('empty', rmCard.classList.contains('hidden')); }   // pending reminders live between "Our Space" and "Our Sacred Diary"
-  const top = el.querySelector('.bn-heroTop');
-  if (hb) top.appendChild(hb);
-  if (sub) top.appendChild(sub);
-  const dock = document.createElement('nav');
-  dock.className = 'dock'; dock.setAttribute('aria-label', 'Main');
-  const svg = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p}"/></svg>`;
-  dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}</button><button type="button" id="dkFr" aria-label="Friend list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.3"/><path d="M2.8 20c.5-3.4 3.1-5.2 6.2-5.2s5.7 1.8 6.2 5.2"/><circle cx="17.2" cy="9.5" r="2.5"/><path d="M17 14.7c2.6.1 4.4 1.7 4.8 5"/></svg></button>`;
-  document.body.appendChild(dock);
-  $('bnMem').onclick = () => O().openMemories?.();
-  $('bnTitle').onclick = () => O().openSpace?.();
-  $('bnTitle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); O().openSpace?.(); } };
-  $('bnTodo').onclick = () => O().openTodo?.();
-  $('bnStory').onclick = () => O().openStory?.();
-  $('bnChat').onclick = () => openChat();
-  $('dkHome').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-  $('dkFr').onclick = () => openFriends();
-  $('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click();   // set the anniversary only from "days together"
-  const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
-  function tick() {
-    const nm = ($('currentUserLabel')?.textContent || '').trim(), h = new Date().getHours();
-    set('bnHi', (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (nm && nm !== 'Loading...' ? ', ' + nm : ''));
-    const d = parseInt(document.querySelector('#annivCard .anniv-num')?.textContent, 10);
-    if (Number.isFinite(d)) {
-      set('bnDays', d); $('bnBar').style.width = ((d % 365) / 365 * 100) + '%';
-      const next = 365 * (Math.floor(d / 365) + 1) - d, yr = Math.floor(d / 365) + 1;
-      set('bnAnnN', next); set('bnAnnS', 'days to year ' + yr);
-    } else { set('bnDays', '–'); set('bnAnnN', '–'); set('bnAnnS', 'set it from days together'); }
-    const mems = window.OS?.memories?.() || [];
-    set('bnMemN', mems.length);
-    set('bnTodoN', (window.OS?.todos?.() || []).filter((t) => !t.data.completed).length);
-    const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
-    set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
-    set('bnStoryS', chs[0]?.querySelector('.story-accordion-title')?.textContent || '');
-    const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
-    set('bnChatT', un ? un + ' unread' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'All caught up');
-    const dot = !!(un || rq);
-    $('bnChatDot').classList.toggle('hidden', !dot);
-  }
-  tick(); setInterval(tick, 1000);
+const root = document.querySelector('.app-container'), header = document.querySelector('.app-header');
+if (!root || !header || document.getElementById('bento')) return;
+const hb = document.querySelector('.glowing-badge'), sub = header.querySelector('.subtitle');
+const tile = (id, lab, inner, cls = '') => `<button type="button" id="${id}" class="bn-tile ${cls}"><span class="bn-lab">${lab}</span>${inner}</button>`;
+const el = document.createElement('section');
+el.id = 'bento'; el.className = 'bento';
+el.innerHTML =
+'<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title" id="bnTitle" role="button" tabindex="0" aria-label="Open Our Space">Our Space</div></div></div>' +
+'<div class="bn-slot empty" id="bnSlot"></div>' +
+'<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
+tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
+tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Open chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') + // CHAT-VISIBLE
+tile('bnTodo', 'To-do', '<span class="bn-big" id="bnTodoN" style="font-size:1.7rem;margin-top:6px">0</span><span class="bn-sm">left today</span>') +
+tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
+tile('bnAnn', 'Next milestone', '<span class="bn-big" id="bnAnnN" style="font-size:1.7rem;margin-top:6px">–</span><span class="bn-sm" id="bnAnnS">days to go</span>');
+header.after(el); header.style.display = 'none';
+const rmCard = document.getElementById('mainPageReminder');
+if (rmCard) { const slot = el.querySelector('#bnSlot'); slot.appendChild(rmCard); slot.classList.toggle('empty', rmCard.classList.contains('hidden')); } // pending reminders live between "Our Space" and "Our Sacred Diary"
+const top = el.querySelector('.bn-heroTop');
+if (hb) top.appendChild(hb);
+if (sub) top.appendChild(sub);
+const dock = document.createElement('nav');
+dock.className = 'dock'; dock.setAttribute('aria-label', 'Main');
+const svg = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p}"/></svg>`;
+dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}<span class="dk-lab">Home</span></button><button type="button" id="dkFr" aria-label="Friend list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.3"/><path d="M2.8 20c.5-3.4 3.1-5.2 6.2-5.2s5.7 1.8 6.2 5.2"/><circle cx="17.2" cy="9.5" r="2.5"/><path d="M17 14.7c2.6.1 4.4 1.7 4.8 5"/></svg><span class="dk-lab">Friends</span></button><button type="button" id="dkPost" aria-label="Post a memory">${svg('M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z')}<span class="dk-lab">Post</span></button>`;
+document.body.appendChild(dock);
+$('bnMem').onclick = () => O().openMemories?.();
+$('bnTitle').onclick = () => O().openSpace?.();
+$('bnTitle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); O().openSpace?.(); } };
+$('bnTodo').onclick = () => O().openTodo?.();
+$('bnStory').onclick = () => O().openStory?.();
+$('bnChat').onclick = () => openChat();
+$('dkHome').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+$('dkFr').onclick = () => openFriends();
+$('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click(); // set the anniversary only from "days together"
+const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
+function tick() {
+const nm = ($('currentUserLabel')?.textContent || '').trim(), h = new Date().getHours();
+set('bnHi', (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (nm && nm !== 'Loading...' ? ', ' + nm : ''));
+const d = parseInt(document.querySelector('#annivCard .anniv-num')?.textContent, 10);
+if (Number.isFinite(d)) {
+set('bnDays', d); $('bnBar').style.width = ((d % 365) / 365 * 100) + '%';
+const next = 365 * (Math.floor(d / 365) + 1) - d, yr = Math.floor(d / 365) + 1;
+set('bnAnnN', next); set('bnAnnS', 'days to year ' + yr);
+} else { set('bnDays', '–'); set('bnAnnN', '–'); set('bnAnnS', 'set it from days together'); }
+const mems = window.OS?.memories?.() || [];
+set('bnMemN', mems.length);
+set('bnTodoN', (window.OS?.todos?.() || []).filter((t) => !t.data.completed).length);
+const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
+set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
+set('bnStoryS', chs[0]?.querySelector('.story-accordion-title')?.textContent || '');
+const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
+set('bnChatT', un ? un + ' unread' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'All caught up');
+const dot = !!(un || rq);
+$('bnChatDot').classList.toggle('hidden', !dot);
+}
+tick(); setInterval(tick, 1000);
 })();
-
 /* =========================================================
-   FRIEND LIST  (beside the home button)  — only accepted friends
-   ========================================================= */
+FRIEND LIST (beside the home button) — only accepted friends
+========================================================= */
 var frPage = null;
 document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
 <header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div class="fp-title">Friends</div><span id="frCount" class="fp-count">0</span></header>
 <div id="frList" class="fp-list"></div></div>`);
 frPage = $('frPage');
 function renderFriendsPage() {
-  if (!frPage || !frPage.classList.contains('active')) return;
-  const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
-  $('frCount').textContent = fr.length;
-  if (!fr.length) {
-    list.innerHTML = '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>When you accept a friend request in Chat, your friend shows up here.</i></div>';
-    return;
-  }
-  list.innerHTML = fr.map(({ uid }) => {
-    const p = state.profiles.get(uid) || {}, nm = displayName(uid), un = p.username ? '@' + p.username : '', pr = presence(uid);
-    return `<article class="fp-card"><div class="fp-ban">${bannerEl(p, 'fp-bn')}<span class="fp-scrim"></span><span class="fp-pres${pr.on ? ' on' : ''}">${pr.on ? '● Online' : esc(pr.txt)}</span></div>
-<div class="fp-mid"><span class="pfp-wrap" style="width:104px;height:104px"><span class="pfp-ring lg">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span><button type="button" class="fp-msg" data-msg="${esc(uid)}">${IC.send} Message</button></div>
-<div class="fp-info"><h3>${esc(nm)}</h3>${un ? `<div class="fp-user">${esc(un)}</div>` : ''}${p.bio ? `<p>${esc(p.bio)}</p>` : ''}</div></article>`;
-  }).join('');
+if (!frPage || !frPage.classList.contains('active')) return;
+const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
+$('frCount').textContent = fr.length;
+let h = '';
+if (state.incoming.length) {
+h += `<div class="cs-label">Friend requests · ${state.incoming.length}</div>`;
+state.incoming.forEach((r) => {
+const pr = state.profiles.get(r.from) || {};
+h += `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
+<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>`;
+});
+}
+if (state.outgoing.length) {
+h += '<div class="cs-label">Sent requests</div>';
+state.outgoing.forEach((r) => {
+const pr = state.profiles.get(r.to) || {};
+h += `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>`;
+});
+}
+h += `<div class="cs-label">Friends · ${fr.length}</div>`;
+h += fr.length ? fr.map(({ uid }) => friendRow(uid)).join('')
+: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>';
+list.innerHTML = h;
 }
 function openFriends() {
-  frPage.classList.add('active'); frPage.setAttribute('aria-hidden', 'false');
-  document.documentElement.style.overflow = 'hidden';
-  renderFriendsPage();
+frPage.classList.add('active'); frPage.setAttribute('aria-hidden', 'false');
+document.documentElement.style.overflow = 'hidden';
+renderFriendsPage();
 }
 function closeFriends() {
-  frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
-  if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
+frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
+if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
 }
 $('frClose').onclick = closeFriends;
 $('frList').onclick = async (e) => {
-  const b = e.target.closest('[data-msg]'); if (!b) return;
-  const uid = b.dataset.msg; closeFriends();
-  await openChat(); openConversation(uid);
+const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
+if (t.dataset.open) { const uid = t.dataset.open; closeFriends(); await openChat(); openConversation(uid); return; }
+try {
+if (t.dataset.acc) await updateDoc(doc(D(), 'chatRequests', t.dataset.acc), { status: 'accepted', seenFrom: false, seenTo: false });
+else await deleteDoc(doc(D(), 'chatRequests', t.dataset.dec || t.dataset.cancel));
+} catch { toast('Something went wrong', 'error'); }
 };
 window.OSBack?.add(frPage, closeFriends);
-setInterval(renderFriendsPage, 15000);   // keeps "online / last seen" fresh while it is open
+/* ---------- Post a memory page (dock symbol beside Friends) ---------- */
+const postPage = $('postPage');
+function openPost() {
+postPage.classList.add('active'); postPage.setAttribute('aria-hidden', 'false');
+document.documentElement.style.overflow = 'hidden';
+}
+function closePost() {
+postPage.classList.remove('active'); postPage.setAttribute('aria-hidden', 'true');
+if (!app.classList.contains('active') && !frPage.classList.contains('active')) document.documentElement.style.overflow = '';
+}
+$('dkPost').onclick = openPost;
+$('ppClose').onclick = closePost;
+window.OSBack?.add(postPage, closePost);
+// when a memory is shared, the pop-up animation plays and we return Home, where "moments shared" goes up
+const rv = $('memoryRevealOverlay');
+if (rv) new MutationObserver(() => { if (rv.classList.contains('posting') && postPage.classList.contains('active')) closePost(); }).observe(rv, { attributes: true, attributeFilter: ['class'] });
+setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while it is open
