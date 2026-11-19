@@ -1010,10 +1010,11 @@ background: radial-gradient(ellipse 50% 70% at 50% 50%, rgba(255,255,255,.4), rg
 .bnx .pth { z-index: 6; inset: 7px; }
 .bnx .pth.p2 { inset: 14px; }
 .bnx .ob { position: absolute; display: block; left: 0; top: 0; width: var(--s, 16px); height: var(--s, 16px); margin: calc(var(--s, 16px) / -2) 0 0 calc(var(--s, 16px) / -2);
-animation: bnPath var(--d, 6s) linear var(--dl, 0s) infinite var(--dir, normal); }
-@keyframes bnPath { 0% { left: 0; top: 0; } 25% { left: 100%; top: 0; } 50% { left: 100%; top: 100%; } 75% { left: 0; top: 100%; } 100% { left: 0; top: 0; } }
+animation: bnPathT var(--d, 6s) linear var(--dl, 0s) infinite var(--dir, normal); will-change: transform; }
+.bnx .pth { container-type: size; }
+@keyframes bnPathT { 0% { transform: translate(0, 0); } 25% { transform: translate(100cqw, 0); } 50% { transform: translate(100cqw, 100cqh); } 75% { transform: translate(0, 100cqh); } 100% { transform: translate(0, 0); } }
 .bnx .ob u { display: block; width: 100%; height: 100%; text-decoration: none; }
-.bnx .ob svg { width: 100%; height: 100%; display: block; fill: var(--g1); filter: drop-shadow(0 0 3px var(--g1)) drop-shadow(0 0 8px var(--g2)); animation: bnFlick .9s steps(1, end) infinite; }
+.bnx .ob svg { width: 100%; height: 100%; display: block; fill: var(--g1); filter: drop-shadow(0 0 5px var(--g2)); animation: bnFlick .9s steps(1, end) infinite; }
 @keyframes bnFlick { 0% { opacity: 1; transform: rotate(-12deg) scale(1); } 20% { opacity: .55; transform: rotate(10deg) scale(1.15); } 40% { opacity: 1; transform: rotate(-6deg) scale(.95); } 60% { opacity: .75; transform: rotate(14deg) scale(1.1); } 80% { opacity: 1; transform: rotate(-14deg) scale(1); } }
 /* 1 · golden thunder */
 .bn-volt { --bg: radial-gradient(120% 150% at 88% 0%, #5e4508 0%, rgba(94,69,8,0) 58%), radial-gradient(90% 130% at 0% 100%, #3b2a06 0%, rgba(59,42,6,0) 60%), linear-gradient(125deg, #0d0a05, #201706 55%, #33250a);
@@ -1025,7 +1026,7 @@ animation: bnPath var(--d, 6s) linear var(--dl, 0s) infinite var(--dir, normal);
 .bn-aurora { --bg: radial-gradient(90% 120% at 15% 105%, rgba(16,120,100,.55) 0%, transparent 60%), radial-gradient(80% 110% at 90% -10%, rgba(80,40,160,.55) 0%, transparent 60%), linear-gradient(165deg, #030614, #07102b 55%, #0a1a30);
 --glw: rgba(60,255,180,.4); --spin: 7s; }
 .bn-aurora .rg { background: conic-gradient(from 0deg, transparent 0 50%, #37f5b0 68%, #38c9ff 80%, #b16bff 92%, #ff7bd8 100%); }
-.bnx .au { top: -30%; width: 70%; height: 160%; border-radius: 50%; filter: blur(16px); opacity: .75; will-change: transform; animation: auDrift 9s ease-in-out infinite alternate;
+.bnx .au { top: -30%; width: 70%; height: 160%; border-radius: 50%; filter: blur(9px); opacity: .75; will-change: transform; animation: auDrift 9s ease-in-out infinite alternate;
 background: linear-gradient(180deg, transparent, rgba(60,255,170,.6) 45%, rgba(60,200,255,.35) 70%, transparent); }
 .bnx .a1 { left: -10%; }
 .bnx .a2 { left: 30%; animation-duration: 11s; animation-delay: -3s; background: linear-gradient(180deg, transparent, rgba(170,90,255,.55) 50%, transparent); }
@@ -1159,5 +1160,4 @@ opacity: 0; visibility: hidden; transform: translateY(14px); transition: opacity
 html body .chat-congrats { background: radial-gradient(80% 60% at 50% 40%, rgba(64,38,22,.94), rgba(8,5,4,.97)); }
 html body .cc-card { background: linear-gradient(165deg, #261a12, #110b08); border: 1px solid rgba(227,192,141,.55);
 box-shadow: 0 0 0 1px rgba(255,236,200,.06) inset, 0 0 70px rgba(227,192,141,.38), 0 30px 60px rgba(0,0,0,.6); }
-html body .cc-card h2 { background: linear-gradient(100deg, #b98558, #fff1cf 45%, #e3c08d 60%, #b98558); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text;
--webkit
+html body .cc-card h2 { background: linear-gradient(100deg, #b98558, #fff1cf 45%, #e3c08d 60%, #b98558
