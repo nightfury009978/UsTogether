@@ -1114,7 +1114,6 @@ html body .main-reminder-card.hidden { display: none; }
 .rm-dots:empty { display: none; }
 .rm-dots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(227,192,141,.3); transition: width .3s ease, background .3s ease; }
 .rm-dots i.on { width: 18px; background: #e3c08d; }
-
 /* =========================================================
 v9 — shining "Our Space" · dock labels · request ticks · post page · premium congrats
 ========================================================= */
