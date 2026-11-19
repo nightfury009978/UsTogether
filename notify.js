@@ -76,6 +76,7 @@ if (track && deck.length) track.scrollLeft = Math.min(keep, (deck.length - 1) * 
 if (deck.length) armHide(4500);
 }
 function push(n) {
+if (document.getElementById('osStart')) { setTimeout(() => push(n), 1200); return; }   // wait until the opening animation has finished
 const type = typeOf(n.key);
 let count = 1;
 if (n.key) {
