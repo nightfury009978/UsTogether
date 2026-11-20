@@ -543,10 +543,11 @@ background: var(--accent-light); border-color: var(--accent); transform: none;
 /* ===== chat: 3-dots menu, delete / select mode, typing indicator ===== */
 .cp-head { position: relative; }
 .cp-menu { right: 12px; top: calc(100% - 6px); }
-.cp-selbar { display: none; align-items: center; gap: 10px; width: 100%; }
-.chat-pane.selecting .cp-head > :not(.cp-selbar) { display: none !important; }
-.chat-pane.selecting .cp-selbar { display: flex; }
-.chat-pane.selecting .cp-comp { display: none; }
+.cp-selbar { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; gap: 10px; width: auto; padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;
+background: linear-gradient(180deg, #2a1c12, #170f0a); border-bottom: 1px solid rgba(227,192,141,.36);
+opacity: 0; visibility: hidden; transform: translateY(-6px); pointer-events: none; transition: opacity .26s ease, transform .26s ease, visibility 0s linear .26s; }
+.cp-selbar.on { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition-delay: 0s; }
+.chat-pane.selecting .cp-comp { opacity: 0; pointer-events: none; }
 .sel-count { flex: 1; min-width: 0; font-size: 1.02rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cp-link { background: none; border: none; font-weight: 700; font-size: .88rem; color: var(--accent-dark); padding: 8px 6px; }
 .cp-btn.danger { color: var(--danger); border-color: rgba(226,113,138,.5); }
@@ -555,7 +556,7 @@ background: var(--accent-light); border-color: var(--accent); transform: none;
 .sel-ck { display: none; position: absolute; top: -6px; left: -8px; z-index: 3; width: 22px; height: 22px; border-radius: 50%;
 background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 2px 6px rgba(60,35,20,.25); }
 .cp-msgs.selecting .sel-ck { display: block; }
-.cp-msgs.selecting .msg { cursor: pointer; -webkit-user-select: none; user-select: none; - webkit-touch-callout: none; }
+.cp-msgs.selecting .msg { cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .cp-msgs.selecting .msg .bub, .cp-msgs.selecting .msg .bub * { pointer-events: none; }
 .msg.picked .sel-ck { background: var(--danger); border-color: var(--danger); }
 .msg.picked .sel-ck::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: .8rem; font-weight: 800; line-height: 1; }
