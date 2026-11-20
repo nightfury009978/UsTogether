@@ -189,6 +189,174 @@ opacity: 0; visibility: hidden; transform: translate(-50%, 16px); transition: op
 .fp-rmbar button { padding: 11px 20px; border: 0; border-radius: 999px; font: 700 .84rem 'Outfit', sans-serif; color: #fff; background: linear-gradient(135deg, #e5484d, #b02a34); cursor: pointer; }
 .fp-rmbar button:disabled { opacity: .4; }
 `; document.head.appendChild(s); })();
+(() => { if (document.getElementById('v14css')) return; const s = document.createElement('style'); s.id = 'v14css'; s.textContent = `
+/* =========================================================
+v14 — back arrows · premium menus · premium calls · voice player · attach menu · memories timeline
+========================================================= */
+/* ---------- back arrow (replaces every close "x" that goes back) ---------- */
+svg.back-ic { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.fp-x svg, .mn-x svg, .ow-x svg, .td-x svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+html body .td-x { font-size: 0; }
+html body .close-drawer, html body .close-sheet-btn { order: -1; width: 40px; height: 40px; flex: none; display: grid; place-items: center; padding: 0; border-radius: 50%; color: #e9cd9f; background: linear-gradient(145deg, rgba(227,192,141,.16), rgba(227,192,141,.03)); border: 1px solid rgba(227,192,141,.3); cursor: pointer; }
+html body .drawer-header, html body .story-sheet-header { gap: 12px; justify-content: flex-start; }
+html body .drawer-header h3 { flex: 1; }
+html body .story-sheet-header h2 { flex: 1; }
+html body .ow-x { right: auto; left: 16px; }
+/* ---------- premium side menu (sections) ---------- */
+html body .menu-drawer { background: linear-gradient(180deg, #1a130f, #0f0a08); border-left: 1px solid rgba(227,192,141,.28); box-shadow: -18px 0 50px rgba(0,0,0,.55); }
+html body .dr-group { position: relative; overflow: hidden; border-radius: 22px; background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); border: 1px solid rgba(227,192,141,.22); }
+html body .dr-group.open { border-color: rgba(227,192,141,.55); box-shadow: 0 0 0 1px rgba(227,192,141,.12) inset, 0 10px 26px rgba(0,0,0,.4), 0 0 26px rgba(227,192,141,.14); }
+html body .dr-group::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255,236,200,.1), transparent); transform: translateX(-160%) skewX(-18deg); animation: mcSheen 7s ease-in-out infinite; }
+html body .dr-ic, html body .di-icon { border-radius: 13px; color: #e9cd9f; background: linear-gradient(145deg, rgba(227,192,141,.26), rgba(227,192,141,.05)); border: 1px solid rgba(227,192,141,.38); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 4px 12px rgba(0,0,0,.35); }
+html body .dr-ic svg, html body .di-icon svg { width: 18px; height: 18px; fill: none; stroke: #f0d3a2; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(227,192,141,.55)); }
+html body .dr-sub .drawer-items li, html body .dr-item { background: rgba(255,255,255,.045); border: 1px solid rgba(227,192,141,.2); border-radius: 16px; color: #f4e9dc; font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif; font-weight: 600; letter-spacing: .01em; transition: transform .15s ease, background .2s ease, border-color .2s ease; }
+html body .dr-sub .drawer-items li:active, html body .dr-item:active { transform: scale(.98); background: rgba(227,192,141,.12); border-color: rgba(227,192,141,.5); }
+html body .dr-item.danger { color: #ffb3bb; border-color: rgba(229,72,77,.45); background: rgba(229,72,77,.08); }
+html body .dr-item.danger .di-icon { background: rgba(229,72,77,.16); border-color: rgba(229,72,77,.45); }
+html body .dr-item.danger .di-icon svg { stroke: #ff9aa6; filter: drop-shadow(0 0 4px rgba(229,72,77,.5)); }
+html body .dr-sub .chevron { color: #e3c08d; opacity: .85; }
+/* ---------- premium 3-dots menus ---------- */
+html body .cs-menu, html body .cp-menu { min-width: 238px; padding: 8px; border-radius: 22px; overflow: hidden; background: linear-gradient(165deg, #261a12, #110b08); border: 1px solid rgba(227,192,141,.45); box-shadow: 0 0 0 1px rgba(255,236,200,.05) inset, 0 24px 54px rgba(0,0,0,.72), 0 0 34px rgba(227,192,141,.16); }
+html body .cp-menu::before { background: #261a12; border-left-color: rgba(227,192,141,.45); border-top-color: rgba(227,192,141,.45); }
+html body .cs-menu.open::after, html body .cp-menu.open::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 45%; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255,236,200,.14), transparent); animation: mnMenuSheen 1.4s ease .15s both; }
+@keyframes mnMenuSheen { from { transform: translateX(-130%) skewX(-18deg); } to { transform: translateX(330%) skewX(-18deg); } }
+html body .cs-menu button, html body .cp-menu button { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 12px 9px 9px; margin: 0 0 4px; border-radius: 16px; border: 1px solid transparent; background: transparent; color: #f4e9dc; text-align: left; font: 600 .9rem 'Outfit', 'Plus Jakarta Sans', sans-serif; letter-spacing: .02em; transition: background .18s ease, border-color .18s ease, transform .15s ease; }
+html body .cs-menu button:last-child, html body .cp-menu button:last-child { margin-bottom: 0; }
+html body .cs-menu button:active, html body .cp-menu button:active { transform: scale(.98); background: rgba(227,192,141,.12); border-color: rgba(227,192,141,.35); }
+html body .cp-menu button::after { display: none; }
+html body .cs-menu .mi, html body .cp-menu .mi { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; color: #f0d3a2; background: linear-gradient(145deg, rgba(227,192,141,.26), rgba(227,192,141,.05)); border: 1px solid rgba(227,192,141,.38); box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
+html body .cs-menu .mi svg, html body .cp-menu .mi svg { width: 18px; height: 18px; filter: drop-shadow(0 0 4px rgba(227,192,141,.5)); }
+html body .cs-menu .ml, html body .cp-menu .ml { flex: 1; min-width: 0; }
+html body .cs-menu button.danger, html body .cp-menu button.danger { color: #ffb3bb; background: rgba(229,72,77,.07); border-color: rgba(229,72,77,.3); }
+html body .cs-menu button.danger .mi, html body .cp-menu button.danger .mi { color: #ff9aa6; background: rgba(229,72,77,.16); border-color: rgba(229,72,77,.45); }
+html body .cs-menu button.danger .mi svg, html body .cp-menu button.danger .mi svg { filter: drop-shadow(0 0 4px rgba(229,72,77,.5)); }
+/* the 3-dots button itself */
+html body .chat-app #cpMore, html body .fp #frMore { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #f0d3a2; border: 1px solid rgba(227,192,141,.35); background: linear-gradient(145deg, rgba(227,192,141,.2), rgba(227,192,141,.04)); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 14px rgba(0,0,0,.35); }
+html body .chat-app #cpMore svg, html body .fp #frMore svg { filter: drop-shadow(0 0 5px rgba(227,192,141,.6)); }
+html body .chat-app #cpMore:active, html body .fp #frMore:active { transform: scale(.92); }
+html body .cs-burger { border: 1px solid rgba(227,192,141,.35); background: linear-gradient(145deg, rgba(227,192,141,.2), rgba(227,192,141,.04)); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 14px rgba(0,0,0,.35); }
+html body .cs-burger span { background: #f0d3a2; box-shadow: 0 0 6px rgba(227,192,141,.6); }
+/* ---------- no reply arrow beside messages (reply = long-press, then pick Reply) ---------- */
+html body .msg .rp { display: none !important; }
+/* ---------- attach button + menu ---------- */
+html body #cpFileBtn.open { background: linear-gradient(135deg, #f6e1b4, #c89556); color: #1b120c; border-color: transparent; transform: rotate(-18deg); box-shadow: 0 6px 18px rgba(227,192,141,.4); }
+#cpFileBtn { transition: transform .25s cubic-bezier(.2,1.2,.4,1), background .2s ease; }
+.att-menu { position: absolute; left: 10px; bottom: calc(100% + 10px); z-index: 9; display: none; flex-direction: column; gap: 4px; min-width: 214px; padding: 8px; border-radius: 22px; overflow: hidden; background: linear-gradient(165deg, #261a12, #110b08); border: 1px solid rgba(227,192,141,.45); box-shadow: 0 0 0 1px rgba(255,236,200,.05) inset, 0 24px 54px rgba(0,0,0,.72), 0 0 34px rgba(227,192,141,.16); }
+.att-menu.open { display: flex; animation: attIn .22s cubic-bezier(.2,.9,.3,1); transform-origin: 20px 100%; }
+@keyframes attIn { from { opacity: 0; transform: translateY(10px) scale(.94); } }
+.att-menu button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px 8px 8px; border-radius: 16px; border: 1px solid transparent; background: transparent; color: #f4e9dc; text-align: left; font: 600 .92rem 'Outfit', 'Plus Jakarta Sans', sans-serif; cursor: pointer; }
+.att-menu button:active { background: rgba(227,192,141,.12); border-color: rgba(227,192,141,.35); transform: scale(.98); }
+.att-menu .mi { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; color: #f0d3a2; background: linear-gradient(145deg, rgba(227,192,141,.26), rgba(227,192,141,.05)); border: 1px solid rgba(227,192,141,.38); }
+.att-menu .mi svg { width: 19px; height: 19px; filter: drop-shadow(0 0 4px rgba(227,192,141,.5)); }
+.att-menu .ml small { display: block; margin-top: 1px; font-size: .68rem; font-weight: 500; letter-spacing: .02em; color: #a8978a; }
+.up-prog { position: absolute; left: 12px; right: 12px; bottom: calc(100% + 8px); z-index: 8; display: none; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 16px; background: rgba(24,18,15,.96); border: 1px solid rgba(227,192,141,.4); box-shadow: 0 12px 28px rgba(0,0,0,.5); font: 600 .78rem 'Outfit', sans-serif; color: #e9cd9f; }
+.up-prog.on { display: flex; }
+.up-prog b { flex: none; min-width: 38px; text-align: right; }
+.up-prog span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-prog i { position: absolute; left: 14px; right: 14px; bottom: 5px; height: 3px; border-radius: 3px; background: rgba(227,192,141,.15); overflow: hidden; }
+.up-prog i::after { content: ''; display: block; height: 100%; width: var(--p, 0%); border-radius: 3px; background: linear-gradient(90deg, #b98558, #ffe3a6); transition: width .25s ease; }
+/* ---------- file card ---------- */
+.bub.fl { display: flex; align-items: center; gap: 12px; min-width: 210px; max-width: 290px; padding: 10px 14px 10px 10px; cursor: pointer; white-space: normal; }
+.fl-ic { flex: none; width: 44px; height: 48px; display: grid; place-items: center; border-radius: 12px; font: 800 .66rem 'Outfit', sans-serif; letter-spacing: .06em; color: #1b120c; background: linear-gradient(135deg, #f6e1b4, #c89556); box-shadow: 0 4px 12px rgba(227,192,141,.3); }
+.fl-tx { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fl-tx b { font-size: .9rem; font-weight: 700; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fl-tx small { font-size: .7rem; opacity: .75; }
+/* ---------- voice message player (long-press works, no download button) ---------- */
+.bub.vm { display: flex; align-items: center; gap: 10px; width: min(66vw, 268px); padding: 8px 14px 8px 8px; white-space: normal; }
+.vm-btn { flex: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: #1b120c; background: linear-gradient(135deg, #f6e1b4, #c89556); box-shadow: 0 4px 12px rgba(0,0,0,.3); -webkit-tap-highlight-color: transparent; }
+.vm-btn svg { width: 17px; height: 17px; fill: currentColor; }
+.vm-btn .pa { display: none; }
+.vm.playing .vm-btn .pl { display: none; } .vm.playing .vm-btn .pa { display: block; }
+.vm-track { flex: 1; min-width: 0; height: 34px; display: flex; align-items: center; cursor: pointer; }
+.vm-bars { width: 100%; height: 26px; display: flex; align-items: center; justify-content: space-between; gap: 2px; pointer-events: none; }
+.vm-bars i { flex: 1; min-width: 2px; max-width: 5px; border-radius: 3px; background: currentColor; opacity: .32; transition: opacity .12s linear; }
+.vm-bars i.on { opacity: 1; }
+.vm-t { flex: none; min-width: 34px; text-align: right; font: 600 .72rem 'Outfit', sans-serif; font-variant-numeric: tabular-nums; opacity: .85; }
+html body .chat-app .me .bub.vm .vm-btn { color: #f6e1b4; background: #2b190b; }
+html body .chat-app .them .bub.vm { color: #e9cd9f; }
+/* ---------- premium call screen ---------- */
+html body #callUI { padding: calc(env(safe-area-inset-top, 0px) + 54px) 24px calc(env(safe-area-inset-bottom, 0px) + 52px); justify-content: space-between; overflow: hidden; background: radial-gradient(120% 70% at 50% 28%, #3b2517 0%, #170d08 58%, #080403 100%); }
+html body #callUI .cl-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+html body #callUI .cl-bg i { position: absolute; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(227,192,141,.16), transparent 70%); animation: mnFloat 16s ease-in-out infinite; }
+html body #callUI .cl-bg i:nth-child(1) { left: -80px; top: 14%; } html body #callUI .cl-bg i:nth-child(2) { right: -90px; top: 52%; animation-delay: -6s; } html body #callUI .cl-bg i:nth-child(3) { left: 24%; bottom: -110px; animation-delay: -10s; }
+html body #callUI .cl-top { position: relative; z-index: 2; display: grid; gap: 8px; justify-items: center; }
+html body #callUI .cl-top h2 { margin: 0; max-width: 86vw; font-family: 'Bodoni Moda', Georgia, serif; font-weight: 600; font-size: 2rem; line-height: 1.15; color: #fff1d6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 0 24px rgba(227,192,141,.35); }
+html body #callUI .call-state { margin: 0; font: 600 .78rem 'Cinzel', Georgia, serif; letter-spacing: .34em; text-indent: .34em; text-transform: uppercase; color: #cdb48f; }
+html body #callUI.ringing .call-state { animation: clBlink 1.6s ease-in-out infinite; }
+@keyframes clBlink { 50% { opacity: .45; } }
+html body #callUI .cl-mid { position: relative; z-index: 2; flex: 1; display: grid; place-items: center; }
+html body #callUI .cl-av { position: relative; width: 156px; height: 156px; border-radius: 50%; display: grid; place-items: center; padding: 4px; background: conic-gradient(from 0deg, #b98558, #fff1cf, #e3c08d, #b98558); box-shadow: 0 0 56px rgba(227,192,141,.42); }
+html body #callUI .cl-av span { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 32% 26%, #4a3220, #1d120b 72%); color: #f3d9a8; font: 600 4.4rem/1 'Bodoni Moda', Georgia, serif; border: 3px solid #120b08; text-shadow: 0 0 22px rgba(227,192,141,.6); }
+html body #callUI .cl-av::before, html body #callUI .cl-av::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid rgba(227,192,141,.5); opacity: 0; pointer-events: none; }
+html body #callUI.ringing .cl-av::before { animation: clRing 2.4s ease-out infinite; }
+html body #callUI.ringing .cl-av::after { animation: clRing 2.4s ease-out 1.2s infinite; }
+@keyframes clRing { from { transform: scale(1); opacity: .7; } to { transform: scale(1.85); opacity: 0; } }
+html body #callUI:not(.ringing) .cl-av { animation: clBreath 3.2s ease-in-out infinite; }
+@keyframes clBreath { 50% { box-shadow: 0 0 78px rgba(227,192,141,.55); } }
+html body #callUI .cl-acts { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: center; gap: 30px; min-height: 100px; }
+html body #callUI .cb { width: 78px; display: grid; justify-items: center; gap: 8px; }
+html body #callUI .cb small { font: 600 .7rem 'Outfit', sans-serif; letter-spacing: .08em; color: #cdb48f; }
+html body #callUI .call-sp { width: 78px; }
+html body #callUI .call-btn { width: 72px; height: 72px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; cursor: pointer; color: #fff; -webkit-tap-highlight-color: transparent; transition: transform .15s ease, background .2s ease; }
+html body #callUI .call-btn svg { width: 29px; height: 29px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html body #callUI .call-btn.end { background: linear-gradient(145deg, #ff5a60, #d7343b); box-shadow: 0 10px 30px rgba(229,72,77,.5); }
+html body #callUI .call-btn.end svg { transform: rotate(135deg); }
+html body #callUI .call-btn.ok { background: linear-gradient(145deg, #3fd988, #1f9f58); box-shadow: 0 10px 30px rgba(47,191,113,.5); animation: clOk 1.6s ease-in-out infinite; }
+@keyframes clOk { 50% { transform: scale(1.07); } }
+html body #callUI .call-btn.spk, html body #callUI .call-btn.mute { background: rgba(255,255,255,.08); border: 1px solid rgba(227,192,141,.4); color: #f0d3a2; }
+html body #callUI .call-btn.spk.on, html body #callUI .call-btn.mute.on { background: linear-gradient(135deg, #f6e1b4, #c89556); color: #1b120c; border-color: transparent; box-shadow: 0 8px 24px rgba(227,192,141,.4); }
+html body #callUI .call-btn:active { transform: scale(.92); }
+/* ---------- Our Memories: premium timeline ---------- */
+html body .mn-top { padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 8px; gap: 12px; }
+html body .mn-x { flex: none; border: 1px solid rgba(227,192,141,.3); background: linear-gradient(145deg, rgba(227,192,141,.16), rgba(227,192,141,.03)); }
+html body .mn-title { flex: 1; text-align: center; font-family: 'Cinzel', 'Bodoni Moda', Georgia, serif; font-size: 1rem; letter-spacing: .24em; text-transform: uppercase; }
+html body .mn-count { flex: none; width: auto; min-width: 42px; height: 34px; padding: 0 13px; display: grid; place-items: center; border-radius: 999px; text-align: center; font: 700 .8rem 'Outfit', sans-serif; letter-spacing: .04em; color: #e9cd9f; background: rgba(227,192,141,.12); border: 1px solid rgba(227,192,141,.35); }
+.mn-scroll { position: relative; z-index: 2; flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 44px); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.mn-hero { max-width: 560px; margin: 4px auto 10px; padding: 12px 20px 6px; text-align: center; }
+.mn-hero-k { font: 600 .66rem 'Cinzel', Georgia, serif; letter-spacing: .34em; text-indent: .34em; text-transform: uppercase; color: #cdb48f; }
+.mn-hero-n { margin-top: 2px; font-family: 'Great Vibes', 'Bodoni Moda', Georgia, cursive; font-size: 3.8rem; line-height: 1.12; padding-bottom: .06em; color: transparent; background: linear-gradient(100deg, #b98558, #fff1cf 45%, #e3c08d 60%, #b98558 100%); background-size: 220% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: mcText 6s linear infinite; }
+@keyframes mcText { to { background-position: -220% 0; } }
+.mn-hero-s { font-size: .8rem; letter-spacing: .04em; color: #a8978a; }
+.mn-list { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.mn-day { display: flex; align-items: center; gap: 12px; margin: 12px 4px 0; }
+.mn-day span { flex: none; max-width: 80%; font: 600 .68rem 'Cinzel', Georgia, serif; letter-spacing: .2em; text-transform: uppercase; color: #e3c08d; }
+.mn-day i { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(227,192,141,.45), transparent); }
+.mn-none { margin: 54px auto 0; display: grid; gap: 6px; justify-items: center; text-align: center; color: #b9a894; }
+.mn-none span { font-size: 2.4rem; filter: drop-shadow(0 0 14px rgba(227,192,141,.6)); }
+.mn-none b { font-family: 'Bodoni Moda', Georgia, serif; font-size: 1.2rem; font-weight: 600; color: #e9cd9f; }
+.mn-none i { font-style: normal; font-size: .84rem; }
+.mc { position: relative; overflow: hidden; padding: 14px 14px 12px; border-radius: 22px; background: linear-gradient(160deg, rgba(255,255,255,.075), rgba(255,255,255,.025)); border: 1px solid rgba(227,192,141,.2); box-shadow: 0 10px 26px rgba(0,0,0,.35); content-visibility: auto; contain-intrinsic-size: auto 150px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mn-list.fresh .mc { animation: mcIn .55s cubic-bezier(.2,.9,.25,1) both; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes mcIn { from { opacity: 0; transform: translateY(18px) scale(.98); } }
+.mc.pinned { border-color: rgba(227,192,141,.55); box-shadow: 0 0 0 1px rgba(227,192,141,.14) inset, 0 0 26px rgba(227,192,141,.2), 0 10px 26px rgba(0,0,0,.4); }
+.mc-shine { position: absolute; top: 0; bottom: 0; left: 0; width: 45%; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255,236,200,.15), transparent); transform: translateX(-160%) skewX(-18deg); }
+.mc.lit .mc-shine { animation: mcSheen 6.5s ease-in-out infinite; animation-delay: calc(var(--i, 0) * .7s); }
+.mn:not(.active) .mc-shine, .mn:not(.active) .mn-hero-n { animation-play-state: paused; }
+@keyframes mcSheen { 0%, 62% { transform: translateX(-160%) skewX(-18deg); } 100% { transform: translateX(380%) skewX(-18deg); } }
+.mc-top { position: relative; display: flex; align-items: center; gap: 12px; }
+.mc-mood { flex: none; width: 46px; height: 46px; display: grid; place-items: center; font-size: 1.5rem; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #3d2c20, #1a110b); border: 2px solid rgba(227,192,141,.5); box-shadow: 0 0 16px rgba(227,192,141,.25); }
+.mc-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mc-by { font: 700 .95rem 'Outfit', sans-serif; color: #f4e9dc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-time { font-size: .7rem; letter-spacing: .04em; color: #a8978a; }
+.mc-pin svg { width: 18px; height: 18px; fill: #e3c08d; stroke: #e3c08d; stroke-width: 1.6; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(227,192,141,.7)); }
+.mc-photo { position: relative; margin-top: 12px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(227,192,141,.2); }
+.mc-photo img { width: 100%; max-height: 280px; object-fit: cover; display: block; pointer-events: none; }
+.mc-text { position: relative; margin: 12px 2px 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.24rem; line-height: 1.4; color: #f4e9dc; white-space: pre-wrap; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.mc.open .mc-text { display: block; -webkit-line-clamp: unset; }
+.mc-text:empty { display: none; }
+.mc-foot { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.mc-badge { padding: 4px 11px; border-radius: 999px; font: 700 .62rem 'Outfit', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #e9cd9f; background: rgba(227,192,141,.12); border: 1px solid rgba(227,192,141,.32); }
+.mc-acts { margin-left: auto; display: flex; gap: 8px; }
+.mc-acts button { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: #e9cd9f; background: rgba(255,255,255,.05); border: 1px solid rgba(227,192,141,.3); }
+.mc-acts button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mc-acts button.on { color: #1b120c; background: linear-gradient(135deg, #f6e1b4, #c89556); border-color: transparent; }
+.mc-acts button.on svg { fill: currentColor; }
+.mc-acts button.del { color: #ff9aa6; border-color: rgba(229,72,77,.4); }
+.mc-acts button:active { transform: scale(.9); }
+.mc.flash { animation: mcFlash 1.7s ease; }
+@keyframes mcFlash { 0%, 100% { box-shadow: 0 10px 26px rgba(0,0,0,.35); } 30% { box-shadow: 0 0 0 2px #e3c08d, 0 0 34px rgba(227,192,141,.6); } }
+@media (prefers-reduced-motion: reduce) { .mc-shine, .dr-group::after, .mn-hero-n, #callUI .cl-av::before, #callUI .cl-av::after { animation: none !important; } }
+`; document.head.appendChild(s); })();
 const O = () => window.OS;
 const D = () => O().db;
 const toast = (m, t) => O()?.toast(m, t);
@@ -196,7 +364,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const LSs = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const enc = new TextEncoder(), dec = new TextDecoder();
 const INLINE = 700000;// max base64 chars kept inside one Firestore doc
-const MAX_VIDEO = 8 * 1024 * 1024;// 8 MB
+const CHUNK = 600000;// raw bytes per encrypted piece (about 800 KB once encoded, safely under Firestore's 1 MB document limit)
 const safeImg = (s) => (typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)) ? s : '';
 const chatId = (a, b) => [a, b].sort().join('_');
 const BANNERS = [['volt', 'Golden Thunder'], ['aurora', 'Night Aurora'], ['storm', 'White Thunder'], ['tide', 'Ocean Bubbles'], ['cosmos', 'Cosmic Drift']];
@@ -220,12 +388,21 @@ if (p?.bannerId && BNFX[p.bannerId]) return `<span class="${cls} bn bnx bn-${p.b
 const s = safeImg(p?.banner);
 return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bnx bn-cosmos">${BNFX.cosmos}</span>`; };
 const wide = () => matchMedia('(min-width:820px)').matches; const svg = (d, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const mi = (ic, label) => `<span class="mi">${ic}</span><span class="ml">${label}</span>`;
 const IC = { add: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M19 8v6M16 11h6"/>'),
 img: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>'),
 mic: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>'),
 send: svg('<path d="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z"/>'),
 panel: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>'),
-dots: svg('<circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>'),
+dots: svg('<circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="2" fill="currentColor" stroke="none"/>'),
+back: (s = 22) => svg('<path d="M15 5l-7 7 7 7"/>', s).replace('<svg ', '<svg class="back-ic" '),
+userMinus: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 11h6"/>'),
+user: svg('<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c.9-3.7 3.8-5.7 7.5-5.7s6.6 2 7.5 5.7"/>'),
+key: svg('<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>'),
+clear: svg('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h6"/>'),
+clip: svg('<path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.2-8.2"/>'),
+video: svg('<rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 10.5l5-3v9l-5-3"/>'),
+file: svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'),
 trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
 star: svg('<path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8 6.8 19.5l1-5.8L3.6 9.6l5.8-.8z"/>'),
 pen: svg('<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>'),
@@ -317,9 +494,9 @@ document.body.insertAdjacentHTML('beforeend', `
 <button id="csAdd" class="cs-icon" aria-label="Add friend">${IC.add}</button>
 <button id="csBurger" class="cs-burger" aria-label="Friends menu"><span></span><span></span><span></span><i id="csBurgerDot" class="bdot hidden"></i></button>
 <div id="csMenu" class="cs-menu">
-<button id="csRemove">🗑️ Remove friends</button>
-<button id="csProfile">🖼️ My profile</button>
-<button id="csForgot">🔑 Forgot / new username</button>
+<button id="csRemove" class="danger">${mi(IC.userMinus, 'Remove friends')}</button>
+<button id="csProfile">${mi(IC.user, 'My profile')}</button>
+<button id="csForgot">${mi(IC.key, 'Forgot / new username')}</button>
 </div>
 </div>
 <div id="csMe" class="cs-me"></div>
@@ -333,9 +510,9 @@ document.body.insertAdjacentHTML('beforeend', `
 <button id="cpCall" class="cp-btn cp-call" aria-label="Voice call"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></button>
 <button id="cpMore" class="cp-btn" aria-label="More options">${IC.dots}</button>
 <div id="cpMenu" class="cs-menu cp-menu">
-<button id="cpmRemove" class="danger">🚫 Remove friend</button>
-<button id="cpmEmpty" class="danger">🧹 Empty msgs</button>
-<button id="cpmClose">✕ Close chat</button>
+<button id="cpmRemove" class="danger">${mi(IC.userMinus, 'Remove friend')}</button>
+<button id="cpmEmpty" class="danger">${mi(IC.clear, 'Empty msgs')}</button>
+<button id="cpmClose">${mi(IC.back(18), 'Close chat')}</button>
 </div>
 <div id="cpSelBar" class="cp-selbar">
 <button id="selCancel" class="cp-btn" aria-label="Cancel selection">${IC.close(20)}</button>
@@ -351,8 +528,16 @@ document.body.insertAdjacentHTML('beforeend', `
 <div id="cpMsgs" class="cp-msgs hidden"></div>
 <div id="cpReply" class="cp-reply hidden"></div>
 <footer id="cpComp" class="cp-comp">
-<button id="cpFileBtn" class="cp-circle" aria-label="Send photo or video">${IC.img}</button>
-<input id="cpFile" type="file" accept="image/*,video/*" hidden>
+<button id="cpFileBtn" class="cp-circle" aria-label="Attach">${IC.clip}</button>
+<div id="attMenu" class="att-menu">
+<button type="button" data-att="photo">${mi(IC.img, 'Photos<small>Send pictures</small>')}</button>
+<button type="button" data-att="video">${mi(IC.video, 'Videos<small>Any size</small>')}</button>
+<button type="button" data-att="file">${mi(IC.file, 'Files<small>Documents, videos &amp; more</small>')}</button>
+</div>
+<div id="upProg" class="up-prog"><span id="upTxt"></span><b id="upPct"></b><i></i></div>
+<input id="cpPhoto" type="file" accept="image/*" multiple hidden>
+<input id="cpVideo" type="file" accept="video/*" multiple hidden>
+<input id="cpFile" type="file" multiple hidden>
 <textarea id="cpInput" class="cp-input" rows="1" placeholder="Type a message"></textarea> <div class="cp-rec"><span class="rec-dot"></span><span id="cpRecTime" class="rec-time">0:00</span>
 <button id="cpRecCancel" class="cp-circle" style="width:36px;height:36px" aria-label="Cancel">${IC.close(18)}</button></div>
 <button id="cpMic" class="cp-circle" aria-label="Voice message">${IC.mic}</button>
@@ -405,7 +590,7 @@ reg($('cpSelBar'), () => exitSelect(), () => state.selecting);
 let tx0 = 0, ty0 = 0, tblock = false;
 app.addEventListener('touchstart', (e) => {
 const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY;
-tblock = !!e.target.closest('audio,video,input,textarea,.chat-sheet,.chat-light');
+tblock = !!e.target.closest('audio,video,input,textarea,.vm,.att-menu,.chat-sheet,.chat-light');
 }, { passive: true });
 app.addEventListener('touchend', (e) => {
 if (wide() || tblock || sheet.classList.contains('active')) return;
@@ -798,7 +983,7 @@ el.innerHTML = Array.from({ length: few ? 8 : n }, () => `<i style="--x:${(Math.
 }
 /* ---------- reply to a message (the ↩ arrow beside every message) ---------- */
 const REPLY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>';
-const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 Video' : r.k === 'aud' ? '🎧 Voice message' : (r.x || 'Message');
+const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 Video' : r.k === 'aud' ? '🎧 Voice message' : r.k === 'file' ? '📄 File' : (r.x || 'Message');
 const replyWho = (r) => r.f === state.uid ? 'You' : displayName(r.f);
 function renderReply() {
 const box = $('cpReply'); if (!box) return;
@@ -848,16 +1033,62 @@ else if (p.k === 't') inner = `<div class="bub">${esc(p.x)}</div>`;
 else if (url) {
 inner = p.k === 'img' ? `<div class="bub media"><img class="m-img" data-view src="${url}" alt="" decoding="async"></div>`
 : p.k === 'vid' ? `<div class="bub media"><video controls playsinline preload="metadata" src="${url}"></video></div>`
-: `<div class="bub media"><audio controls preload="metadata" src="${url}"></audio></div>`;
+: p.k === 'file' ? `<div class="bub fl" data-fdl="${m.id}"><span class="fl-ic">${esc(fileExt(p.nm))}</span><span class="fl-tx"><b>${esc(p.nm || 'File')}</b><small>${fmtSize(p.sz)} · Tap to save</small></span></div>`
+: `<div class="bub vm" data-vm="${m.id}" data-dur="${Number(p.dur) || 0}"><button type="button" class="vm-btn" data-vplay aria-label="Play voice message"><svg class="pl" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg><svg class="pa" viewBox="0 0 24 24"><path d="M7 5h3.6v14H7zM13.400 5H17v14h-3.600z"/></svg></button><div class="vm-track" data-vseek><div class="vm-bars">${vmBars(m.id)}</div></div><span class="vm-t">${fmtDur(p.dur)}</span></div>`;
 } else {
-inner = `<div class="bub media"><button class="m-load" data-load="${m.id}">${p.k === 'vid' ? '▶ Video' : p.k === 'aud' ? '🎧 Voice message' : '🖼️ Photo'} · ${fmtSize(p.sz)}<br>${m.d ? 'Opening…' : 'Tap to load'}</button></div>`;
+inner = `<div class="bub media"><button class="m-load" data-load="${m.id}">${p.k === 'vid' ? '▶ Video' : p.k === 'aud' ? '🎧 Voice message' : p.k === 'file' ? '📄 ' + esc(p.nm || 'File') : '🖼️ Photo'} · ${fmtSize(p.sz)}<br>${m.d ? 'Opening…' : 'Tap to load'}</button></div>`;
 }
 const rq = p.r && p.r.id ? `<div class="rq" data-rq="${esc(p.r.id)}"><b>${esc(replyWho(p.r))}</b><span>${esc(replyLabel(p.r))}</span></div>` : '';
-const rp = p.k === 'err' ? '' : `<button type="button" class="rp" data-reply="${m.id}" aria-label="Reply">${REPLY_SVG}</button>`;
+const rp = '';
 const stars = local.star.has(m.id) ? '<b class="st">★</b>' : '', edt = m.edited ? '<i class="ed">edited</i>' : '';
 const at = tsOf(m.at), seen = !!(theirRead && at && theirRead >= at);
 const tick = !mine ? '' : m.pending ? '<em class="rd pend">🕓 Sending…</em>' : seen ? '<em class="rd seen">✓✓ Seen</em>' : '<em class="rd">✓ Delivered</em>';
 return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${rq}${inner}<span class="mt">${stars}${edt}${time}${tick}</span>${rp}</div>`;
+}
+const fileExt = (n) => { const m = /\.([A-Za-z0-9]{1,5})$/.exec(String(n || '')); return m ? m[1].toUpperCase() : 'FILE'; };
+const fmtDur = (x) => { x = Math.max(0, Math.round(Number(x) || 0)); return Math.floor(x / 60) + ':' + String(x % 60).padStart(2, '0'); };
+const vmBars = (id) => { let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; let o = ''; for (let i = 0; i < 30; i++) { h = (h * 1664525 + 1013904223) >>> 0; o += `<i style="height:${26 + ((h >>> 8) % 70)}%"></i>`; } return o; };
+/* ---------- voice message player: one shared audio, so playback never stops when the chat repaints ---------- */
+const vp = { a: new Audio(), id: null, raf: 0 }; vp.a.preload = 'auto';
+function vmSync() {
+const box = $('cpMsgs'); if (!box) return;
+if (vp.id && !box.querySelector('.vm[data-vm="' + vp.id + '"]')) { vp.a.pause(); vp.id = null; }
+box.querySelectorAll('.vm').forEach((el) => {
+const on = el.dataset.vm === vp.id, known = on && isFinite(vp.a.duration) && vp.a.duration > 0 ? vp.a.duration : (+el.dataset.dur || 0);
+const bars = el.querySelectorAll('.vm-bars i'), lit = on && known ? Math.round(Math.min(1, vp.a.currentTime / known) * bars.length) : 0;
+bars.forEach((b, i) => b.classList.toggle('on', i < lit));
+el.classList.toggle('playing', on && !vp.a.paused);
+el.querySelector('.vm-t').textContent = on && (!vp.a.paused || vp.a.currentTime > .2) ? fmtDur(vp.a.currentTime) : fmtDur(known);
+});
+}
+const vmLoop = () => { vmSync(); vp.raf = vp.a.paused ? 0 : requestAnimationFrame(vmLoop); };
+['play', 'playing'].forEach((n) => vp.a.addEventListener(n, () => { if (!vp.raf) vp.raf = requestAnimationFrame(vmLoop); }));
+['pause', 'seeked', 'loadedmetadata'].forEach((n) => vp.a.addEventListener(n, vmSync));
+vp.a.addEventListener('ended', () => { vp.a.currentTime = 0; vmSync(); });
+function vmStart(el) {
+const id = el.dataset.vm, url = media.get(id); if (!url) return false;
+if (vp.id !== id) { vp.a.pause(); vp.id = id; vp.a.src = url; vp.a.currentTime = 0; }
+return true;
+}
+function vmToggle(el) {
+if (!vmStart(el)) return;
+if (vp.a.paused) vp.a.play().catch(() => toast('Couldn’t play this voice message', 'error')); else vp.a.pause();
+vmSync();
+}
+function vmSeek(el, ev) {
+if (!vmStart(el)) return;
+const r = el.querySelector('.vm-track').getBoundingClientRect(), f = Math.min(1, Math.max(0, (ev.clientX - r.left) / Math.max(1, r.width)));
+const d = isFinite(vp.a.duration) && vp.a.duration > 0 ? vp.a.duration : (+el.dataset.dur || 0); if (!d) return;
+try { vp.a.currentTime = f * d; } catch {}
+if (vp.a.paused) vp.a.play().catch(() => {}); vmSync();
+}
+/* ---------- progress pill for big uploads / downloads ---------- */
+let upT = 0;
+function upProg(txt, f) {
+const el = $('upProg'); if (!el) return; clearTimeout(upT);
+if (txt == null) { el.classList.remove('on'); return; }
+el.classList.add('on'); $('upTxt').textContent = txt; $('upPct').textContent = f == null ? '' : Math.round(f * 100) + '%'; el.style.setProperty('--p', (f == null ? 0 : f * 100) + '%');
+if (f != null && f >= 1) upT = setTimeout(() => el.classList.remove('on'), 900);
 }
 let paintTok = 0, pq = 0, hyd = 0; const badMedia = new Set();
 const queuePaint = () => { if (!pq) pq = requestAnimationFrame(() => { pq = 0; paint(); }); };
@@ -890,6 +1121,7 @@ setList(box, items);
 if (a) box.scrollTop = a.t + (box.scrollHeight - a.h);
 else if (near) { box.scrollTop = box.scrollHeight; box.__pin = true; }
 state.first = false; state.stick = false;
+vmSync();
 hydrateMedia(docs, key, uid);
 }
 /* photos / videos / voice are decrypted one by one in the background, newest first, so text is never kept waiting */
@@ -922,22 +1154,34 @@ subMsgs(state.active, chatId(state.uid, state.active));
 });
 }, { passive: true });
 })();
+const loadingMedia = new Set();
 async function loadChunked(id) {
-const p = plain.get(id); if (!p?.mid) return;
-const cid = chatId(state.uid, state.active), parts = new Array(p.n);
-toast('Downloading…', 'info');
+const p = plain.get(id); if (!p?.mid || loadingMedia.has(id)) return;
+loadingMedia.add(id);
+const cid = chatId(state.uid, state.active), parts = new Array(p.n); let done = 0;
+upProg('Downloading…', 0);
 try {
+const key = await sharedKey(state.active);
 for (let i = 0; i < p.n; i += 4) {
-await Promise.all([...Array(Math.min(4, p.n - i))].map(async (_, j) => { parts[i + j] = (await getDoc(doc(D(), 'chats', cid, 'blobs', `${p.mid}_${i + j}`))).data().d;
+await Promise.all([...Array(Math.min(4, p.n - i))].map(async (_, j) => {
+const dd = (await getDoc(doc(D(), 'chats', cid, 'blobs', `${p.mid}_${i + j}`))).data();
+parts[i + j] = p.v === 2 ? await decBytes(key, dd.iv, dd.d) : dd.d;
+upProg('Downloading…', ++done / p.n);
 }));
 }
-const bytes = await decBytes(await sharedKey(state.active), p.miv, parts.join(''));
-media.set(id, URL.createObjectURL(new Blob([bytes], { type: p.mime })));
-queuePaint();
-} catch (e) { console.error(e); toast('Download failed', 'error'); }
+const blob = p.v === 2 ? new Blob(parts, { type: p.mime }) : new Blob([await decBytes(key, p.miv, parts.join(''))], { type: p.mime });
+media.set(id, URL.createObjectURL(blob));
+queuePaint(); upProg('Ready', 1);
+} catch (e) { console.error(e); upProg(null); toast('Download failed', 'error'); }
+loadingMedia.delete(id);
+}
+function saveFile(id) {
+const url = media.get(id), p = plain.get(id); if (!url) return;
+const a = document.createElement('a'); a.href = url; a.download = p?.nm || 'file'; document.body.appendChild(a); a.click(); a.remove();
 }
 $('cpMsgs').addEventListener('click', (e) => {
-if (state.selecting) { const mm = e.target.closest('.msg'); if (mm) toggleSel(mm.dataset.mid); return; } const rpb = e.target.closest('[data-reply]'); if (rpb) { startReply(rpb.dataset.reply); return; }
+if (state.selecting) { const mm = e.target.closest('.msg'); if (mm) toggleSel(mm.dataset.mid); return; } const vb = e.target.closest('.vm'); if (vb) { if (e.target.closest('[data-vseek]')) vmSeek(vb, e); else vmToggle(vb); return; }
+const fd = e.target.closest('[data-fdl]'); if (fd) { saveFile(fd.dataset.fdl); return; }
 const rqb = e.target.closest('[data-rq]'); if (rqb) { jumpToMsg(rqb.dataset.rq); return; }
 const v = e.target.closest('[data-view]'), l = e.target.closest('[data-load]'); if (v) { light.querySelector('img').src = v.src; light.classList.add('active'); }
 else if (l) loadChunked(l.dataset.load);
@@ -966,20 +1210,28 @@ if (needFriend()) return;
 input.value = ''; autoGrow(); updateComp(); stopTyping();
 sendPayload({ k: 't', x }).catch(() => toast('Couldn’t send', 'error'));
 }
-async function sendMedia(blob, k) {
+async function sendMedia(blob, k, extra) {
 const uid = state.active; if (!uid) return;
+const label = k === 'vid' ? 'video' : k === 'img' ? 'photo' : k === 'aud' ? 'voice message' : 'file';
 try {
 const key = await sharedKey(uid), cid = chatId(state.uid, uid);
+const meta = { k, mime: blob.type || 'application/octet-stream', sz: blob.size, ...(extra || {}) };
+if (blob.size <= 500000) {
 const e = await encBytes(key, await blob.arrayBuffer());
-const meta = { k, mime: blob.type || 'application/octet-stream', miv: e.iv, sz: blob.size };
-if (e.ct.length <= INLINE) { await sendPayload(meta, { d: e.ct }); return; }
-const mid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8), n = Math.ceil(e.ct.length / INLINE);
-await setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort() }, { merge: true }); for (let i = 0; i < n; i++) {
-toast(`Sending ${i + 1}/${n}…`, 'info');
-await setDoc(doc(D(), 'chats', cid, 'blobs', `${mid}_${i}`), { d: e.ct.slice(i * INLINE, (i + 1) * INLINE), from: state.uid });
+if (e.ct.length <= INLINE) { await sendPayload({ ...meta, miv: e.iv }, { d: e.ct }); return; }
 }
-await sendPayload({ ...meta, mid, n }, { mid, n });
-} catch (err) { console.error(err); toast('Couldn’t send media', 'error'); }
+const mid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8), n = Math.ceil(blob.size / CHUNK);
+await setDoc(doc(D(), 'chats', cid), { members: [state.uid, uid].sort() }, { merge: true });
+let done = 0; upProg('Sending ' + label + '…', 0);
+for (let i = 0; i < n; i += 3) {
+await Promise.all([...Array(Math.min(3, n - i))].map(async (_, j) => {
+const at = (i + j) * CHUNK, e = await encBytes(key, await blob.slice(at, at + CHUNK).arrayBuffer());
+await setDoc(doc(D(), 'chats', cid, 'blobs', `${mid}_${i + j}`), { d: e.ct, iv: e.iv, from: state.uid });
+upProg('Sending ' + label + '…', ++done / n);
+}));
+}
+await sendPayload({ ...meta, mid, n, v: 2 }, { mid, n });
+} catch (err) { console.error(err); upProg(null); toast('Couldn’t send ' + label, 'error'); }
 }
 const shrinkImg = (file, max, q) => new Promise((res, rej) => {
 const img = new Image(), u = URL.createObjectURL(file); img.onload = () => {
@@ -1002,15 +1254,30 @@ res(c.toDataURL('image/jpeg', q));
 };
 img.onerror = () => { URL.revokeObjectURL(u); rej(); }; img.src = u;
 });
-$('cpFileBtn').onclick = () => { if (needFriend()) return; $('cpFile').click(); }; $('cpFile').onchange = async (e) => {
-const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-if (f.type.startsWith('image/')) {
-try { toast('Sending photo…', 'info'); await sendMedia(await prepImage(f), 'img'); } catch { toast('Couldn’t read that photo', 'error'); }
+const attMenu = $('attMenu'), closeAtt = () => { attMenu.classList.remove('open'); $('cpFileBtn').classList.remove('open'); };
+$('cpFileBtn').onclick = (e) => { e.stopPropagation(); if (needFriend()) return; const o = attMenu.classList.toggle('open'); $('cpFileBtn').classList.toggle('open', o); };
+document.addEventListener('click', (e) => { if (!e.target.closest('#attMenu') && !e.target.closest('#cpFileBtn')) closeAtt(); });
+attMenu.addEventListener('click', (e) => {
+const b = e.target.closest('[data-att]'); if (!b) return; closeAtt();
+$(b.dataset.att === 'photo' ? 'cpPhoto' : b.dataset.att === 'video' ? 'cpVideo' : 'cpFile').click();
+});
+async function sendPicked(files, mode) {
+for (const f of files) {
+if (mode === 'photo') {
+if (!f.type.startsWith('image/')) { toast('Photos only here — use Files for other things', 'error'); continue; }
+try { upProg('Sending photo…', null); await sendMedia(await prepImage(f), 'img'); upProg(null); } catch { upProg(null); toast('Couldn’t read that photo', 'error'); }
 } else if (f.type.startsWith('video/')) {
-if (f.size > MAX_VIDEO) return toast('Video too large — max 8 MB. Trim it first.', 'error');
-toast('Sending video…', 'info'); sendMedia(f, 'vid');
-} else toast('Only photos and videos', 'error');
-};
+await sendMedia(f, 'vid');
+} else if (mode === 'video') {
+toast('That isn’t a video — use Files', 'error');
+} else {
+await sendMedia(f, 'file', { nm: String(f.name || 'file').slice(0, 120) });
+}
+}
+}
+[['cpPhoto', 'photo'], ['cpVideo', 'video'], ['cpFile', 'file']].forEach(([id, mode]) => {
+$(id).onchange = (e) => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) sendPicked(fs, mode); };
+});
 /* composer behaviour */
 let agRaf = 0;
 function autoGrow() { if (agRaf) return; agRaf = requestAnimationFrame(() => { agRaf = 0; input.style.height = '46px'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; }); }
@@ -1039,7 +1306,7 @@ rec = { mr, stream, chunks, t0: Date.now(), send: false, mt: mr.mimeType };
 mr.onstop = () => {
 const r = rec; rec = null; clearInterval(recTimer);
 stream.getTracks().forEach((t) => t.stop()); comp.classList.remove('recording'); updateComp();
-if (r && r.send && r.chunks.length) sendMedia(new Blob(r.chunks, { type: r.mt || 'audio/webm' }), 'aud');
+if (r && r.send && r.chunks.length) sendMedia(new Blob(r.chunks, { type: r.mt || 'audio/webm' }), 'aud', { dur: Math.max(1, Math.round((Date.now() - r.t0) / 1000)) });
 };
 mr.start(); comp.classList.add('recording'); $('cpRecTime').textContent = '0:00'; updateComp();
 recTimer = setInterval(() => {
@@ -1116,549 +1383,3 @@ const f = state.friends.find((x) => x.uid === uid);
 if (f && confirm(`Remove ${nm}?`)) { try { await deleteDoc(doc(D(), 'chatRequests', f.req.id)); closeSheet(); toast('Removed', 'success'); } catch { toast('Couldn’t remove', 'error'); } }
 };
 }
-function openMeSheet() {
-if (!state.profile) return;
-const me = state.uid;
-openSheet('My profile', `<div class="pv-banner" id="mpBanner"></div>
-<div class="pv-pfpwrap"><span class="pfp-ring lg" id="mpPfp"></span></div>
-<button id="mpPfpBtn" class="sh-btn">📷 Change profile photo</button>
-<input id="mpPfpF" type="file" accept="image/*" hidden>
-<label class="sh-lab">Select banner</label>
-<div class="bn-box"><div class="bn-grid" id="mpGrid"></div></div>
-<label class="sh-lab">Bio</label><textarea id="mpBio" maxlength="120" placeholder="Say something about you">${esc(state.profile.bio || '')}</textarea>
-<label class="sh-lab">Username</label><div class="sh-note" style="margin:0">@${esc(state.profile.username)} · <a id="mpForgot" style="color:var(--accent-dark);font-weight:700">Forgot it / create a new one</a></div>
-<button id="mpSave" class="sh-btn primary">Save profile</button>`);
-const draw = () => {
-const q = state.profile;
-$('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
-$('mpPfp').innerHTML = av(q, q.username);
-$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bnx bn-${id}">${BNFX[id]}</span><i>${n}</i></button>`).join('');
-};
-draw();
-const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
-$('mpGrid').onclick = async (e) => { const b = e.target.closest('[data-bn]'); if (!b) return;
-apply({ bannerId: b.dataset.bn, banner: '' });
-try { await updateDoc(doc(D(), 'chatUsers', me), { bannerId: b.dataset.bn, banner: '' }); toast('Banner applied ✨', 'success'); }
-catch { toast('Couldn’t save banner', 'error'); }
-};
-$('mpPfpBtn').onclick = () => $('mpPfpF').click();
-$('mpPfpF').onchange = async (e) => {
-const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-let data; try { data = await cropImg(f, 256, 256, .82); } catch { return toast('Couldn’t read that image', 'error'); } apply({ pfp: data });
-try { await updateDoc(doc(D(), 'chatUsers', me), { pfp: data }); toast('Profile photo updated ✨', 'success'); }
-catch { toast('Couldn’t save photo', 'error'); }
-};
-$('mpForgot').onclick = openUsernameSheet;
-$('mpSave').onclick = async () => {
-try { await updateDoc(doc(D(), 'chatUsers', me), { bio: $('mpBio').value.trim().slice(0, 120) }); toast('Profile saved ✨', 'success'); closeSheet(); }
-catch { toast('Couldn’t save profile', 'error'); }
-};
-}
-function openUsernameSheet() {
-const p = state.profile; if (!p) return;
-openSheet('Your username', `<p class="sh-note">Your current chat username is <b>@${esc(p.username)}</b>. Forgot it or want a different one? Create a new username below — your friends stay connected.</p>
-<input id="unNew" type="text" placeholder="New username" autocapitalize="none" autocomplete="off" maxlength="20">
-<button id="unGo" class="sh-btn primary">Save new username</button>`);
-$('unGo').onclick = async () => {
-const name = $('unNew').value.trim(), lower = name.toLowerCase(), me = state.uid, old = p.usernameLower;
-if (!/^[a-z0-9_.]{3,20}$/i.test(name)) return toast('Username: 3–20 letters, numbers, _ or .', 'error');
-try {
-await runTransaction(D(), async (tx) => {
-if (lower === old) { tx.update(doc(D(), 'chatUsers', me), { username: name }); return; }
-const ref = doc(D(), 'usernames', lower); if ((await tx.get(ref)).exists()) throw new Error('taken');
-tx.set(ref, { uid: me }); if (old) tx.delete(doc(D(), 'usernames', old));
-tx.update(doc(D(), 'chatUsers', me), { username: name, usernameLower: lower });
-});
-toast('Username updated', 'success'); closeSheet();
-} catch (e) { toast(e.message === 'taken' ? 'That username is taken' : 'Couldn’t update username', 'error'); }
-};
-}
-/* =========================================================
-Delete messages / delete all chats (wipes Firestore docs too)
-========================================================= */
-const selMsgs = () => [...state.sel].map((id) => state.msgDocs.find((x) => x.id === id)).filter(Boolean);
-function markPicked() { $('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid))); }
-function updateSelUI() {
-const ms = selMsgs(), n = ms.length, one = n === 1 ? ms[0] : null, p = one ? plain.get(one.id) : null;
-$('selCount').textContent = n || 1;
-$('selEdit').classList.toggle('off', !(one && one.from === state.uid && p && p.k === 't'));
-$('selReply').classList.toggle('off', !(one && p && p.k !== 'err'));
-$('selStar').classList.toggle('on', n > 0 && ms.every((m) => local.star.has(m.id)));
-}
-/* only a long press on a message starts this (the top bar fades in); back / swipe-back / ✕ fades it out */
-function enterSelect(id) {
-if (!state.active || !id) return;
-state.selecting = true; state.sel.clear(); state.sel.add(id);
-pane.classList.add('selecting'); $('cpMsgs').classList.add('selecting'); $('cpSelBar').classList.add('on');
-$('cpMenu')?.classList.remove('open'); stopTyping(); input.blur(); markPicked(); updateSelUI();
-}
-function exitSelect() {
-if (!state.selecting && !state.sel.size) return;
-state.selecting = false; state.sel.clear();
-pane.classList.remove('selecting'); $('cpMsgs').classList.remove('selecting'); $('cpSelBar').classList.remove('on');
-markPicked(); updateSelUI();
-}
-function toggleSel(id) {
-if (!id) return;
-if (state.sel.has(id)) state.sel.delete(id); else state.sel.add(id);
-if (!state.sel.size) { exitSelect(); return; }
-markPicked(); updateSelUI();
-}
-/* run deletes a few at a time (each delete is checked by the security rules) */
-async function delRefs(refs) {
-for (let i = 0; i < refs.length; i += 20) await Promise.all(refs.slice(i, i + 20).map((r) => deleteDoc(r)));
-}
-function forgetLocal(ids) {
-ids.forEach((id) => { const u = media.get(id); if (u) { URL.revokeObjectURL(u); media.delete(id); } plain.delete(id); });
-state.sig = '';
-}
-async function deleteForBoth(ids) {
-const uid = state.active; if (!uid || !ids.length) return;
-const cid = chatId(state.uid, uid);
-try {
-const refs = [];
-ids.forEach((id) => {
-const m = state.msgDocs.find((x) => x.id === id), p = plain.get(id), mid = m?.mid || p?.mid, n = m?.n || p?.n || 0;
-for (let i = 0; mid && i < n; i++) refs.push(doc(D(), 'chats', cid, 'blobs', `${mid}_${i}`)); // big media chunks first
-});
-await delRefs(refs);
-await delRefs(ids.map((id) => doc(D(), 'chats', cid, 'messages', id))); // then the messages themselves
-ids.forEach((id) => { local.star.delete(id); local.hide.delete(id); }); saveLocal();
-forgetLocal(ids); exitSelect(); toast('Deleted for both of you 🗑️', 'success');
-} catch (e) { console.error(e); toast('Couldn’t delete — publish the updated Firestore rules', 'error'); }
-}
-function openDeleteSheet() {
-const ids = [...state.sel]; if (!ids.length) return;
-openSheet(ids.length > 1 ? `Delete ${ids.length} messages` : 'Delete message', `<p class="sh-note">Choose how you want to delete ${ids.length > 1 ? 'these messages' : 'this message'}.</p>
-<button id="dmMe" class="sh-btn">Delete msg for me</button>
-<button id="dmBoth" class="sh-btn danger">Delete msg for both</button>
-<button id="dmNo" class="sh-btn">Cancel</button>`);
-$('dmNo').onclick = closeSheet;
-$('dmMe').onclick = () => { ids.forEach((id) => local.hide.add(id)); saveLocal(); closeSheet(); exitSelect(); forgetLocal(ids); paint(); toast('Deleted for you', 'success'); };
-$('dmBoth').onclick = () => { closeSheet(); deleteForBoth(ids); };
-}
-/* wipe EVERYTHING in one conversation: messages (incl. inline photos/voice) + media chunks */
-async function wipeChat(uid) {
-const cid = chatId(state.uid, uid);
-for (const [sub, size] of [['messages', 40], ['blobs', 8]]) {
-for (;;) {
-const s = await getDocs(query(collection(D(), 'chats', cid, sub), limit(size)));
-if (s.empty) break;
-await delRefs(s.docs.map((d) => d.ref));
-}
-}
-try { await updateDoc(doc(D(), 'chats', cid), { lastAt: deleteField(), lastFrom: deleteField() }); } catch {}
-}
-/* 3-dots menu + selection bar wiring */
-$('cpMore').onclick = (e) => { e.stopPropagation(); $('cpMenu').classList.toggle('open'); };
-document.addEventListener('click', (e) => { if (!e.target.closest('#cpMenu') && !e.target.closest('#cpMore')) $('cpMenu').classList.remove('open'); });
-$('cpmRemove').onclick = async () => {
-$('cpMenu').classList.remove('open');
-const uid = state.active, f = state.friends.find((x) => x.uid === uid); if (!uid || !f) return toast('Open a chat first', 'info');
-if (!confirm(`Remove ${displayName(uid)} from your friends?`)) return;
-try { await deleteDoc(doc(D(), 'chatRequests', f.req.id)); toast('Friend removed', 'success'); closeConversation(); if (!wide()) openSide(); }
-catch { toast('Couldn’t remove this friend', 'error'); }
-};
-$('cpmEmpty').onclick = async () => {
-$('cpMenu').classList.remove('open');
-const uid = state.active; if (!uid) return toast('Open a chat first', 'info');
-if (!confirm(`Delete ALL messages with ${displayName(uid)} for both of you? This can’t be undone.`)) return;
-exitSelect(); toast('Emptying…', 'info');
-try {
-await wipeChat(uid);
-media.forEach((u) => URL.revokeObjectURL(u)); media.clear(); plain.clear(); pct.clear(); local.hide.clear(); local.star.clear(); saveLocal(); state.sig = ''; paint();
-toast('All messages deleted for both of you 🧹', 'success');
-} catch (e) { console.error(e); toast('Couldn’t delete everything — publish the updated Firestore rules', 'error'); }
-};
-$('cpmClose').onclick = () => { $('cpMenu').classList.remove('open'); closeChat(); };
-$('selCancel').onclick = () => exitSelect();
-$('selStar').onclick = () => {
-const ms = selMsgs(); if (!ms.length) return;
-const all = ms.every((m) => local.star.has(m.id));
-ms.forEach((m) => { if (all) local.star.delete(m.id); else local.star.add(m.id); });
-saveLocal(); exitSelect(); paint(); toast(all ? 'Removed from starred' : 'Starred ⭐', 'success');
-};
-$('selDel').onclick = openDeleteSheet;
-$('selEdit').onclick = () => {
-const m = selMsgs()[0], p = m && plain.get(m.id);
-if (!m || m.from !== state.uid || !p || p.k !== 't') return;
-exitSelect(); startEdit(m.id, p.x);
-};
-$('selReply').onclick = () => { const m = selMsgs()[0]; if (!m) return; exitSelect(); startReply(m.id); };
-/* long press on any message (text, photo, video, voice) = select it */
-(function () {
-const box = $('cpMsgs'); let t = 0, sx = 0, sy = 0, tgt = null, fired = false;
-const clear = () => { clearTimeout(t); t = 0; tgt = null; };
-box.addEventListener('pointerdown', (e) => {
-if (e.button > 0 || state.selecting) return;
-const m = e.target.closest('.msg'); if (!m || e.target.closest('.rp')) return;
-tgt = m; sx = e.clientX; sy = e.clientY; fired = false;
-t = setTimeout(() => { t = 0; if (!tgt) return; fired = true; navigator.vibrate?.(24); enterSelect(tgt.dataset.mid); }, 420);
-});
-box.addEventListener('pointermove', (e) => { if (t && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) clear(); });
-['pointerup', 'pointercancel', 'pointerleave'].forEach((n) => box.addEventListener(n, () => { if (t) clear(); if (fired) setTimeout(() => { fired = false; }, 450); }));
-box.addEventListener('scroll', clear, { passive: true });
-box.addEventListener('contextmenu', (e) => { if (e.target.closest('.msg')) e.preventDefault(); });
-box.addEventListener('click', (e) => { if (fired) { fired = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true); // the tap that ends the long press must not toggle it again
-})();
-window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(uid)) };
-/* =========================================================
-v5 — typing cloud + Seen / Not seen (paste at the VERY END of chat.js)
-========================================================= */
-(function () {
-const msgsBox = $('cpMsgs');
-const tsMs = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
-/* typing clouds: friend = bottom-left (near photos) · me = bottom-right (near mic) */
-comp.insertAdjacentHTML('beforeend',
-'<div id="tcL" class="tcloud l" aria-hidden="true"><i></i><i></i><i></i></div>' +
-'<div id="tcR" class="tcloud r" aria-hidden="true"><i></i><i></i><i></i></div>');
-const tcL = $('tcL'), tcR = $('tcR');
-let lastKey = 0, marked = '';
-input.addEventListener('input', () => { lastKey = input.value.trim() ? Date.now() : 0; });
-input.addEventListener('blur', () => { lastKey = 0; });
-const inView = (el) => {
-const r = el.getBoundingClientRect(), b = msgsBox.getBoundingClientRect();
-return r.bottom > b.top + 4 && r.top < b.bottom - 4;
-};
-function refresh() {
-const open = app.classList.contains('active') && state.active && !msgsBox.classList.contains('hidden');
-if (!open) { tcL.classList.remove('show'); tcR.classList.remove('show'); return; }
-tcL.classList.toggle('show', (state.typeUntil.get(state.active) || 0) > Date.now());
-const mine = lastKey && Date.now() - lastKey < 2600 && input.value.trim() && document.activeElement === input;
-tcR.classList.toggle('show', !!mine);
-const cid = chatId(state.uid, state.active), chat = state.chats.get(cid) || {};
-const myRead = tsMs(chat.reads && chat.reads[state.uid]);
-/* tell my friend I've seen their latest message — only when it is really on screen */
-if (document.hidden) return;
-let last = null;
-for (let i = (state.msgDocs || []).length - 1; i >= 0; i--) {
-if (state.msgDocs[i].from === state.active) { last = state.msgDocs[i]; break; }
-}
-if (!last) return;
-const el = msgsBox.querySelector('[data-mid="' + last.id + '"]');
-if (!el || !inView(el)) return;
-const key = cid + ':' + last.id;
-if (key === marked || tsMs(last.at) <= myRead) { marked = key; return; }
-marked = key;
-setDoc(doc(D(), 'chats', cid), { reads: { [state.uid]: serverTimestamp() } }, { merge: true })
-.catch(() => { marked = ''; });
-}
-new MutationObserver(refresh).observe(msgsBox, { childList: true });
-let rfRaf = 0; msgsBox.addEventListener('scroll', () => { if (!rfRaf) rfRaf = requestAnimationFrame(() => { rfRaf = 0; refresh(); }); }, { passive: true });
-document.addEventListener('visibilitychange', refresh);
-setInterval(refresh, 700);
-})();
-/* =========================================================
-BENTO NOIR home tiles + bottom dock (v6)
-Chat opens from the "Chat" tile. A red shining dot on that tile shows when something unread is waiting.
-========================================================= */
-(function () {
-const root = document.querySelector('.app-container'), header = document.querySelector('.app-header');
-if (!root || !header || document.getElementById('bento')) return;
-const hb = document.querySelector('.glowing-badge'), sub = header.querySelector('.subtitle');
-const tile = (id, lab, inner, cls = '') => `<button type="button" id="${id}" class="bn-tile ${cls}"><span class="bn-lab">${lab}</span>${inner}</button>`;
-const el = document.createElement('section');
-el.id = 'bento'; el.className = 'bento';
-el.innerHTML =
-'<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title" id="bnTitle" role="button" tabindex="0" aria-label="Open Our Space">Our Space</div></div></div>' +
-'<div class="bn-slot empty" id="bnSlot"></div>' +
-'<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
-tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
-tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Welcome to chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') + // CHAT-VISIBLE
-tile('bnTodo', 'To-do', '<span class="bn-big" id="bnTodoN" style="font-size:1.7rem;margin-top:6px">0</span><span class="bn-sm">left today</span>') +
-tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
-tile('bnAnn', 'Next milestone', '<span class="bn-big" id="bnAnnN" style="font-size:1.7rem;margin-top:6px">–</span><span class="bn-sm" id="bnAnnS">days to go</span>');
-header.after(el); header.style.display = 'none';
-const rmCard = document.getElementById('mainPageReminder');
-if (rmCard) { const slot = el.querySelector('#bnSlot'); slot.appendChild(rmCard); slot.classList.toggle('empty', rmCard.classList.contains('hidden')); } // pending reminders live between "Our Space" and "Our Sacred Diary"
-const top = el.querySelector('.bn-heroTop');
-if (hb) top.appendChild(hb);
-if (sub) top.appendChild(sub);
-const dock = document.createElement('nav');
-dock.className = 'dock'; dock.setAttribute('aria-label', 'Main');
-const svg = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p}"/></svg>`;
-dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}<span class="dk-lab">Home</span></button><button type="button" id="dkFr" aria-label="Friend list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.3"/><path d="M2.8 20c.5-3.4 3.1-5.2 6.2-5.2s5.7 1.8 6.2 5.2"/><circle cx="17.2" cy="9.5" r="2.5"/><path d="M17 14.7c2.6.1 4.4 1.7 4.8 5"/></svg><span class="dk-lab">Friends</span></button><button type="button" id="dkPost" aria-label="Post a memory">${svg('M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z')}<span class="dk-lab">Post</span></button>`;
-document.body.appendChild(dock);
-$('bnMem').onclick = () => O().openMemories?.();
-$('bnTitle').onclick = () => O().openSpace?.();
-$('bnTitle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); O().openSpace?.(); } };
-$('bnTodo').onclick = () => O().openTodo?.();
-$('bnStory').onclick = () => O().openStory?.();
-$('bnChat').onclick = () => openChat();
-$('dkHome').onclick = () => { closeFriends(); closePost(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-$('dkFr').onclick = () => openFriends();
-$('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click(); // set the anniversary only from "days together"
-const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
-function tick() {
-const nm = ($('currentUserLabel')?.textContent || '').trim(), h = new Date().getHours();
-set('bnHi', (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (nm && nm !== 'Loading...' ? ', ' + nm : ''));
-const d = parseInt(document.querySelector('#annivCard .anniv-num')?.textContent, 10);
-if (Number.isFinite(d)) {
-set('bnDays', d); $('bnBar').style.width = ((d % 365) / 365 * 100) + '%';
-const next = 365 * (Math.floor(d / 365) + 1) - d, yr = Math.floor(d / 365) + 1;
-set('bnAnnN', next); set('bnAnnS', 'days to year ' + yr);
-} else { set('bnDays', '–'); set('bnAnnN', '–'); set('bnAnnS', 'set it from days together'); }
-const mems = window.OS?.memories?.() || [];
-set('bnMemN', mems.length);
-set('bnTodoN', (window.OS?.todos?.() || []).filter((t) => !t.data.completed).length);
-const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
-set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
-set('bnStoryS', chs[0]?.querySelector('.story-accordion-title')?.textContent || '');
-const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
-const ct = $('bnChatT'), ctxt = un ? 'New message' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'Welcome to chat';
-if (ct && ct.textContent !== ctxt) { ct.textContent = ctxt; ct.classList.remove('swap'); void ct.offsetWidth; ct.classList.add('swap'); }
-ct?.classList.toggle('bn-new', !!un); $('bnChat')?.classList.toggle('has-new', !!un);
-const dot = !!(un || rq);
-$('bnChatDot').classList.toggle('hidden', !dot);
-}
-tick(); setInterval(tick, 1000);
-})();
-/* =========================================================
-FRIEND LIST (beside the home button) — only accepted friends
-========================================================= */
-var frPage = null;
-document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
-<header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div id="frTitle" class="fp-title">Friends</div><button id="frCancel" class="fp-link" type="button" hidden>Cancel</button><button id="frMore" class="fp-x" type="button" aria-label="More options">${IC.dots}</button>
-<div id="frMenu" class="cs-menu cp-menu fp-menu"><button id="frRemove" class="danger">🗑️ Remove friend</button></div></header>
-<div id="frList" class="fp-list"></div>
-<div id="frRmBar" class="fp-rmbar"><span id="frRmCount">Select friends</span><button id="frRmGo" type="button" disabled>Remove</button></div></div>`);
-frPage = $('frPage');
-/* friends page: 3-dots -> "Remove friend" -> tick the friends to remove */
-let rmMode = false; const rmSel = new Set(); const rmBar = $('frRmBar');
-function rmUI() { const n = rmSel.size; $('frRmCount').textContent = n ? `${n} selected` : 'Select friends'; $('frRmGo').disabled = !n; }
-function enterRm() {
-if (!state.friends.length) return toast('No friends to remove', 'info');
-rmMode = true; rmSel.clear(); frPage.classList.add('rm'); rmBar.classList.add('on');
-$('frMore').hidden = true; $('frCancel').hidden = false; $('frTitle').textContent = 'Select friends'; rmUI(); renderFriendsPage();
-}
-function exitRm() {
-if (!rmMode) return;
-rmMode = false; rmSel.clear(); frPage.classList.remove('rm'); rmBar.classList.remove('on');
-$('frMore').hidden = false; $('frCancel').hidden = true; $('frTitle').textContent = 'Friends'; renderFriendsPage();
-}
-function toggleRm(uid) { if (rmSel.has(uid)) rmSel.delete(uid); else rmSel.add(uid); rmUI(); renderFriendsPage(); }
-function renderFriendsPage() {
-if (!frPage || !frPage.classList.contains('active')) return;
-const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
-const items = [];
-if (state.incoming.length) {
-items.push({ k: 'l:rq', html: cnt('Friend requests · ' + state.incoming.length) });
-state.incoming.forEach((r) => {
-const pr = state.profiles.get(r.from) || {};
-items.push({ k: 'rq:' + r.id, html: `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
-<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>` });
-});
-}
-if (state.outgoing.length) {
-items.push({ k: 'l:out', html: cnt('Sent requests') });
-state.outgoing.forEach((r) => {
-const pr = state.profiles.get(r.to) || {};
-items.push({ k: 'ro:' + r.id, html: `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>` });
-});
-}
-items.push({ k: 'l:fr', html: cnt('Friends · ' + fr.length) });
-if (fr.length) fr.forEach(({ uid }) => items.push({ k: 'fr:' + uid, html: friendRow(uid, rmMode ? (rmSel.has(uid) ? 2 : 1) : 0) }));
-else items.push({ k: 'empty', html: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>' });
-setList(list, items, true);
-}
-function dockSet(id) { ['dkHome', 'dkFr', 'dkPost'].forEach((b) => $(b)?.classList.toggle('on', b === id)); document.body.classList.toggle('dock-up', id !== 'dkHome'); }
-function openFriends() {
-closePost();
-frPage.classList.add('active'); dockSet('dkFr'); frPage.setAttribute('aria-hidden', 'false');
-document.documentElement.style.overflow = 'hidden';
-renderFriendsPage();
-}
-function closeFriends() {
-exitRm(); $('frMenu')?.classList.remove('open');
-if (frPage.classList.contains('active')) dockSet('dkHome');
-frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
-if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
-}
-$('frClose').onclick = closeFriends;
-$('frList').onclick = async (e) => {
-const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
-if (t.dataset.open && rmMode) { toggleRm(t.dataset.open); return; }
-if (t.dataset.open) { const uid = t.dataset.open; closeFriends(); await openChat(); openConversation(uid); return; }
-try {
-if (t.dataset.acc) await updateDoc(doc(D(), 'chatRequests', t.dataset.acc), { status: 'accepted', seenFrom: false, seenTo: false });
-else await deleteDoc(doc(D(), 'chatRequests', t.dataset.dec || t.dataset.cancel));
-} catch { toast('Something went wrong', 'error'); }
-};
-window.OSBack?.add(frPage, closeFriends);
-$('frMore').onclick = (e) => { e.stopPropagation(); $('frMenu').classList.toggle('open'); };
-$('frRemove').onclick = () => { $('frMenu').classList.remove('open'); enterRm(); };
-$('frCancel').onclick = exitRm;
-document.addEventListener('click', (e) => { if (!e.target.closest('#frMenu') && !e.target.closest('#frMore')) $('frMenu').classList.remove('open'); });
-$('frRmGo').onclick = async () => {
-const ids = [...rmSel].filter((u) => state.friends.some((f) => f.uid === u)); if (!ids.length) return;
-if (!confirm(`Remove ${ids.length} friend${ids.length > 1 ? 's' : ''}?`)) return;
-try { await Promise.all(ids.map((u) => deleteDoc(doc(D(), 'chatRequests', state.friends.find((f) => f.uid === u).req.id)))); toast('Removed', 'success'); exitRm(); }
-catch { toast('Couldn’t remove', 'error'); }
-};
-window.OSBack?.add(rmBar, exitRm, () => rmMode);
-/* ---------- Post a memory page (dock symbol beside Friends) ---------- */
-const postPage = $('postPage');
-function openPost() {
-closeFriends();
-postPage.classList.add('active'); dockSet('dkPost'); postPage.setAttribute('aria-hidden', 'false');
-document.documentElement.style.overflow = 'hidden';
-}
-function closePost() {
-if (postPage.classList.contains('active')) dockSet('dkHome');
-postPage.classList.remove('active'); postPage.setAttribute('aria-hidden', 'true');
-if (!app.classList.contains('active') && !frPage.classList.contains('active')) document.documentElement.style.overflow = '';
-}
-$('dkPost').onclick = openPost;
-$('ppClose').onclick = closePost;
-window.OSBack?.add(postPage, closePost);
-// when a memory is shared, the pop-up animation plays and we return Home, where "moments shared" goes up
-const rv = $('memoryRevealOverlay');
-if (rv) new MutationObserver(() => { if (rv.classList.contains('posting') && postPage.classList.contains('active')) closePost(); }).observe(rv, { attributes: true, attributeFilter: ['class'] });
-setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while it is open
-/* =========================================================
-VOICE CALLS — WebRTC audio, the two phones find each other through Firestore ("calls" collection)
-========================================================= */
-const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
-const PH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
-const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
-document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><div class="call-lbl" id="callLbl">Voice call</div><div class="call-mid"><div class="call-av" id="callAv"></div><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="call-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
-const call = { id: null, pc: null, stream: null, role: null, uid: null, unsubs: [], t0: 0, tick: 0, ringTo: 0, ring: null, muted: false, accepting: false, queue: [], incoming: null };
-const callDoc = (id) => doc(D(), 'calls', id);
-function ringStop() { if (call.ring) { clearInterval(call.ring.iv); try { call.ring.ctx.close(); } catch {} call.ring = null; } }
-function ringStart(incoming) {
-ringStop();
-try {
-const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
-const beep = () => {
-const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
-o.type = 'sine'; o.frequency.value = incoming ? 880 : 440;
-g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .05); g.gain.linearRampToValueAtTime(0, t + .6);
-o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .65);
-if (incoming) navigator.vibrate?.([300, 150, 300]);
-};
-beep(); call.ring = { ctx, iv: setInterval(beep, 2200) };
-} catch {}
-}
-function callActs(mode) {
-const b = (cls, id, label, svg) => `<button type="button" class="call-btn ${cls}" id="${id}" aria-label="${label}">${svg}</button>`;
-$('callActs').innerHTML = mode === 'in' ? b('end', 'callNo', 'Decline', PH) + b('ok', 'callYes', 'Accept', PH)
-: mode === 'live' ? b('mute' + (call.muted ? ' on' : ''), 'callMute', 'Mute', MIC) + b('end', 'callEnd', 'End call', PH) : b('end', 'callEnd', 'End call', PH);
-if ($('callNo')) $('callNo').onclick = declineCall;
-if ($('callYes')) $('callYes').onclick = acceptCall;
-if ($('callEnd')) $('callEnd').onclick = () => hangup('ended');
-if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; call.stream?.getAudioTracks().forEach((t) => { t.enabled = !call.muted; }); $('callMute').classList.toggle('on', call.muted); };
-}
-async function showCall(uid, mode, text) {
-const ui = $('callUI'); call.uid = uid;
-ui.classList.add('active'); ui.classList.toggle('ringing', mode !== 'live'); ui.setAttribute('aria-hidden', 'false');
-$('callLbl').textContent = mode === 'in' ? 'Incoming voice call' : 'Voice call';
-$('callState').textContent = text || '';
-callActs(mode);
-const p = await getProfile(uid); if (call.uid !== uid) return;
-$('callAv').innerHTML = av(p, displayName(uid)); $('callName').textContent = displayName(uid);
-}
-function makePc() {
-const pc = new RTCPeerConnection(ICE); call.pc = pc; call.queue = [];
-pc.ontrack = (e) => { const a = $('callAudio'); a.srcObject = e.streams[0]; a.play?.().catch(() => {}); };
-pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') hangup('ended', 'Connection lost'); };
-return pc;
-}
-const addCand = (c) => { const pc = call.pc; if (!pc) return; if (pc.remoteDescription) pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}); else call.queue.push(c); };
-const flushCands = () => { const q = call.queue; call.queue = []; q.forEach(addCand); };
-function goLive() {
-if (call.t0) return;
-ringStop(); clearTimeout(call.ringTo); call.t0 = Date.now();
-$('callUI').classList.remove('ringing'); callActs('live');
-const upd = () => { const s = Math.floor((Date.now() - call.t0) / 1000); $('callState').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
-upd(); call.tick = setInterval(upd, 1000);
-}
-function endLocal(msg) {
-if (!call.id && !call.stream && !call.pc && !call.incoming) return;
-ringStop(); clearTimeout(call.ringTo); clearInterval(call.tick);
-call.unsubs.forEach((u) => { try { u(); } catch {} });
-call.stream?.getTracks().forEach((t) => t.stop());
-try { call.pc?.close(); } catch {}
-const ui = $('callUI'); $('callAudio').srcObject = null;
-if (msg) { $('callState').textContent = msg; ui.classList.remove('ringing'); $('callActs').innerHTML = ''; }
-Object.assign(call, { id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, ringTo: 0, muted: false, accepting: false, queue: [], incoming: null });
-setTimeout(() => { if (!call.id && !call.incoming) { ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); } }, msg ? 1300 : 0);
-}
-async function hangup(status, msg) {
-const id = call.id; endLocal(msg || (status === 'ended' ? 'Call ended' : ''));
-if (id) { try { await updateDoc(callDoc(id), { status }); } catch {} }
-}
-async function startCall(uid) {
-if (call.id || call.incoming) return toast('You’re already in a call', 'info');
-if (!state.friends.some((f) => f.uid === uid)) return toast('You can only call friends', 'info');
-if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) return toast('Calling isn’t supported on this browser', 'error');
-try { call.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-catch { return toast('Please allow the microphone to make a call', 'error'); }
-call.role = 'caller'; showCall(uid, 'out', 'Calling…'); ringStart(false);
-const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
-const ref = doc(collection(D(), 'calls')); call.id = ref.id;
-let ready = false; const buf = [];
-pc.onicecandidate = (e) => { if (!e.candidate) return; const c = e.candidate.toJSON(); if (ready) addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}); else buf.push(c); };
-try {
-const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
-await setDoc(ref, { from: state.uid, to: uid, status: 'ringing', offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
-} catch { endLocal('Couldn’t start the call'); toast('Couldn’t start the call', 'error'); return; }
-ready = true; buf.forEach((c) => addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}));
-call.unsubs.push(onSnapshot(ref, async (sn) => {
-const d = sn.data(); if (!d || call.id !== ref.id) return;
-if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(d.answer); flushCands(); } catch {} }
-if (d.status === 'active') { $('callState').textContent = 'Connecting…'; }
-if (d.status === 'declined') endLocal('Call declined');
-else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'No answer');
-}, () => {}));
-call.unsubs.push(onSnapshot(collection(ref, 'calleeCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
-pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
-call.ringTo = setTimeout(() => { if (call.id === ref.id && !call.t0) hangup('missed', 'No answer'); }, 45000);
-}
-async function declineCall() {
-const inc = call.incoming; if (!inc) return;
-endLocal('');
-try { await updateDoc(callDoc(inc.id), { status: 'declined' }); } catch {}
-}
-async function acceptCall() {
-const inc = call.incoming; if (!inc || call.accepting) return;
-call.accepting = true; ringStop(); $('callState').textContent = 'Connecting…';
-if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) { toast('Calling isn’t supported on this browser', 'error'); declineCall(); return; }
-try { call.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-catch { toast('Please allow the microphone to answer', 'error'); declineCall(); return; }
-if (call.incoming !== inc) { call.stream?.getTracks().forEach((t) => t.stop()); return; }
-const ref = callDoc(inc.id); call.id = inc.id; call.role = 'callee';
-const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
-pc.onicecandidate = (e) => { if (e.candidate) addDoc(collection(ref, 'calleeCandidates'), e.candidate.toJSON()).catch(() => {}); };
-pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
-try {
-await pc.setRemoteDescription(inc.offer); flushCands();
-const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
-await updateDoc(ref, { answer: { type: answer.type, sdp: answer.sdp }, status: 'active' });
-} catch { endLocal('Couldn’t connect the call'); toast('Couldn’t connect the call', 'error'); return; }
-call.unsubs.push(onSnapshot(collection(ref, 'callerCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
-call.unsubs.push(onSnapshot(ref, (sn) => { const d = sn.data(); if (!d || call.id !== ref.id) return; if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'Call ended'); }, () => {}));
-}
-/* incoming calls: listen for a "ringing" call addressed to me */
-let callUnsub = null, callUid = null;
-function stopCallListener() { try { callUnsub?.(); } catch {} callUnsub = null; callUid = null; }
-function listenCalls(uid) {
-stopCallListener(); callUid = uid;
-try {
-callUnsub = onSnapshot(query(collection(D(), 'calls'), where('to', '==', uid), where('status', '==', 'ringing')), (sn) => {
-sn.docChanges().forEach((c) => {
-if (c.type !== 'added') return;
-const d = c.doc.data(), id = c.doc.id;
-const t = d.createdAt?.toMillis ? d.createdAt.toMillis() : Date.now();
-if (Date.now() - t > 60000) return; // an old call that nobody answered
-if (call.id || call.incoming) { updateDoc(callDoc(id), { status: 'declined' }).catch(() => {}); return; }
-call.incoming = { id, uid: d.from, offer: d.offer }; call.role = 'callee';
-showCall(d.from, 'in', 'Incoming call…'); ringStart(true);
-call.unsubs.push(onSnapshot(callDoc(id), (s2) => { const x = s2.data(); if (!x || !call.incoming || call.incoming.id !== id) return; if (!call.t0 && (x.status === 'ended' || x.status === 'missed')) endLocal('Missed call'); }, () => {}));
-call.ringTo = setTimeout(() => { if (call.incoming && call.incoming.id === id && !call.t0 && !call.accepting) { updateDoc(callDoc(id), { status: 'missed' }).catch(() => {}); endLocal('Missed call'); } }, 45000);
-});
-}, () => {});
-} catch (e) { console.error(e); }
-}
-onAuthStateChanged(O().auth, (u) => { if (!u) { stopCallListener(); endLocal(''); return; } if (callUid !== u.uid) listenCalls(u.uid); });
-$('cpCall').onclick = () => { if (!state.active) return toast('Open a chat first', 'info'); startCall(state.active); };
-window.addEventListener('pagehide', () => { if (call.id) { try { updateDoc(callDoc(call.id), { status: 'ended' }); } catch {} } });
