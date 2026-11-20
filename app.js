@@ -75,12 +75,14 @@ function getTodayDateKey() {
 const d = new Date();
 return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
-// ---------- Mood list: original 9 + 25 more ----------
-const ALL_MOODS = [
-'💖', '✨', '🥰', '🌙', '🌸', '📚', '💌', '🔥', '🥰',
-'😊', '😍', '😘', '🥰', '😴', '😇', '🤗', '😌', '😢',
-'😭', '😡', '😱', '🥰', '🤔', '😅', '🙈', '💫', '🌟',
-'🌈', '☕', '🍫', '🎶', '🌺', '🍀', '🦋'
+// ---------- Badges (emoji + cute name). The emoji is still saved as "mood" so older memories keep working ----------
+const BADGES = [
+['💖', 'Love'], ['🥰', 'Adore'], ['😘', 'Kisses'], ['🌹', 'Romance'], ['💌', 'Love Note'], ['🧸', 'Cuddles'],
+['🤗', 'Hugs'], ['💍', 'Forever'], ['🏡', 'Home'], ['🌙', 'Dreamy'], ['✨', 'Magic'], ['🌸', 'Blossom'],
+['🦋', 'Butterflies'], ['🌈', 'Joyful'], ['🎀', 'Sweetie'], ['🍓', 'Sweet'], ['🍫', 'Chocolate'], ['☕', 'Cozy'],
+['🍰', 'Treat'], ['🎶', 'Melody'], ['📸', 'Snapshot'], ['🌅', 'Sunset'], ['🎁', 'Surprise'], ['😂', 'Giggles'],
+['🙈', 'Shy'], ['🥺', 'Missing You'], ['😴', 'Sleepy'], ['🔥', 'Passion'], ['🍀', 'Lucky'], ['🎂', 'Celebrate'],
+['⭐', 'Star'], ['🌻', 'Sunshine'], ['🐾', 'Cutie'], ['🕊️', 'Peace']
 ];
 // DOM Elements
 const authOverlay = document.getElementById('authOverlay');
@@ -116,6 +118,7 @@ const saveBtn = document.getElementById('saveBtn');
 // Mood picker popup
 const moodTriggerBtn = document.getElementById('moodTriggerBtn');
 const moodTriggerEmoji = document.getElementById('moodTriggerEmoji');
+const moodTriggerName = document.getElementById('moodTriggerName');
 const moodPickerOverlay = document.getElementById('moodPickerOverlay');
 const moodPickerPopup = document.getElementById('moodPickerPopup');
 const moodOptionsContainer = document.getElementById('moodOptionsContainer');
@@ -123,6 +126,7 @@ const moodOptionsContainer = document.getElementById('moodOptionsContainer');
 const memoryRevealOverlay = document.getElementById('memoryRevealOverlay');
 const memoryRevealBubble = document.getElementById('memoryRevealBubble');
 const memoryRevealMood = document.getElementById('memoryRevealMood');
+const memoryRevealBadge = document.getElementById('memoryRevealBadge');
 const memoryRevealText = document.getElementById('memoryRevealText');
 const memoryRevealMeta = document.getElementById('memoryRevealMeta');
 // To-Do Sticky Modal Controls
@@ -148,6 +152,7 @@ const publishStoryBtn = document.getElementById('publishStoryBtn');
 const storiesFeed = document.getElementById('storiesFeed');
 let isSignUpMode = false;
 let selectedMood = '💖';
+let selectedBadge = 'Love';
 let currentUser = null;
 let deleteTimerInterval = null;
 let allMemories = []; // cache for client-side search/filter
@@ -166,11 +171,13 @@ return raw.charAt(0).toUpperCase() + raw.slice(1);
 function renderMoodOptions() {
 if (!moodOptionsContainer) return;
 moodOptionsContainer.innerHTML = '';
-ALL_MOODS.forEach((emoji, i) => {
+BADGES.forEach(([emoji, name], i) => {
 const btn = document.createElement('button');
+btn.type = 'button';
 btn.className = `mood-btn ${i === 0 ? 'active' : ''}`;
 btn.setAttribute('data-mood', emoji);
-btn.textContent = emoji;
+btn.setAttribute('data-name', name);
+btn.innerHTML = `<span class="bd-ring">${emoji}</span><span class="bd-name">${name}</span>`;
 moodOptionsContainer.appendChild(btn);
 });
 }
@@ -191,7 +198,9 @@ btn.addEventListener('click', () => {
 moodBtns.forEach(b => b.classList.remove('active'));
 btn.classList.add('active');
 selectedMood = btn.getAttribute('data-mood');
+selectedBadge = btn.getAttribute('data-name') || '';
 if (moodTriggerEmoji) moodTriggerEmoji.textContent = selectedMood;
+if (moodTriggerName) moodTriggerName.textContent = selectedBadge;
 closeMoodPicker();
 });
 });
@@ -199,9 +208,10 @@ closeMoodPicker();
 // ============================================================
 // MEMORY REVEAL OVERLAY (posting animation + tap-to-view)
 // ============================================================
-function showMemoryReveal({ mood, text, author, dateStr }, mode) {
+function showMemoryReveal({ mood, badge, text, author, dateStr }, mode) {
 clearTimeout(revealAutoCloseTimer);
 memoryRevealMood.textContent = mood || '💖';
+if (memoryRevealBadge) { memoryRevealBadge.textContent = badge || ''; memoryRevealBadge.style.display = badge ? '' : 'none'; }
 memoryRevealText.textContent = text || '';
 memoryRevealMeta.innerHTML = `${shineName(author || 'User')} · ${esc(dateStr || '')}`;
 memoryRevealOverlay.classList.remove('posting');
@@ -242,12 +252,13 @@ try {
 await addDoc(collection(db, "memories"), {
 text: text,
 mood: selectedMood,
+badge: selectedBadge,
 author: displayName,
 photo: window.OS?.photo?.() || '',
 pinned: false,
 createdAt: serverTimestamp()
 });
-showMemoryReveal({ mood: selectedMood, text, author: displayName, dateStr: formatDMY(new Date()) }, 'post');
+showMemoryReveal({ mood: selectedMood, badge: selectedBadge, text, author: displayName, dateStr: formatDMY(new Date()) }, 'post');
 memoryInput.value = '';
 window.OS?.clearPhoto?.();
 } catch (err) {
