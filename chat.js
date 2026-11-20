@@ -40,7 +40,6 @@ opacity: 0; animation: cbgRise var(--t) linear var(--dl) infinite; will-change: 
 html body .chat-app .me .bub { color: #2b190b; text-shadow: none; background: linear-gradient(135deg, #f3d9ae 0%, #e0b377 55%, #c9965a 100%); box-shadow: 0 6px 18px rgba(201,150,90,.32), inset 0 1px 0 rgba(255,255,255,.45); }
 html body .chat-app .them .bub { color: #f7ecdc; background: rgba(42,30,24,.78); border: 1px solid rgba(227,192,141,.24); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 html body .chat-app .bub.lock { color: #d8c3a2; }
-
 /* =========================================================
 v12 — menu above messages · call button + call screen · dock stays on its pages
 ========================================================= */
@@ -693,7 +692,6 @@ if (!el) return;
 const g = ['✦', '·', '✧'], few = matchMedia('(prefers-reduced-motion: reduce)').matches;
 el.innerHTML = Array.from({ length: few ? 8 : n }, () => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--s:${(8 + Math.random() * 14).toFixed(0)}px;--t:${(7 + Math.random() * 8).toFixed(1)}s;--dl:${(-Math.random() * 12).toFixed(1)}s;--sw:${((Math.random() - .5) * 60).toFixed(0)}px">${g[(Math.random() * 3) | 0]}</i>`).join('');
 }
-
 /* ---------- reply to a message (the ↩ arrow beside every message) ---------- */
 const REPLY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>';
 const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 Video' : r.k === 'aud' ? '🎧 Voice message' : (r.x || 'Message');
@@ -1341,7 +1339,6 @@ window.OSBack?.add(postPage, closePost);
 const rv = $('memoryRevealOverlay');
 if (rv) new MutationObserver(() => { if (rv.classList.contains('posting') && postPage.classList.contains('active')) closePost(); }).observe(rv, { attributes: true, attributeFilter: ['class'] });
 setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while it is open
-
 /* =========================================================
 VOICE CALLS — WebRTC audio, the two phones find each other through Firestore ("calls" collection)
 ========================================================= */
@@ -1435,4 +1432,57 @@ const d = sn.data(); if (!d || call.id !== ref.id) return;
 if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(d.answer); flushCands(); } catch {} }
 if (d.status === 'active') { $('callState').textContent = 'Connecting…'; }
 if (d.status === 'declined') endLocal('Call declined');
-else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Ca
+else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'No answer');
+}, () => {}));
+call.unsubs.push(onSnapshot(collection(ref, 'calleeCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
+pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
+call.ringTo = setTimeout(() => { if (call.id === ref.id && !call.t0) hangup('missed', 'No answer'); }, 45000);
+}
+async function declineCall() {
+const inc = call.incoming; if (!inc) return;
+endLocal('');
+try { await updateDoc(callDoc(inc.id), { status: 'declined' }); } catch {}
+}
+async function acceptCall() {
+const inc = call.incoming; if (!inc || call.accepting) return;
+call.accepting = true; ringStop(); $('callState').textContent = 'Connecting…';
+if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) { toast('Calling isn’t supported on this browser', 'error'); declineCall(); return; }
+try { call.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+catch { toast('Please allow the microphone to answer', 'error'); declineCall(); return; }
+if (call.incoming !== inc) { call.stream?.getTracks().forEach((t) => t.stop()); return; }
+const ref = callDoc(inc.id); call.id = inc.id; call.role = 'callee';
+const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+pc.onicecandidate = (e) => { if (e.candidate) addDoc(collection(ref, 'calleeCandidates'), e.candidate.toJSON()).catch(() => {}); };
+pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
+try {
+await pc.setRemoteDescription(inc.offer); flushCands();
+const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
+await updateDoc(ref, { answer: { type: answer.type, sdp: answer.sdp }, status: 'active' });
+} catch { endLocal('Couldn’t connect the call'); toast('Couldn’t connect the call', 'error'); return; }
+call.unsubs.push(onSnapshot(collection(ref, 'callerCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
+call.unsubs.push(onSnapshot(ref, (sn) => { const d = sn.data(); if (!d || call.id !== ref.id) return; if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'Call ended'); }, () => {}));
+}
+/* incoming calls: listen for a "ringing" call addressed to me */
+let callUnsub = null, callUid = null;
+function stopCallListener() { try { callUnsub?.(); } catch {} callUnsub = null; callUid = null; }
+function listenCalls(uid) {
+stopCallListener(); callUid = uid;
+try {
+callUnsub = onSnapshot(query(collection(D(), 'calls'), where('to', '==', uid), where('status', '==', 'ringing')), (sn) => {
+sn.docChanges().forEach((c) => {
+if (c.type !== 'added') return;
+const d = c.doc.data(), id = c.doc.id;
+const t = d.createdAt?.toMillis ? d.createdAt.toMillis() : Date.now();
+if (Date.now() - t > 60000) return; // an old call that nobody answered
+if (call.id || call.incoming) { updateDoc(callDoc(id), { status: 'declined' }).catch(() => {}); return; }
+call.incoming = { id, uid: d.from, offer: d.offer }; call.role = 'callee';
+showCall(d.from, 'in', 'Incoming call…'); ringStart(true);
+call.unsubs.push(onSnapshot(callDoc(id), (s2) => { const x = s2.data(); if (!x || !call.incoming || call.incoming.id !== id) return; if (!call.t0 && (x.status === 'ended' || x.status === 'missed')) endLocal('Missed call'); }, () => {}));
+call.ringTo = setTimeout(() => { if (call.incoming && call.incoming.id === id && !call.t0 && !call.accepting) { updateDoc(callDoc(id), { status: 'missed' }).catch(() => {}); endLocal('Missed call'); } }, 45000);
+});
+}, () => {});
+} catch (e) { console.error(e); }
+}
+onAuthStateChanged(O().auth, (u) => { if (!u) { stopCallListener(); endLocal(''); return; } if (callUid !== u.uid) listenCalls(u.uid); });
+$('cpCall').onclick = () => { if (!state.active) return toast('Open a chat first', 'info'); startCall(state.active); };
+window.addEventListener('pagehide', () => { if (call.id) { try { updateDoc(callDoc(call.id), { status: 'ended' }); } catch {} } });
