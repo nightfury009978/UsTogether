@@ -202,7 +202,7 @@ const mn = { el: $('memNotes'), stage: $('mnStage'), fx: $('mnFx'), list: [], id
 const hash = (str) => { let h = 7; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0; return h; };
 const secs = (m) => m.data.createdAt?.seconds ?? Date.now() / 1000;
 const sortedMemories = () => [...(O().memories() || [])].sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0) || secs(b) - secs(a));
-const sigOf = ({ data: d }) => [d.text, d.mood, !!d.pinned, !!d.photo, d.editedAt?.seconds || 0].join('|');
+const sigOf = ({ data: d }) => [d.text, d.mood, d.badge, !!d.pinned, !!d.photo, d.editedAt?.seconds || 0].join('|');
 const ACT = {
 pin: SV('<path d="M12 3.500l2.600 5.300 5.800.800-4.200 4.100 1 5.800L12 16.800 6.800 19.500l1-5.800L3.600 9.600l5.800-.8z"/>'),
 edit: SV('<path d="M4 20h4L19 9l-4-4L4 16zM13.500 6.500l4 4"/>'),
@@ -217,7 +217,8 @@ const d = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
 el.innerHTML = '<i class="mn-tape"></i><div class="mn-stamp"><b></b><span></span></div><div class="mn-mood"></div><div class="mn-photo"></div><div class="mn-body"><p></p></div><div class="mn-by"></div><div class="mn-acts"></div>';
 el.querySelector('.mn-stamp b').textContent = d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
 el.querySelector('.mn-stamp span').textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-el.querySelector('.mn-mood').textContent = data.mood || '💖';
+const mm = el.querySelector('.mn-mood'); mm.textContent = data.mood || '💖';
+if (data.badge) { const bs = document.createElement('small'); bs.className = 'mn-badge'; bs.textContent = data.badge; mm.appendChild(bs); }
 el.querySelector('.mn-body p').textContent = data.text || '';
 el.querySelector('.mn-by').textContent = data.author ? '— ' + data.author : '';
 if (typeof data.photo === 'string' && data.photo.startsWith('data:image/')) {
