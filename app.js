@@ -295,6 +295,7 @@ if (k !== resetKey) { resetKey = k; checkAndResetDailyTodos(); }
 };
 rollover(); setInterval(rollover, 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) rollover(); });
+todoInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTodoBtn?.click(); } });
 if (addTodoBtn) {
 addTodoBtn.addEventListener('click', async () => {
 const text = todoInput.value.trim();
@@ -317,9 +318,8 @@ createdAt: serverTimestamp(),
 dateKey: getTodayDateKey()
 });
 todoInput.value = '';
-if (todoDueDate) todoDueDate.value = '';
-if (todoPriority) todoPriority.value = 'medium';
 toast("Task added ✅", "success");
+setTimeout(() => { const sc = document.querySelector('#todoBottomSheet .td-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 350);
 } catch (e) {
 console.error("Error adding todo:", e);
 toast("Couldn't add task. Try again.", "error");
@@ -340,126 +340,80 @@ else label = `Due ${due.toLocaleDateString()}`;
 return { label, overdue: diffDays < 0 };
 }
 function buildTaskCard(docId, data) {
-const stickyCard = document.createElement('div');
-stickyCard.className = `sticky-note-card ${data.completed ? 'completed' : ''}`;
-const priority = data.priority || 'medium';
-const dueInfo = formatDueDate(data.dueDate);
-let dateTimeStr = 'Just now';
-if (data.createdAt) {
-const d = new Date(data.createdAt.seconds * 1000);
-dateTimeStr = `${formatDMY(d)} ${formatTimeHM(d)}`;
-}
-let completedBadge = '';
-if (data.completed && data.completedAt) {
-const c = new Date(data.completedAt.seconds * 1000);
-completedBadge = `<span class="completed-badge">Done ${formatTimeHM(c)}</span>`;
-}
-stickyCard.innerHTML = `
-<div class="sticky-content">
-<input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docId}">
-<span class="todo-text" id="text-${docId}">${esc(data.task)}</span>
-<button class="todo-icon-btn" id="edit-todo-${docId}" title="Edit">✏️</button>
-<button class="todo-icon-btn" id="del-todo-${docId}" title="Delete">&times;</button>
-</div>
-<div class="todo-badges">
-<span class="priority-badge ${priority}">${priority}</span>
-${dueInfo ? `<span class="due-date-badge ${dueInfo.overdue && !data.completed ? 'overdue' : ''}">${dueInfo.label}</span>` : ''}
-${completedBadge}
-</div>
-<div class="sticky-footer-stamp">
-${shineName(data.createdBy || 'User')} • ${dateTimeStr}
-</div>
-`;
-stickyCard.querySelector(`#check-${docId}`)?.addEventListener('change', async (e) => {
+const card = document.createElement('div');
+card.className = `td-item ${data.completed ? 'completed' : ''}`;
+let when = 'Just now';
+if (data.createdAt) when = formatTimeHM(new Date(data.createdAt.seconds * 1000));
+let done = '';
+if (data.completed && data.completedAt) done = ` · Done ${formatTimeHM(new Date(data.completedAt.seconds * 1000))}`;
+card.innerHTML = `
+<label class="td-chk"><input type="checkbox" ${data.completed ? 'checked' : ''} id="check-${docId}"><i></i></label>
+<div class="td-body"><span class="todo-text" id="text-${docId}">${esc(data.task)}</span><small>${esc(data.createdBy || 'User')} · ${when}${done}</small></div>
+<button class="todo-icon-btn" id="edit-todo-${docId}" title="Edit" aria-label="Edit">✎</button>
+<button class="todo-icon-btn" id="del-todo-${docId}" title="Delete" aria-label="Delete">&times;</button>`;
+card.querySelector(`#check-${docId}`)?.addEventListener('change', async (e) => {
 const isNowCompleted = e.target.checked;
 const updates = { completed: isNowCompleted };
+card.classList.toggle('completed', isNowCompleted);
 if (isNowCompleted) {
 updates.completedAt = serverTimestamp();
-stickyCard.classList.add('just-completed');
 if (!data.historyLogged) {
 try {
 await addDoc(collection(db, "todo_history"), {
-task: data.task,
-completed: true,
-status: 'done',
-priority: data.priority || 'medium',
-dueDate: data.dueDate || '',
-createdBy: data.createdBy,
-createdAt: data.createdAt || serverTimestamp(),
-completedAt: serverTimestamp(),
-dateKey: data.dateKey || getTodayDateKey(),
-archivedAt: serverTimestamp()
+task: data.task, completed: true, status: 'done', priority: data.priority || 'medium', dueDate: data.dueDate || '',
+createdBy: data.createdBy, createdAt: data.createdAt || serverTimestamp(), completedAt: serverTimestamp(),
+dateKey: data.dateKey || getTodayDateKey(), archivedAt: serverTimestamp()
 });
 updates.historyLogged = true;
-} catch (err) {
-console.error("Error logging to history:", err);
-}
+} catch (err) { console.error("Error logging to history:", err); }
 }
 }
 await updateDoc(doc(db, "todos", docId), updates);
 });
-stickyCard.querySelector(`#del-todo-${docId}`)?.addEventListener('click', async () => {
+card.querySelector(`#del-todo-${docId}`)?.addEventListener('click', async () => {
 await deleteDoc(doc(db, "todos", docId));
 toast("Task deleted", "info");
 });
-stickyCard.querySelector(`#edit-todo-${docId}`)?.addEventListener('click', () => {
-const textSpan = stickyCard.querySelector(`#text-${docId}`);
+card.querySelector(`#edit-todo-${docId}`)?.addEventListener('click', () => {
+const textSpan = card.querySelector(`#text-${docId}`);
 if (!textSpan) return;
 const currentText = textSpan.textContent;
 const input = document.createElement('input');
-input.type = 'text';
-input.className = 'todo-text-input';
-input.value = currentText;
-textSpan.replaceWith(input);
-input.focus();
-input.select();
+input.type = 'text'; input.className = 'todo-text-input'; input.value = currentText;
+textSpan.replaceWith(input); input.focus(); input.select();
 const commit = async () => {
 const newText = input.value.trim();
-if (newText && newText !== currentText) {
-await updateDoc(doc(db, "todos", docId), { task: newText });
-}
+if (newText && newText !== currentText) await updateDoc(doc(db, "todos", docId), { task: newText });
+else renderTodoList();
 };
 input.addEventListener('blur', commit);
-input.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
 });
-});
-return stickyCard;
+return card;
 }
+/* the page header always shows today's real day + date and updates itself at midnight */
+function updateTodoDate() {
+const d = new Date(), a = document.getElementById('tdDay'), b = document.getElementById('tdDate');
+if (a) a.textContent = d.toLocaleDateString([], { weekday: 'long' });
+if (b) b.textContent = d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+}
+updateTodoDate(); setInterval(updateTodoDate, 30000);
 function renderTodoList() {
 if (!todoList) return;
 const searchTerm = (todoSearchInput?.value || '').trim().toLowerCase();
 const visible = allTodos.filter(({ data }) => !searchTerm || data.task.toLowerCase().includes(searchTerm));
-const pending = visible.filter(t => !t.data.completed);
-const completed = visible.filter(t => t.data.completed);
-pending.sort((a, b) => {
-const pw = priorityWeight[a.data.priority || 'medium'] - priorityWeight[b.data.priority || 'medium'];
-if (pw !== 0) return pw;
-return (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0);
-});
+/* one checklist for the whole day: in the order they were written, newest at the bottom */
+visible.sort((a, b) => (a.data.createdAt?.seconds ?? 9e15) - (b.data.createdAt?.seconds ?? 9e15));
 todoList.innerHTML = '';
-if (pending.length === 0 && completed.length === 0) {
-todoList.innerHTML = `
-<div class="empty-state">
-<span class="empty-emoji">📝</span>
-${allTodos.length === 0 ? 'No tasks yet — add your first one above.' : 'No tasks match your search.'}
-</div>
-`;
+if (visible.length === 0) {
+todoList.innerHTML = `<div class="td-empty"><span>✨</span><b>Nothing here yet</b><i>Write your first task below and tap ✓</i></div>`;
 } else {
 const frag = document.createDocumentFragment();
-pending.forEach(({ id, data }) => frag.appendChild(buildTaskCard(id, data)));
-if (completed.length > 0) {
-const label = document.createElement('div');
-label.className = 'todo-section-label';
-label.textContent = `Completed (${completed.length})`;
-frag.appendChild(label);
-completed.forEach(({ id, data }) => frag.appendChild(buildTaskCard(id, data)));
-}
+visible.forEach(({ id, data }) => frag.appendChild(buildTaskCard(id, data)));
 todoList.appendChild(frag);
 }
-const allPending = allTodos.filter(t => !t.data.completed).length;
-const allCompleted = allTodos.filter(t => t.data.completed).length;
-const totalCount = allPending + allCompleted;
+const allCompleted = allTodos.filter((t) => t.data.completed).length;
+const totalCount = allTodos.length;
 const pct = totalCount === 0 ? 0 : Math.round((allCompleted / totalCount) * 100);
 if (todoProgressFill) todoProgressFill.style.width = `${pct}%`;
 if (todoProgressText) todoProgressText.textContent = `${allCompleted} of ${totalCount} done today`;
@@ -579,7 +533,7 @@ await Promise.all(snapshot.docs.map((d) => deleteDoc(doc(db, "todos", d.id))));
 toast("Cleared completed tasks", "success");
 });
 const openTodoModal = () => {
-closeDrawer();
+closeDrawer(); updateTodoDate();
 todoBottomSheet?.classList.add('active');
 todoModalOverlay?.classList.add('active');
 };
@@ -610,49 +564,39 @@ unsubHist?.();
 unsubHist = onSnapshot(q, (snapshot) => {
 todoHistoryList.innerHTML = '';
 if (snapshot.empty) {
-todoHistoryList.innerHTML = `
-<div class="empty-state">
-<span class="empty-emoji">📜</span>
-No past to-do records found.
-</div>
-`;
+todoHistoryList.innerHTML = `<div class="td-empty"><span>📜</span><b>No history yet</b><i>Finished and past tasks will live here</i></div>`;
 return;
 }
+const keyOf = (data) => {
+if (data.dateKey) return data.dateKey;
+const t = data.completedAt || data.createdAt;
+return t ? (() => { const d = new Date(t.seconds * 1000); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; })() : 'older';
+};
+const groups = new Map();
+snapshot.docs.forEach((docSnap) => { const data = docSnap.data(), k = keyOf(data); if (!groups.has(k)) groups.set(k, []); groups.get(k).push({ id: docSnap.id, data }); });
 const frag = document.createDocumentFragment();
-snapshot.docs.forEach((docSnap) => {
-const data = docSnap.data();
-let dateTimeStr = 'Past Task';
-if (data.completedAt) {
-const d = new Date(data.completedAt.seconds * 1000);
-dateTimeStr = `Completed ${formatDMY(d)} at ${formatTimeHM(d)}`;
-} else if (data.createdAt) {
-const d = new Date(data.createdAt.seconds * 1000);
-dateTimeStr = `${formatDMY(d)} at ${formatTimeHM(d)}`;
-}
-const priority = data.priority || 'medium';
-const card = document.createElement('div');
-card.className = 'entry-card ios-notification-card';
-card.innerHTML = `
-<div style="display:flex; justify-content:space-between; align-items:center;">
-<span>${shineName(data.createdBy || 'User')}</span>
-<span class="entry-date">${dateTimeStr}</span>
-</div>
-<p class="entry-text" style="${data.completed ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
-${esc(data.task)} ${data.completed ? '✅' : (data.status === 'missed' ? '❌' : '⏳')}
-</p>
-<div class="todo-badges">
-<span class="priority-badge ${priority}">${priority}</span>
-</div>
-`;
+groups.forEach((rows, k) => {
+const sec = document.createElement('section'); sec.className = 'th-day';
+let title = 'Earlier';
+if (k !== 'older') { const [y, m, d] = k.split('-').map(Number); title = new Date(y, m - 1, d).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
+const done = rows.filter((r) => r.data.completed).length;
+sec.innerHTML = `<div class="th-head"><b>${esc(title)}</b><span>${done} of ${rows.length} done</span></div>`;
+rows.forEach(({ id, data }) => {
+const st = data.completed ? 'done' : (data.status === 'missed' ? 'missed' : 'wait');
+let t = data.completedAt || data.createdAt, time = '';
+if (t) time = formatTimeHM(new Date(t.seconds * 1000));
+const row = document.createElement('div'); row.className = `th-item ${st}`;
+row.innerHTML = `<span class="th-ic">${st === 'done' ? '✓' : st === 'missed' ? '×' : '…'}</span><div class="th-body"><span class="th-text">${esc(data.task)}</span><small>${esc(data.createdBy || 'User')}${time ? ' · ' + (data.completed ? 'Done ' : '') + time : ''}</small></div>`;
 if (data.status === 'unconfirmed') {
-const row = document.createElement('div');
-row.className = 'hs-acts';
-row.innerHTML = '<span>Did you finish it?</span><button type="button" class="rm-no" aria-label="Not done">✕</button><button type="button" class="rm-ok" aria-label="Done">✓</button>';
-row.querySelector('.rm-ok').onclick = () => updateDoc(doc(db, "todo_history", docSnap.id), { completed: true, status: 'done', completedAt: serverTimestamp() });
-row.querySelector('.rm-no').onclick = () => updateDoc(doc(db, "todo_history", docSnap.id), { status: 'missed' });
-card.appendChild(row);
+const acts = document.createElement('div'); acts.className = 'th-acts';
+acts.innerHTML = '<button type="button" class="th-no" aria-label="Not done">×</button><button type="button" class="th-ok" aria-label="Done">✓</button>';
+acts.querySelector('.th-ok').onclick = () => updateDoc(doc(db, "todo_history", id), { completed: true, status: 'done', completedAt: serverTimestamp() });
+acts.querySelector('.th-no').onclick = () => updateDoc(doc(db, "todo_history", id), { status: 'missed' });
+row.appendChild(acts);
 }
-frag.appendChild(card);
+sec.appendChild(row);
+});
+frag.appendChild(sec);
 });
 todoHistoryList.appendChild(frag);
 });
