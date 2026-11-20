@@ -1383,3 +1383,579 @@ const f = state.friends.find((x) => x.uid === uid);
 if (f && confirm(`Remove ${nm}?`)) { try { await deleteDoc(doc(D(), 'chatRequests', f.req.id)); closeSheet(); toast('Removed', 'success'); } catch { toast('Couldn’t remove', 'error'); } }
 };
 }
+function openMeSheet() {
+if (!state.profile) return;
+const me = state.uid;
+openSheet('My profile', `<div class="pv-banner" id="mpBanner"></div>
+<div class="pv-pfpwrap"><span class="pfp-ring lg" id="mpPfp"></span></div>
+<button id="mpPfpBtn" class="sh-btn">📷 Change profile photo</button>
+<input id="mpPfpF" type="file" accept="image/*" hidden>
+<label class="sh-lab">Select banner</label>
+<div class="bn-box"><div class="bn-grid" id="mpGrid"></div></div>
+<label class="sh-lab">Bio</label><textarea id="mpBio" maxlength="120" placeholder="Say something about you">${esc(state.profile.bio || '')}</textarea>
+<label class="sh-lab">Username</label><div class="sh-note" style="margin:0">@${esc(state.profile.username)} · <a id="mpForgot" style="color:var(--accent-dark);font-weight:700">Forgot it / create a new one</a></div>
+<button id="mpSave" class="sh-btn primary">Save profile</button>`);
+const draw = () => {
+const q = state.profile;
+$('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
+$('mpPfp').innerHTML = av(q, q.username);
+$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bnx bn-${id}">${BNFX[id]}</span><i>${n}</i></button>`).join('');
+};
+draw();
+const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
+$('mpGrid').onclick = async (e) => { const b = e.target.closest('[data-bn]'); if (!b) return;
+apply({ bannerId: b.dataset.bn, banner: '' });
+try { await updateDoc(doc(D(), 'chatUsers', me), { bannerId: b.dataset.bn, banner: '' }); toast('Banner applied ✨', 'success'); }
+catch { toast('Couldn’t save banner', 'error'); }
+};
+$('mpPfpBtn').onclick = () => $('mpPfpF').click();
+$('mpPfpF').onchange = async (e) => {
+const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+let data; try { data = await cropImg(f, 256, 256, .82); } catch { return toast('Couldn’t read that image', 'error'); } apply({ pfp: data });
+try { await updateDoc(doc(D(), 'chatUsers', me), { pfp: data }); toast('Profile photo updated ✨', 'success'); }
+catch { toast('Couldn’t save photo', 'error'); }
+};
+$('mpForgot').onclick = openUsernameSheet;
+$('mpSave').onclick = async () => {
+try { await updateDoc(doc(D(), 'chatUsers', me), { bio: $('mpBio').value.trim().slice(0, 120) }); toast('Profile saved ✨', 'success'); closeSheet(); }
+catch { toast('Couldn’t save profile', 'error'); }
+};
+}
+function openUsernameSheet() {
+const p = state.profile; if (!p) return;
+openSheet('Your username', `<p class="sh-note">Your current chat username is <b>@${esc(p.username)}</b>. Forgot it or want a different one? Create a new username below — your friends stay connected.</p>
+<input id="unNew" type="text" placeholder="New username" autocapitalize="none" autocomplete="off" maxlength="20">
+<button id="unGo" class="sh-btn primary">Save new username</button>`);
+$('unGo').onclick = async () => {
+const name = $('unNew').value.trim(), lower = name.toLowerCase(), me = state.uid, old = p.usernameLower;
+if (!/^[a-z0-9_.]{3,20}$/i.test(name)) return toast('Username: 3–20 letters, numbers, _ or .', 'error');
+try {
+await runTransaction(D(), async (tx) => {
+if (lower === old) { tx.update(doc(D(), 'chatUsers', me), { username: name }); return; }
+const ref = doc(D(), 'usernames', lower); if ((await tx.get(ref)).exists()) throw new Error('taken');
+tx.set(ref, { uid: me }); if (old) tx.delete(doc(D(), 'usernames', old));
+tx.update(doc(D(), 'chatUsers', me), { username: name, usernameLower: lower });
+});
+toast('Username updated', 'success'); closeSheet();
+} catch (e) { toast(e.message === 'taken' ? 'That username is taken' : 'Couldn’t update username', 'error'); }
+};
+}
+/* =========================================================
+Delete messages / delete all chats (wipes Firestore docs too)
+========================================================= */
+const selMsgs = () => [...state.sel].map((id) => state.msgDocs.find((x) => x.id === id)).filter(Boolean);
+function markPicked() { $('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid))); }
+function updateSelUI() {
+const ms = selMsgs(), n = ms.length, one = n === 1 ? ms[0] : null, p = one ? plain.get(one.id) : null;
+$('selCount').textContent = n || 1;
+$('selEdit').classList.toggle('off', !(one && one.from === state.uid && p && p.k === 't'));
+$('selReply').classList.toggle('off', !(one && p && p.k !== 'err'));
+$('selStar').classList.toggle('on', n > 0 && ms.every((m) => local.star.has(m.id)));
+}
+/* only a long press on a message starts this (the top bar fades in); back / swipe-back / ✕ fades it out */
+function enterSelect(id) {
+if (!state.active || !id) return;
+state.selecting = true; state.sel.clear(); state.sel.add(id);
+pane.classList.add('selecting'); $('cpMsgs').classList.add('selecting'); $('cpSelBar').classList.add('on');
+$('cpMenu')?.classList.remove('open'); stopTyping(); input.blur(); markPicked(); updateSelUI();
+}
+function exitSelect() {
+if (!state.selecting && !state.sel.size) return;
+state.selecting = false; state.sel.clear();
+pane.classList.remove('selecting'); $('cpMsgs').classList.remove('selecting'); $('cpSelBar').classList.remove('on');
+markPicked(); updateSelUI();
+}
+function toggleSel(id) {
+if (!id) return;
+if (state.sel.has(id)) state.sel.delete(id); else state.sel.add(id);
+if (!state.sel.size) { exitSelect(); return; }
+markPicked(); updateSelUI();
+}
+/* run deletes a few at a time (each delete is checked by the security rules) */
+async function delRefs(refs) {
+for (let i = 0; i < refs.length; i += 20) await Promise.all(refs.slice(i, i + 20).map((r) => deleteDoc(r)));
+}
+function forgetLocal(ids) {
+ids.forEach((id) => { const u = media.get(id); if (u) { URL.revokeObjectURL(u); media.delete(id); } plain.delete(id); });
+state.sig = '';
+}
+async function deleteForBoth(ids) {
+const uid = state.active; if (!uid || !ids.length) return;
+const cid = chatId(state.uid, uid);
+try {
+const refs = [];
+ids.forEach((id) => {
+const m = state.msgDocs.find((x) => x.id === id), p = plain.get(id), mid = m?.mid || p?.mid, n = m?.n || p?.n || 0;
+for (let i = 0; mid && i < n; i++) refs.push(doc(D(), 'chats', cid, 'blobs', `${mid}_${i}`)); // big media chunks first
+});
+await delRefs(refs);
+await delRefs(ids.map((id) => doc(D(), 'chats', cid, 'messages', id))); // then the messages themselves
+ids.forEach((id) => { local.star.delete(id); local.hide.delete(id); }); saveLocal();
+forgetLocal(ids); exitSelect(); toast('Deleted for both of you 🗑️', 'success');
+} catch (e) { console.error(e); toast('Couldn’t delete — publish the updated Firestore rules', 'error'); }
+}
+function openDeleteSheet() {
+const ids = [...state.sel]; if (!ids.length) return;
+openSheet(ids.length > 1 ? `Delete ${ids.length} messages` : 'Delete message', `<p class="sh-note">Choose how you want to delete ${ids.length > 1 ? 'these messages' : 'this message'}.</p>
+<button id="dmMe" class="sh-btn">Delete msg for me</button>
+<button id="dmBoth" class="sh-btn danger">Delete msg for both</button>
+<button id="dmNo" class="sh-btn">Cancel</button>`);
+$('dmNo').onclick = closeSheet;
+$('dmMe').onclick = () => { ids.forEach((id) => local.hide.add(id)); saveLocal(); closeSheet(); exitSelect(); forgetLocal(ids); paint(); toast('Deleted for you', 'success'); };
+$('dmBoth').onclick = () => { closeSheet(); deleteForBoth(ids); };
+}
+/* wipe EVERYTHING in one conversation: messages (incl. inline photos/voice) + media chunks */
+async function wipeChat(uid) {
+const cid = chatId(state.uid, uid);
+for (const [sub, size] of [['messages', 40], ['blobs', 8]]) {
+for (;;) {
+const s = await getDocs(query(collection(D(), 'chats', cid, sub), limit(size)));
+if (s.empty) break;
+await delRefs(s.docs.map((d) => d.ref));
+}
+}
+try { await updateDoc(doc(D(), 'chats', cid), { lastAt: deleteField(), lastFrom: deleteField() }); } catch {}
+}
+/* 3-dots menu + selection bar wiring */
+$('cpMore').onclick = (e) => { e.stopPropagation(); $('cpMenu').classList.toggle('open'); };
+document.addEventListener('click', (e) => { if (!e.target.closest('#cpMenu') && !e.target.closest('#cpMore')) $('cpMenu').classList.remove('open'); });
+$('cpmRemove').onclick = async () => {
+$('cpMenu').classList.remove('open');
+const uid = state.active, f = state.friends.find((x) => x.uid === uid); if (!uid || !f) return toast('Open a chat first', 'info');
+if (!confirm(`Remove ${displayName(uid)} from your friends?`)) return;
+try { await deleteDoc(doc(D(), 'chatRequests', f.req.id)); toast('Friend removed', 'success'); closeConversation(); if (!wide()) openSide(); }
+catch { toast('Couldn’t remove this friend', 'error'); }
+};
+$('cpmEmpty').onclick = async () => {
+$('cpMenu').classList.remove('open');
+const uid = state.active; if (!uid) return toast('Open a chat first', 'info');
+if (!confirm(`Delete ALL messages with ${displayName(uid)} for both of you? This can’t be undone.`)) return;
+exitSelect(); toast('Emptying…', 'info');
+try {
+await wipeChat(uid);
+media.forEach((u) => URL.revokeObjectURL(u)); media.clear(); plain.clear(); pct.clear(); local.hide.clear(); local.star.clear(); saveLocal(); state.sig = ''; paint();
+toast('All messages deleted for both of you 🧹', 'success');
+} catch (e) { console.error(e); toast('Couldn’t delete everything — publish the updated Firestore rules', 'error'); }
+};
+$('cpmClose').onclick = () => { $('cpMenu').classList.remove('open'); closeChat(); };
+$('selCancel').onclick = () => exitSelect();
+$('selStar').onclick = () => {
+const ms = selMsgs(); if (!ms.length) return;
+const all = ms.every((m) => local.star.has(m.id));
+ms.forEach((m) => { if (all) local.star.delete(m.id); else local.star.add(m.id); });
+saveLocal(); exitSelect(); paint(); toast(all ? 'Removed from starred' : 'Starred ⭐', 'success');
+};
+$('selDel').onclick = openDeleteSheet;
+$('selEdit').onclick = () => {
+const m = selMsgs()[0], p = m && plain.get(m.id);
+if (!m || m.from !== state.uid || !p || p.k !== 't') return;
+exitSelect(); startEdit(m.id, p.x);
+};
+$('selReply').onclick = () => { const m = selMsgs()[0]; if (!m) return; exitSelect(); startReply(m.id); };
+/* long press on any message (text, photo, video, voice) = select it */
+(function () {
+const box = $('cpMsgs'); let t = 0, sx = 0, sy = 0, tgt = null, fired = false;
+const clear = () => { clearTimeout(t); t = 0; tgt = null; };
+box.addEventListener('pointerdown', (e) => {
+if (e.button > 0 || state.selecting) return;
+const m = e.target.closest('.msg'); if (!m || e.target.closest('.rp')) return;
+tgt = m; sx = e.clientX; sy = e.clientY; fired = false;
+t = setTimeout(() => { t = 0; if (!tgt) return; fired = true; navigator.vibrate?.(24); enterSelect(tgt.dataset.mid); }, 420);
+});
+box.addEventListener('pointermove', (e) => { if (t && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) clear(); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach((n) => box.addEventListener(n, () => { if (t) clear(); if (fired) setTimeout(() => { fired = false; }, 450); }));
+box.addEventListener('scroll', clear, { passive: true });
+box.addEventListener('contextmenu', (e) => { if (e.target.closest('.msg')) e.preventDefault(); });
+box.addEventListener('click', (e) => { if (fired) { fired = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true); // the tap that ends the long press must not toggle it again
+})();
+window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(uid)) };
+/* =========================================================
+v5 — typing cloud + Seen / Not seen (paste at the VERY END of chat.js)
+========================================================= */
+(function () {
+const msgsBox = $('cpMsgs');
+const tsMs = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
+/* typing clouds: friend = bottom-left (near photos) · me = bottom-right (near mic) */
+comp.insertAdjacentHTML('beforeend',
+'<div id="tcL" class="tcloud l" aria-hidden="true"><i></i><i></i><i></i></div>' +
+'<div id="tcR" class="tcloud r" aria-hidden="true"><i></i><i></i><i></i></div>');
+const tcL = $('tcL'), tcR = $('tcR');
+let lastKey = 0, marked = '';
+input.addEventListener('input', () => { lastKey = input.value.trim() ? Date.now() : 0; });
+input.addEventListener('blur', () => { lastKey = 0; });
+const inView = (el) => {
+const r = el.getBoundingClientRect(), b = msgsBox.getBoundingClientRect();
+return r.bottom > b.top + 4 && r.top < b.bottom - 4;
+};
+function refresh() {
+const open = app.classList.contains('active') && state.active && !msgsBox.classList.contains('hidden');
+if (!open) { tcL.classList.remove('show'); tcR.classList.remove('show'); return; }
+tcL.classList.toggle('show', (state.typeUntil.get(state.active) || 0) > Date.now());
+const mine = lastKey && Date.now() - lastKey < 2600 && input.value.trim() && document.activeElement === input;
+tcR.classList.toggle('show', !!mine);
+const cid = chatId(state.uid, state.active), chat = state.chats.get(cid) || {};
+const myRead = tsMs(chat.reads && chat.reads[state.uid]);
+/* tell my friend I've seen their latest message — only when it is really on screen */
+if (document.hidden) return;
+let last = null;
+for (let i = (state.msgDocs || []).length - 1; i >= 0; i--) {
+if (state.msgDocs[i].from === state.active) { last = state.msgDocs[i]; break; }
+}
+if (!last) return;
+const el = msgsBox.querySelector('[data-mid="' + last.id + '"]');
+if (!el || !inView(el)) return;
+const key = cid + ':' + last.id;
+if (key === marked || tsMs(last.at) <= myRead) { marked = key; return; }
+marked = key;
+setDoc(doc(D(), 'chats', cid), { reads: { [state.uid]: serverTimestamp() } }, { merge: true })
+.catch(() => { marked = ''; });
+}
+new MutationObserver(refresh).observe(msgsBox, { childList: true });
+let rfRaf = 0; msgsBox.addEventListener('scroll', () => { if (!rfRaf) rfRaf = requestAnimationFrame(() => { rfRaf = 0; refresh(); }); }, { passive: true });
+document.addEventListener('visibilitychange', refresh);
+setInterval(refresh, 700);
+})();
+/* =========================================================
+BENTO NOIR home tiles + bottom dock (v6)
+Chat opens from the "Chat" tile. A red shining dot on that tile shows when something unread is waiting.
+========================================================= */
+(function () {
+const root = document.querySelector('.app-container'), header = document.querySelector('.app-header');
+if (!root || !header || document.getElementById('bento')) return;
+const hb = document.querySelector('.glowing-badge'), sub = header.querySelector('.subtitle');
+const tile = (id, lab, inner, cls = '') => `<button type="button" id="${id}" class="bn-tile ${cls}"><span class="bn-lab">${lab}</span>${inner}</button>`;
+const el = document.createElement('section');
+el.id = 'bento'; el.className = 'bento';
+el.innerHTML =
+'<div class="bn-head"><div><div class="bn-hi" id="bnHi">Welcome</div><div class="bn-title" id="bnTitle" role="button" tabindex="0" aria-label="Open Our Space">Our Space</div></div></div>' +
+'<div class="bn-slot empty" id="bnSlot"></div>' +
+'<div class="bn-tile bn-hero"><div class="bn-heroTop"></div><div class="bn-days" id="bnDaysBox"><span class="bn-num" id="bnDays">–</span><span class="bn-sm">days together</span></div><div class="bn-bar"><i id="bnBar"></i></div></div>' +
+tile('bnMem', 'Memories', '<span class="bn-big" id="bnMemN">0</span><span class="bn-sm">moments shared</span>', 'bn-mem') +
+tile('bnChat', 'Chat', '<span class="bn-mid" id="bnChatT">Welcome to chat</span><i id="bnChatDot" class="bn-dot hidden"></i>') + // CHAT-VISIBLE
+tile('bnTodo', 'To-do', '<span class="bn-big" id="bnTodoN" style="font-size:1.7rem;margin-top:6px">0</span><span class="bn-sm">left today</span>') +
+tile('bnStory', 'Story Book', '<span class="bn-mid" id="bnStoryT" style="font-family:var(--display);font-style:italic;font-size:1rem">Our chapters</span><span class="bn-sm" id="bnStoryS"></span>') +
+tile('bnAnn', 'Next milestone', '<span class="bn-big" id="bnAnnN" style="font-size:1.7rem;margin-top:6px">–</span><span class="bn-sm" id="bnAnnS">days to go</span>');
+header.after(el); header.style.display = 'none';
+const rmCard = document.getElementById('mainPageReminder');
+if (rmCard) { const slot = el.querySelector('#bnSlot'); slot.appendChild(rmCard); slot.classList.toggle('empty', rmCard.classList.contains('hidden')); } // pending reminders live between "Our Space" and "Our Sacred Diary"
+const top = el.querySelector('.bn-heroTop');
+if (hb) top.appendChild(hb);
+if (sub) top.appendChild(sub);
+const dock = document.createElement('nav');
+dock.className = 'dock'; dock.setAttribute('aria-label', 'Main');
+const svg = (p) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${p}"/></svg>`;
+dock.innerHTML = `<button type="button" id="dkHome" class="on" aria-label="Home">${svg('M3 11l9-8 9 8M5 10v10h14V10')}<span class="dk-lab">Home</span></button><button type="button" id="dkFr" aria-label="Friend list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.3"/><path d="M2.8 20c.5-3.4 3.1-5.2 6.2-5.2s5.7 1.8 6.2 5.2"/><circle cx="17.2" cy="9.5" r="2.5"/><path d="M17 14.7c2.6.1 4.4 1.7 4.8 5"/></svg><span class="dk-lab">Friends</span></button><button type="button" id="dkPost" aria-label="Post a memory">${svg('M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z')}<span class="dk-lab">Post</span></button>`;
+document.body.appendChild(dock);
+$('bnMem').onclick = () => O().openMemories?.();
+$('bnTitle').onclick = () => O().openSpace?.();
+$('bnTitle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); O().openSpace?.(); } };
+$('bnTodo').onclick = () => O().openTodo?.();
+$('bnStory').onclick = () => O().openStory?.();
+$('bnChat').onclick = () => openChat();
+$('dkHome').onclick = () => { closeFriends(); closePost(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+$('dkFr').onclick = () => openFriends();
+$('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click(); // set the anniversary only from "days together"
+const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
+function tick() {
+const nm = ($('currentUserLabel')?.textContent || '').trim(), h = new Date().getHours();
+set('bnHi', (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (nm && nm !== 'Loading...' ? ', ' + nm : ''));
+const d = parseInt(document.querySelector('#annivCard .anniv-num')?.textContent, 10);
+if (Number.isFinite(d)) {
+set('bnDays', d); $('bnBar').style.width = ((d % 365) / 365 * 100) + '%';
+const next = 365 * (Math.floor(d / 365) + 1) - d, yr = Math.floor(d / 365) + 1;
+set('bnAnnN', next); set('bnAnnS', 'days to year ' + yr);
+} else { set('bnDays', '–'); set('bnAnnN', '–'); set('bnAnnS', 'set it from days together'); }
+const mems = window.OS?.memories?.() || [];
+set('bnMemN', mems.length);
+set('bnTodoN', (window.OS?.todos?.() || []).filter((t) => !t.data.completed).length);
+const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
+set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
+set('bnStoryS', chs[0]?.querySelector('.story-accordion-title')?.textContent || '');
+const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
+const ct = $('bnChatT'), ctxt = un ? 'New message' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'Welcome to chat';
+if (ct && ct.textContent !== ctxt) { ct.textContent = ctxt; ct.classList.remove('swap'); void ct.offsetWidth; ct.classList.add('swap'); }
+ct?.classList.toggle('bn-new', !!un); $('bnChat')?.classList.toggle('has-new', !!un);
+const dot = !!(un || rq);
+$('bnChatDot').classList.toggle('hidden', !dot);
+}
+tick(); setInterval(tick, 1000);
+})();
+/* =========================================================
+FRIEND LIST (beside the home button) — only accepted friends
+========================================================= */
+var frPage = null;
+document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
+<header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Back">${IC.back(20)}</button><div id="frTitle" class="fp-title">Friends</div><button id="frCancel" class="fp-link" type="button" hidden>Cancel</button><button id="frMore" class="fp-x" type="button" aria-label="More options">${IC.dots}</button>
+<div id="frMenu" class="cs-menu cp-menu fp-menu"><button id="frRemove" class="danger">${mi(IC.userMinus, 'Remove friend')}</button></div></header>
+<div id="frList" class="fp-list"></div>
+<div id="frRmBar" class="fp-rmbar"><span id="frRmCount">Select friends</span><button id="frRmGo" type="button" disabled>Remove</button></div></div>`);
+frPage = $('frPage');
+/* friends page: 3-dots -> "Remove friend" -> tick the friends to remove */
+let rmMode = false; const rmSel = new Set(); const rmBar = $('frRmBar');
+function rmUI() { const n = rmSel.size; $('frRmCount').textContent = n ? `${n} selected` : 'Select friends'; $('frRmGo').disabled = !n; }
+function enterRm() {
+if (!state.friends.length) return toast('No friends to remove', 'info');
+rmMode = true; rmSel.clear(); frPage.classList.add('rm'); rmBar.classList.add('on');
+$('frMore').hidden = true; $('frCancel').hidden = false; $('frTitle').textContent = 'Select friends'; rmUI(); renderFriendsPage();
+}
+function exitRm() {
+if (!rmMode) return;
+rmMode = false; rmSel.clear(); frPage.classList.remove('rm'); rmBar.classList.remove('on');
+$('frMore').hidden = false; $('frCancel').hidden = true; $('frTitle').textContent = 'Friends'; renderFriendsPage();
+}
+function toggleRm(uid) { if (rmSel.has(uid)) rmSel.delete(uid); else rmSel.add(uid); rmUI(); renderFriendsPage(); }
+function renderFriendsPage() {
+if (!frPage || !frPage.classList.contains('active')) return;
+const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
+const items = [];
+if (state.incoming.length) {
+items.push({ k: 'l:rq', html: cnt('Friend requests · ' + state.incoming.length) });
+state.incoming.forEach((r) => {
+const pr = state.profiles.get(r.from) || {};
+items.push({ k: 'rq:' + r.id, html: `<div class="rq-row"><span class="pfp-sm">${av(pr, pr.username)}</span><span class="rq-name"><b>@${esc(pr.username || '…')}</b><i>wants to be friends</i></span>
+<button class="rq-ok" data-acc="${r.id}" aria-label="Accept">✓</button><button class="rq-no" data-dec="${r.id}" aria-label="Decline">×</button></div>` });
+});
+}
+if (state.outgoing.length) {
+items.push({ k: 'l:out', html: cnt('Sent requests') });
+state.outgoing.forEach((r) => {
+const pr = state.profiles.get(r.to) || {};
+items.push({ k: 'ro:' + r.id, html: `<div class="rq-out"><span>Waiting for @${esc(pr.username || '…')}</span><button data-cancel="${r.id}">Cancel</button></div>` });
+});
+}
+items.push({ k: 'l:fr', html: cnt('Friends · ' + fr.length) });
+if (fr.length) fr.forEach(({ uid }) => items.push({ k: 'fr:' + uid, html: friendRow(uid, rmMode ? (rmSel.has(uid) ? 2 : 1) : 0) }));
+else items.push({ k: 'empty', html: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>' });
+setList(list, items, true);
+}
+function dockSet(id) { ['dkHome', 'dkFr', 'dkPost'].forEach((b) => $(b)?.classList.toggle('on', b === id)); document.body.classList.toggle('dock-up', id !== 'dkHome'); }
+function openFriends() {
+closePost();
+frPage.classList.add('active'); dockSet('dkFr'); frPage.setAttribute('aria-hidden', 'false');
+document.documentElement.style.overflow = 'hidden';
+renderFriendsPage();
+}
+function closeFriends() {
+exitRm(); $('frMenu')?.classList.remove('open');
+if (frPage.classList.contains('active')) dockSet('dkHome');
+frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
+if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
+}
+$('frClose').onclick = closeFriends;
+$('frList').onclick = async (e) => {
+const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
+if (t.dataset.open && rmMode) { toggleRm(t.dataset.open); return; }
+if (t.dataset.open) { const uid = t.dataset.open; closeFriends(); await openChat(); openConversation(uid); return; }
+try {
+if (t.dataset.acc) await updateDoc(doc(D(), 'chatRequests', t.dataset.acc), { status: 'accepted', seenFrom: false, seenTo: false });
+else await deleteDoc(doc(D(), 'chatRequests', t.dataset.dec || t.dataset.cancel));
+} catch { toast('Something went wrong', 'error'); }
+};
+window.OSBack?.add(frPage, closeFriends);
+$('frMore').onclick = (e) => { e.stopPropagation(); $('frMenu').classList.toggle('open'); };
+$('frRemove').onclick = () => { $('frMenu').classList.remove('open'); enterRm(); };
+$('frCancel').onclick = exitRm;
+document.addEventListener('click', (e) => { if (!e.target.closest('#frMenu') && !e.target.closest('#frMore')) $('frMenu').classList.remove('open'); });
+$('frRmGo').onclick = async () => {
+const ids = [...rmSel].filter((u) => state.friends.some((f) => f.uid === u)); if (!ids.length) return;
+if (!confirm(`Remove ${ids.length} friend${ids.length > 1 ? 's' : ''}?`)) return;
+try { await Promise.all(ids.map((u) => deleteDoc(doc(D(), 'chatRequests', state.friends.find((f) => f.uid === u).req.id)))); toast('Removed', 'success'); exitRm(); }
+catch { toast('Couldn’t remove', 'error'); }
+};
+window.OSBack?.add(rmBar, exitRm, () => rmMode);
+/* ---------- Post a memory page (dock symbol beside Friends) ---------- */
+const postPage = $('postPage');
+function openPost() {
+closeFriends();
+postPage.classList.add('active'); dockSet('dkPost'); postPage.setAttribute('aria-hidden', 'false');
+document.documentElement.style.overflow = 'hidden';
+}
+function closePost() {
+if (postPage.classList.contains('active')) dockSet('dkHome');
+postPage.classList.remove('active'); postPage.setAttribute('aria-hidden', 'true');
+if (!app.classList.contains('active') && !frPage.classList.contains('active')) document.documentElement.style.overflow = '';
+}
+$('dkPost').onclick = openPost;
+$('ppClose').onclick = closePost;
+window.OSBack?.add(postPage, closePost);
+// when a memory is shared, the pop-up animation plays and we return Home, where "moments shared" goes up
+const rv = $('memoryRevealOverlay');
+if (rv) new MutationObserver(() => { if (rv.classList.contains('posting') && postPage.classList.contains('active')) closePost(); }).observe(rv, { attributes: true, attributeFilter: ['class'] });
+setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while it is open
+/* =========================================================
+VOICE CALLS — WebRTC audio, the two phones find each other through Firestore ("calls" collection)
+========================================================= */
+const ICE = { iceServers: [
+{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
+{ urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' } // free public relay: helps when two phones can't reach each other directly
+], iceCandidatePoolSize: 4, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
+const MIC_OPTS = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } };
+const PH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.500v5h3.500l5 4v-13l-5 4z"/><path d="M16 9a4 4 0 0 1 0 6M18.500 6.500a8 8 0 0 1 0 11"/></svg>';
+document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><div class="cl-bg"><i></i><i></i><i></i></div><div class="cl-top"><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="cl-mid"><div class="cl-av" id="callAv"><span id="callInit"></span></div></div><div class="cl-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
+const call = { id: null, pc: null, stream: null, role: null, uid: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, ring: null, muted: false, spk: true, accepting: false, queue: [], incoming: null };
+const callDoc = (id) => doc(D(), 'calls', id);
+/* keep the screen awake and the audio playing for the whole call */
+let wake = null;
+const wakeOn = async () => { try { wake = await navigator.wakeLock?.request('screen'); } catch {} };
+const wakeOff = () => { try { wake?.release(); } catch {} wake = null; };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && (call.id || call.incoming)) { wakeOn(); $('callAudio').play?.().catch(() => {}); } });
+/* clear, steady voice: Opus with forward error correction, no silence-skipping, 40 kbps mono */
+const tuneSdp = (sdp) => { try { return sdp.replace(/a=fmtp:(\d+) ([^\r\n]*)/g, (m, pt, rest) => /minptime/.test(rest) ? `a=fmtp:${pt} ${rest.replace(/;?(maxaveragebitrate|useinbandfec|usedtx|stereo|cbr)=\d+/g, '')};useinbandfec=1;usedtx=0;stereo=0;cbr=0;maxaveragebitrate=40000` : m); } catch { return sdp; } };
+const tuneSender = (pc) => pc.getSenders().forEach((sd) => {
+if (sd.track?.kind !== 'audio' || !sd.getParameters) return;
+try { const p = sd.getParameters(); if (!p.encodings || !p.encodings.length) p.encodings = [{}]; p.encodings[0].maxBitrate = 40000; p.encodings[0].priority = 'high'; p.encodings[0].networkPriority = 'high'; sd.setParameters(p).catch(() => {}); } catch {}
+});
+function applySpeaker() {
+const a = $('callAudio'); a.volume = call.spk ? 1 : .45;
+try { a.setSinkId?.(call.spk ? 'default' : 'communications')?.catch?.(() => {}); } catch {}
+$('callSpk')?.classList.toggle('on', call.spk);
+}
+function ringStop() { if (call.ring) { clearInterval(call.ring.iv); try { call.ring.ctx.close(); } catch {} call.ring = null; } }
+function ringStart(incoming) {
+ringStop();
+try {
+const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+const beep = () => {
+const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+o.type = 'sine'; o.frequency.value = incoming ? 880 : 440;
+g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .05); g.gain.linearRampToValueAtTime(0, t + .6);
+o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .65);
+if (incoming) navigator.vibrate?.([300, 150, 300]);
+};
+beep(); call.ring = { ctx, iv: setInterval(beep, 2200) };
+} catch {}
+}
+function callActs(mode) {
+const b = (cls, id, label, svg, cap) => `<div class="cb"><button type="button" class="call-btn ${cls}" id="${id}" aria-label="${label}">${svg}</button><small>${cap}</small></div>`;
+$('callActs').innerHTML = mode === 'in'
+? b('end', 'callNo', 'Decline', PH, 'Decline') + b('ok', 'callYes', 'Answer', PH, 'Answer')
+: b('spk' + (call.spk ? ' on' : ''), 'callSpk', 'Speaker', SPK, 'Speaker') + b('end', 'callEnd', 'End call', PH, 'End')
++ (mode === 'live' ? b('mute' + (call.muted ? ' on' : ''), 'callMute', 'Mute', MIC, 'Mute') : '<span class="call-sp"></span>');
+if ($('callNo')) $('callNo').onclick = declineCall;
+if ($('callYes')) $('callYes').onclick = acceptCall;
+if ($('callEnd')) $('callEnd').onclick = () => hangup('ended');
+if ($('callSpk')) $('callSpk').onclick = () => { call.spk = !call.spk; applySpeaker(); };
+if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; call.stream?.getAudioTracks().forEach((t) => { t.enabled = !call.muted; }); $('callMute').classList.toggle('on', call.muted); };
+}
+function showCall(uid, mode, text) {
+const ui = $('callUI'); call.uid = uid;
+const nm = displayName(uid) || 'Unknown';
+ui.classList.add('active'); ui.classList.toggle('ringing', mode !== 'live'); ui.setAttribute('aria-hidden', 'false');
+$('callName').textContent = nm; $('callInit').textContent = (Array.from(nm.trim())[0] || '?').toUpperCase();
+$('callState').textContent = text || '';
+callActs(mode);
+}
+function makePc() {
+const pc = new RTCPeerConnection(ICE); call.pc = pc; call.queue = [];
+pc.ontrack = (e) => { const a = $('callAudio'); a.srcObject = e.streams[0]; applySpeaker(); a.play?.().catch(() => {}); };
+pc.onconnectionstatechange = () => {
+const st = pc.connectionState; clearTimeout(call.dropTo);
+if (st === 'connected') { call.weak = false; call.upd?.(); }
+else if (st === 'disconnected') { call.weak = true; $('callState').textContent = 'Reconnecting…'; call.dropTo = setTimeout(() => hangup('ended', 'Connection lost'), 20000); } // a short network blip heals by itself — we only hang up if it lasts
+else if (st === 'failed') hangup('ended', 'Connection lost');
+};
+return pc;
+}
+const addCand = (c) => { const pc = call.pc; if (!pc) return; if (pc.remoteDescription) pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}); else call.queue.push(c); };
+const flushCands = () => { const q = call.queue; call.queue = []; q.forEach(addCand); };
+function goLive() {
+if (call.t0) return;
+ringStop(); clearTimeout(call.ringTo); call.t0 = Date.now();
+$('callUI').classList.remove('ringing'); callActs('live');
+call.upd = () => { if (call.weak) return; const s = Math.floor((Date.now() - call.t0) / 1000); $('callState').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+call.upd(); call.tick = setInterval(call.upd, 1000);
+$('callAudio').play?.().catch(() => {});
+}
+function endLocal(msg) {
+if (!call.id && !call.stream && !call.pc && !call.incoming) return;
+ringStop(); clearTimeout(call.ringTo); clearTimeout(call.dropTo); clearInterval(call.tick); wakeOff();
+call.unsubs.forEach((u) => { try { u(); } catch {} });
+call.stream?.getTracks().forEach((t) => t.stop());
+try { call.pc?.close(); } catch {}
+const ui = $('callUI'); $('callAudio').srcObject = null;
+if (msg) { $('callState').textContent = msg; ui.classList.remove('ringing'); $('callActs').innerHTML = ''; }
+Object.assign(call, { id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, muted: false, spk: true, accepting: false, queue: [], incoming: null });
+setTimeout(() => { if (!call.id && !call.incoming) { ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); } }, msg ? 1300 : 0);
+}
+async function hangup(status, msg) {
+const id = call.id; endLocal(msg || (status === 'ended' ? 'Call ended' : ''));
+if (id) { try { await updateDoc(callDoc(id), { status }); } catch {} }
+}
+async function startCall(uid) {
+if (call.id || call.incoming) return toast('You’re already in a call', 'info');
+if (!state.friends.some((f) => f.uid === uid)) return toast('You can only call friends', 'info');
+if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) return toast('Calling isn’t supported on this browser', 'error');
+try { call.stream = await navigator.mediaDevices.getUserMedia(MIC_OPTS); }
+catch { return toast('Please allow the microphone to make a call', 'error'); }
+call.role = 'caller'; showCall(uid, 'dial', 'Connecting…'); ringStart(false); wakeOn();
+const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+const ref = doc(collection(D(), 'calls')); call.id = ref.id;
+let ready = false; const buf = [];
+pc.onicecandidate = (e) => { if (!e.candidate) return; const c = e.candidate.toJSON(); if (ready) addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}); else buf.push(c); };
+try {
+const offer = await pc.createOffer({ offerToReceiveAudio: true }); offer.sdp = tuneSdp(offer.sdp); await pc.setLocalDescription(offer); tuneSender(pc);
+await setDoc(ref, { from: state.uid, to: uid, status: 'ringing', offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
+} catch { endLocal('Couldn’t start the call'); toast('Couldn’t start the call', 'error'); return; }
+ready = true; buf.forEach((c) => addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}));
+call.unsubs.push(onSnapshot(ref, async (sn) => {
+const d = sn.data(); if (!d || call.id !== ref.id) return;
+if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(d.answer); flushCands(); } catch {} }
+if (d.status === 'active' && !call.t0) { $('callState').textContent = 'Connecting…'; }
+if (d.status === 'declined') endLocal('Call declined');
+else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'No answer');
+}, () => {}));
+call.unsubs.push(onSnapshot(collection(ref, 'calleeCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
+pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
+call.ringTo = setTimeout(() => { if (call.id === ref.id && !call.t0) hangup('missed', 'No answer'); }, 45000);
+}
+async function declineCall() {
+const inc = call.incoming; if (!inc) return;
+endLocal('');
+try { await updateDoc(callDoc(inc.id), { status: 'declined' }); } catch {}
+}
+async function acceptCall() {
+const inc = call.incoming; if (!inc || call.accepting) return;
+call.accepting = true; ringStop(); $('callState').textContent = 'Connecting…'; callActs('dial');
+if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) { toast('Calling isn’t supported on this browser', 'error'); declineCall(); return; }
+try { call.stream = await navigator.mediaDevices.getUserMedia(MIC_OPTS); }
+catch { toast('Please allow the microphone to answer', 'error'); declineCall(); return; }
+if (call.incoming !== inc) { call.stream?.getTracks().forEach((t) => t.stop()); return; }
+wakeOn();
+const ref = callDoc(inc.id); call.id = inc.id; call.role = 'callee';
+const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+pc.onicecandidate = (e) => { if (e.candidate) addDoc(collection(ref, 'calleeCandidates'), e.candidate.toJSON()).catch(() => {}); };
+pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
+try {
+await pc.setRemoteDescription(inc.offer); flushCands();
+const answer = await pc.createAnswer(); answer.sdp = tuneSdp(answer.sdp); await pc.setLocalDescription(answer); tuneSender(pc);
+await updateDoc(ref, { answer: { type: answer.type, sdp: answer.sdp }, status: 'active' });
+} catch { endLocal('Couldn’t connect the call'); toast('Couldn’t connect the call', 'error'); return; }
+call.unsubs.push(onSnapshot(collection(ref, 'callerCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
+call.unsubs.push(onSnapshot(ref, (sn) => { const d = sn.data(); if (!d || call.id !== ref.id) return; if (d.status === 'ended' || d.status === 'missed') endLocal('Call ended'); }, () => {}));
+}
+/* incoming calls: listen for a "ringing" call addressed to me */
+let callUnsub = null, callUid = null;
+function stopCallListener() { try { callUnsub?.(); } catch {} callUnsub = null; callUid = null; }
+function listenCalls(uid) {
+stopCallListener(); callUid = uid;
+try {
+callUnsub = onSnapshot(query(collection(D(), 'calls'), where('to', '==', uid), where('status', '==', 'ringing')), (sn) => {
+sn.docChanges().forEach((c) => {
+if (c.type !== 'added') return;
+const d = c.doc.data(), id = c.doc.id;
+const t = d.createdAt?.toMillis ? d.createdAt.toMillis() : Date.now();
+if (Date.now() - t > 60000) return; // an old call that nobody answered
+if (call.id || call.incoming) { updateDoc(callDoc(id), { status: 'declined' }).catch(() => {}); return; }
+call.incoming = { id, uid: d.from, offer: d.offer }; call.role = 'callee';
+showCall(d.from, 'in', 'Incoming call'); ringStart(true); wakeOn();
+call.unsubs.push(onSnapshot(callDoc(id), (s2) => { const x = s2.data(); if (!x || !call.incoming || call.incoming.id !== id) return; if (!call.t0 && (x.status === 'ended' || x.status === 'missed')) endLocal('Missed call'); }, () => {}));
+call.ringTo = setTimeout(() => { if (call.incoming && call.incoming.id === id && !call.t0 && !call.accepting) { updateDoc(callDoc(id), { status: 'missed' }).catch(() => {}); endLocal('Missed call'); } }, 45000);
+});
+}, () => {});
+} catch (e) { console.error(e); }
+}
+onAuthStateChanged(O().auth, (u) => { if (!u) { stopCallListener(); endLocal(''); return; } if (callUid !== u.uid) listenCalls(u.uid); });
+$('cpCall').onclick = () => { if (!state.active) return toast('Open a chat first', 'info'); startCall(state.active); };
+window.addEventListener('pagehide', (e) => { if (!e.persisted && call.id) { try { updateDoc(callDoc(call.id), { status: 'ended' }); } catch {} } });
