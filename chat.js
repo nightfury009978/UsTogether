@@ -8,7 +8,7 @@ Helpers
 ========================================================= */
 const $ = (id) => document.getElementById(id);
 /* the newest styles are also injected from here, so they still apply even if an older chat.css is cached on the phone */
-(() => { if (document.getElementById('v11css')) return; const s = document.createElement('style'); s.id = 'v11css'; s.textContent = `
+(() => { if (document.getElementById('v13css')) return; const s = document.createElement('style'); s.id = 'v13css'; s.textContent = `
 /* =========================================================
 v11 — header title · Chat tile · starry chats · reply arrow
 ========================================================= */
@@ -98,6 +98,96 @@ border: 1px solid rgba(227,192,141,.3); background: rgba(22,15,11,.72); color: #
 .cr-t span { font-size: .8rem; color: #d8c8b2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cp-reply button { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(227,192,141,.3); background: transparent; color: #e9cd9f; cursor: pointer; }
 .chat-pane.selecting .cp-reply { display: none; }
+/* =========================================================
+v13 — premium chat · long-press bar · badges · post page · friends menu
+========================================================= */
+/* chat header */
+.chat-pane > .cp-head { background: linear-gradient(180deg, rgba(36,25,18,.95), rgba(16,11,9,.88)); border-bottom: 1px solid rgba(227,192,141,.26); box-shadow: 0 12px 30px rgba(0,0,0,.4); transition: opacity .28s ease; }
+html body .chat-app .cp-who .pfp-sm { border: 2px solid #e3c08d; box-shadow: 0 0 0 3px rgba(227,192,141,.14), 0 0 18px rgba(227,192,141,.3); }
+html body .chat-app .cp-who b { font-family: 'Bodoni Moda', Georgia, serif; font-weight: 600; font-size: 1.08rem; letter-spacing: .01em; color: #fff1d6; }
+html body .chat-app .cp-btn { border-radius: 50%; border: 1px solid rgba(227,192,141,.3); background: linear-gradient(145deg, rgba(227,192,141,.16), rgba(227,192,141,.03)); color: #e9cd9f; transition: transform .15s ease, background .2s ease; }
+html body .chat-app .cp-btn:active { transform: scale(.9); }
+/* the friends drawer sits above the header, and the header fades while it is open (phones) */
+.chat-scrim { z-index: 7; }
+.chat-side { z-index: 8; }
+@media (max-width: 819px) { .chat-main.side-open .chat-pane > .cp-head { opacity: 0; pointer-events: none; } }
+/* messages */
+html body .chat-app .cp-msgs { padding: 18px 14px 10px; gap: 5px; }
+html body .chat-app .msg { max-width: 82%; margin-bottom: 5px; }
+html body .chat-app .bub { padding: 10px 15px; border-radius: 22px; font-size: .97rem; line-height: 1.5; letter-spacing: .005em; }
+html body .chat-app .bub.media { padding: 4px; }
+html body .chat-app .me .bub { border-bottom-right-radius: 7px; }
+html body .chat-app .them .bub { border-bottom-left-radius: 7px; background: linear-gradient(160deg, rgba(54,40,31,.9), rgba(30,21,16,.9)); box-shadow: 0 6px 16px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,236,200,.06); }
+html body .chat-app .mt { display: flex; align-items: center; gap: 5px; font-size: .64rem; letter-spacing: .04em; }
+.msg .mt .st { color: #ffd978; font-size: .8rem; text-shadow: 0 0 8px rgba(255,214,120,.75); }
+.msg .mt .ed { font-style: normal; opacity: .75; }
+html body .chat-app .day-sep { font-family: 'Cinzel', Georgia, serif; font-size: .62rem; letter-spacing: .22em; text-transform: uppercase; padding: 5px 16px; }
+.cp-msgs .msg { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* composer */
+.chat-pane > .cp-comp { background: linear-gradient(0deg, rgba(20,14,10,.95), rgba(16,11,9,.8)); border-top: 1px solid rgba(227,192,141,.24); }
+html body .chat-app .cp-input { background: rgba(10,7,5,.74); color: #f4e9dc; border: 1px solid rgba(227,192,141,.34); border-radius: 24px; box-shadow: inset 0 1px 6px rgba(0,0,0,.35); }
+html body .chat-app .cp-input:focus { border-color: #e3c08d; box-shadow: 0 0 0 3px rgba(227,192,141,.14), 0 0 22px rgba(227,192,141,.18); }
+html body .chat-app .cp-input::placeholder { color: #8f8174; }
+html body .chat-app .cp-circle { border: 1px solid rgba(227,192,141,.3); background: linear-gradient(145deg, rgba(227,192,141,.16), rgba(227,192,141,.03)); color: #e9cd9f; }
+html body .chat-app .cp-circle.go { border: 0; color: #1b120c; background: linear-gradient(135deg, #f6e1b4, #c89556); box-shadow: 0 6px 18px rgba(227,192,141,.42); }
+/* long-press selection bar (fades in over the profile header, fades out on back / swipe-back) */
+.cp-selbar .sel-act.off { display: none; }
+html body .cp-selbar .sel-count { flex: none; font-family: 'Bodoni Moda', Georgia, serif; font-size: 1.2rem; font-weight: 600; color: #fff1d6; }
+.cp-selbar .sel-sp { flex: 1; }
+html body .cp-selbar #selStar.on { color: #1b120c; border-color: transparent; background: linear-gradient(135deg, #f6e1b4, #c89556); }
+.cp-selbar #selStar.on svg { fill: currentColor; }
+html body .cp-selbar #selDel { color: #ff9aa2; border-color: rgba(255,120,130,.42); }
+.msg.picked .sel-ck { background: linear-gradient(135deg, #f6e1b4, #c89556) !important; border-color: transparent !important; }
+.msg.picked .sel-ck::after { color: #1b120c !important; }
+html body .chat-app .msg.picked .bub { box-shadow: 0 0 0 3px #e3c08d, 0 0 26px rgba(227,192,141,.45); }
+/* post a memory page */
+.pp-compose { display: grid; gap: 18px; }
+.pp-who { text-align: center; font-size: .8rem; letter-spacing: .05em; color: #a8978a; }
+.pp-who strong { color: #e9cd9f; font-weight: 600; }
+.pp-oval { position: relative; width: 100%; padding: 2px; border-radius: 28px; overflow: hidden; box-shadow: 0 0 30px rgba(227,192,141,.22); }
+.pp-oval::before { content: ''; position: absolute; left: 50%; top: 50%; width: 260%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(0); border-radius: 50%;
+background: conic-gradient(from 0deg, transparent 0 55%, #b98558 68%, #fff4d2 80%, #e3c08d 88%, transparent 100%); animation: ppSpin 3.6s linear infinite; }
+@keyframes ppSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.pp-in { position: relative; border-radius: 26px; background: #17110d; padding: 6px; }
+html body .pp-in textarea { display: block; width: 100%; min-height: 190px; padding: 16px 18px; resize: none; border: 0; outline: 0; box-shadow: none; background: transparent; color: #f4e9dc; font: 400 1.02rem/1.55 'Outfit', 'Plus Jakarta Sans', sans-serif; }
+html body .pp-in textarea::placeholder { color: #8f8174; }
+html body .pp-in textarea:focus { border: 0; box-shadow: none; }
+.pp-tools { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 0; }
+html body .pp-tools .mood-trigger-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: linear-gradient(145deg, rgba(227,192,141,.16), rgba(227,192,141,.03)); border: 1px solid rgba(227,192,141,.4); color: #f1dcb8; font: 600 .86rem 'Outfit', sans-serif; letter-spacing: .02em; }
+.pp-tools .mood-trigger-btn span { font-size: 1.25rem; }
+.pp-tools .mood-trigger-btn b { font-weight: 600; }
+.pp-compose .photo-preview { margin: 0 auto; }
+@media (prefers-reduced-motion: reduce) { .pp-oval::before { animation: none; } }
+/* badge picker */
+html body .mood-picker-overlay { background: rgba(6,4,3,.64); z-index: 700; }
+html body .mood-picker-popup { z-index: 701; width: min(94%, 440px); max-width: none; max-height: 72vh; padding: 22px 14px 26px; border-radius: 28px; background: linear-gradient(180deg, #261a12, #120c08); border: 1px solid rgba(227,192,141,.36); box-shadow: 0 -10px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,236,200,.05) inset; }
+html body .mood-popup-header { font-family: 'Cinzel', Georgia, serif; font-size: .88rem; letter-spacing: .3em; text-indent: .3em; text-transform: uppercase; color: #e3c08d; margin-bottom: 18px; }
+html body .mood-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 4px; }
+html body .mood-btn { width: auto; height: auto; padding: 2px 0; border: 0; background: none; border-radius: 0; flex-direction: column; gap: 7px; box-shadow: none; transform: none; color: #d8c8b2; font: 600 .64rem 'Outfit', sans-serif; letter-spacing: .03em; }
+.mood-btn .bd-ring { position: relative; width: 58px; height: 58px; display: grid; place-items: center; font-size: 1.7rem; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #3d2c20, #1a110b); border: 2px solid rgba(227,192,141,.5); box-shadow: 0 6px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,236,200,.18); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.mood-btn .bd-ring::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 1px dashed rgba(227,192,141,.3); }
+.mood-btn .bd-name { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body .mood-btn.active { background: none; transform: none; box-shadow: none; }
+.mood-btn.active .bd-ring { border-color: #ffe3a6; background: radial-gradient(circle at 30% 25%, #6d4b2f, #2a1b10); box-shadow: 0 0 22px rgba(255,214,140,.55); transform: scale(1.08); }
+.mood-btn.active .bd-name { color: #ffe3a6; }
+.memory-reveal-badge { margin: -4px 0 10px; font: 600 .68rem 'Cinzel', Georgia, serif; letter-spacing: .26em; text-indent: .26em; text-transform: uppercase; color: #cdb48f; text-align: center; }
+.mn-mood small.mn-badge { display: block; width: max-content; margin-top: 4px; padding: 2px 8px; border-radius: 999px; font: 700 .55rem 'Outfit', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,.42); border: 1px solid rgba(0,0,0,.08); }
+/* friends page: 3-dots menu + remove mode */
+.fp > .fp-top { z-index: 3; }
+.fp-top [hidden] { display: none !important; }
+.fp-link { background: none; border: 0; padding: 8px 6px; font: 600 .86rem 'Outfit', sans-serif; letter-spacing: .04em; color: #e3c08d; cursor: pointer; }
+.fp-menu { right: 16px; }
+.fr-row .fr-ck { display: none; position: absolute; right: 16px; top: 50%; width: 26px; height: 26px; margin-top: -13px; z-index: 12; border-radius: 50%; border: 2px solid rgba(255,236,200,.85); background: rgba(10,7,5,.55); }
+.fr-row.pickable .fr-ck { display: block; }
+.fr-row.picked { border-color: #e8c48f; box-shadow: 0 0 0 2px rgba(232,196,143,.75), 0 8px 18px rgba(0,0,0,.4); }
+.fr-row.picked .fr-ck { background: linear-gradient(135deg, #f6e1b4, #c89556); border-color: transparent; }
+.fr-row.picked .fr-ck::after { content: ''; position: absolute; left: 8px; top: 3px; width: 6px; height: 12px; border: solid #1b120c; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.fp-rmbar { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); z-index: 5; display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 20px; border-radius: 999px; background: rgba(24,18,15,.97); border: 1px solid rgba(227,192,141,.4); box-shadow: 0 16px 36px rgba(0,0,0,.55);
+opacity: 0; visibility: hidden; transform: translate(-50%, 16px); transition: opacity .25s ease, transform .3s cubic-bezier(.2,.9,.25,1), visibility 0s linear .3s; }
+.fp-rmbar.on { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+.fp-rmbar span { font-size: .84rem; color: #d8c8b2; white-space: nowrap; }
+.fp-rmbar button { padding: 11px 20px; border: 0; border-radius: 999px; font: 700 .84rem 'Outfit', sans-serif; color: #fff; background: linear-gradient(135deg, #e5484d, #b02a34); cursor: pointer; }
+.fp-rmbar button:disabled { opacity: .4; }
 `; document.head.appendChild(s); })();
 const O = () => window.OS;
 const D = () => O().db;
@@ -137,6 +227,9 @@ send: svg('<path d="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z"/>'),
 panel: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>'),
 dots: svg('<circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>'),
 trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+star: svg('<path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8 6.8 19.5l1-5.8L3.6 9.6l5.8-.8z"/>'),
+pen: svg('<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>'),
+reply: svg('<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/>'),
 close: (s = 22) => svg('<path d="M6 6l12 12M18 6L6 18"/>', s)
 };
 /* =========================================================
@@ -203,6 +296,14 @@ let hbTimer = null, presenceBound = false;
 let typeLast = 0, typeOff = null; // typing indicator (sender side)
 const plain = new Map(); // decrypted message payloads by id
 const media = new Map(); // blob URLs by message id
+const pct = new Map(); // ciphertext each cached payload was decrypted from (so edited messages refresh)
+const local = { key: '', hide: new Set(), star: new Set() };
+function loadLocal(uid) {
+local.key = state.uid + ':' + chatId(state.uid, uid);
+const get = (p) => { try { return new Set(JSON.parse(LSg(p + local.key) || '[]')); } catch { return new Set(); } };
+local.hide = get('osHide:'); local.star = get('osStar:');
+}
+function saveLocal() { if (!local.key) return; LSs('osHide:' + local.key, JSON.stringify([...local.hide])); LSs('osStar:' + local.key, JSON.stringify([...local.star])); }
 /* =========================================================
 DOM
 ========================================================= */ const confetti = Array.from({ length: 16 }, (_, i) => `<i style="--i:${i}"></i>`).join('');
@@ -232,15 +333,18 @@ document.body.insertAdjacentHTML('beforeend', `
 <button id="cpCall" class="cp-btn cp-call" aria-label="Voice call"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></button>
 <button id="cpMore" class="cp-btn" aria-label="More options">${IC.dots}</button>
 <div id="cpMenu" class="cs-menu cp-menu">
-<button id="cpmSelect">☑️ Delete messages</button>
-<button id="cpmAll" class="danger">🗑️ Delete all chats</button>
+<button id="cpmRemove" class="danger">🚫 Remove friend</button>
+<button id="cpmEmpty" class="danger">🧹 Empty msgs</button>
 <button id="cpmClose">✕ Close chat</button>
 </div>
 <div id="cpSelBar" class="cp-selbar">
 <button id="selCancel" class="cp-btn" aria-label="Cancel selection">${IC.close(20)}</button>
-<b id="selCount" class="sel-count">Select messages</b>
-<button id="selAll" class="cp-link">Select all</button>
-<button id="selDel" class="cp-btn danger" aria-label="Delete selected" disabled>${IC.trash}</button>
+<b id="selCount" class="sel-count">1</b>
+<span class="sel-sp"></span>
+<button id="selStar" class="cp-btn sel-act" aria-label="Star">${IC.star}</button>
+<button id="selDel" class="cp-btn sel-act" aria-label="Delete">${IC.trash}</button>
+<button id="selEdit" class="cp-btn sel-act" aria-label="Edit message">${IC.pen}</button>
+<button id="selReply" class="cp-btn sel-act" aria-label="Reply">${IC.reply}</button>
 </div>
 </header>
 <div id="cpEmpty" class="cp-empty"><div><span id="cpEmptyTxt">Add a friend<br>to start chatting</span><small id="cpNote">🔒 Messages are end-to-end encrypted</small></div></div>
@@ -279,8 +383,8 @@ const closeLight = () => light.classList.remove('active');
 light.onclick = closeLight;
 const closeCongrats = () => congrats.classList.remove('active');
 $('ccClose').onclick = closeCongrats;
-const openSide = () => { if (wide()) $('chatMain').classList.remove('collapsed'); else { side.classList.add('active'); scrim.classList.add('active'); } };
-const hideSideMobile = () => { side.classList.remove('active'); scrim.classList.remove('active'); };
+const openSide = () => { if (wide()) $('chatMain').classList.remove('collapsed'); else { side.classList.add('active'); scrim.classList.add('active'); main.classList.add('side-open'); } };
+const hideSideMobile = () => { side.classList.remove('active'); scrim.classList.remove('active'); main.classList.remove('side-open'); };
 scrim.onclick = hideSideMobile; function closeChat() {
 exitSelect(); stopTyping(); $('cpMenu')?.classList.remove('open');
 stopRec(false); if (state.active) closeConversation();
@@ -565,15 +669,15 @@ function updateBadges() {
 const unread = state.friends.some((f) => unreadFor(f.uid));
 $('chatBadgeDot')?.classList.toggle('hidden', !(state.incoming.length || unread));
 $('csBurgerDot')?.classList.toggle('hidden', !state.incoming.length);
-} function friendRow(uid) {
+} function friendRow(uid, pick) {
 const p = state.profiles.get(uid) || {}, nm = displayName(uid), b = safeImg(p.banner), un = p.username ? '@' + p.username : '';
 const pr = presence(uid);
-return `<button class="fr-row${state.active === uid ? ' sel' : ''}" data-open="${uid}">
+return `<button class="fr-row${state.active === uid ? ' sel' : ''}${pick ? ' pickable' : ''}${pick === 2 ? ' picked' : ''}" data-open="${uid}">
 ${bannerEl(p, 'fr-banner')}
 <span class="fr-sheen"></span><span class="fr-scrim"></span>
 <span class="pfp-wrap"><span class="pfp-ring">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span>
 <span class="fr-text"><b>${esc(nm)}</b>${state.nick[uid] && un ? `<i>${esc(un)}</i>` : ''}<i class="pres${pr.on ? ' on' : ''}${pr.typing ? ' typing' : ''}">${esc(pr.txt)}</i></span>
-${unreadFor(uid) ? '<span class="fr-dot"></span>' : ''}</button>`; }
+${unreadFor(uid) ? '<span class="fr-dot"></span>' : ''}${pick ? '<span class="fr-ck"></span>' : ''}</button>`; }
 /* ---------- smooth lists: only rows that really changed are touched, so nothing flickers or restarts ---------- */
 const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('off', !e.isIntersecting)), { rootMargin: '60px' }) : null;
 function setList(box, items, watch) {
@@ -647,7 +751,7 @@ $('cpWho').onclick = () => { if (state.active) openFriendSheet(state.active); };
 Conversation
 ========================================================= */
 function closeConversation() {
-exitSelect(); stopTyping(); state.reply = null; renderReply();
+exitSelect(); stopTyping(); state.reply = null; state.edit = null; renderReply();
 state.unsubMsgs?.(); state.unsubMsgs = null; state.active = null; state.msgDocs = []; state.sig = ''; pane.classList.remove('active');
 $('cpMsgs').classList.add('hidden'); $('cpEmpty').classList.remove('hidden'); renderHeader();
 }
@@ -655,7 +759,7 @@ async function openConversation(uid) {
 await state.bootP;
 if (!state.priv) return route();
 state.unsubMsgs?.();
-state.active = uid; state.msgDocs = []; state.sig = ''; state.first = true; state.reply = null; renderReply();
+state.active = uid; loadLocal(uid); state.edit = null; state.msgDocs = []; state.sig = ''; state.first = true; state.reply = null; renderReply();
 pane.classList.add('active');
 hideSideMobile();
 $('cpEmpty').classList.add('hidden'); $('cpMsgs').classList.remove('hidden'); comp.classList.remove('hidden');
@@ -678,7 +782,7 @@ state.unsubMsgs = onSnapshot(query(collection(D(), 'chats', cid, 'messages'), or
 if (state.active !== uid) return;
 s.docChanges().forEach((ch) => { if (ch.type === 'removed') { const u = media.get(ch.doc.id); if (u) { URL.revokeObjectURL(u); media.delete(ch.doc.id); } plain.delete(ch.doc.id); } });
 state.msgDocs = s.docs.map((d) => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
-if (state.sel.size) { const live = new Set(state.msgDocs.map((m) => m.id)); [...state.sel].forEach((id) => { if (!live.has(id)) state.sel.delete(id); }); updateSelUI(); }
+if (state.sel.size) { const live = new Set(state.msgDocs.map((m) => m.id)); [...state.sel].forEach((id) => { if (!live.has(id)) state.sel.delete(id); }); if (state.selecting && !state.sel.size) exitSelect(); else updateSelUI(); }
 paint(); if (!s.metadata.hasPendingWrites) markSeen(cid);
 }, () => toast('Couldn’t load messages', 'error'));
 }
@@ -698,10 +802,29 @@ const replyLabel = (r) => r.k === 'img' ? '📷 Photo' : r.k === 'vid' ? '🎥 V
 const replyWho = (r) => r.f === state.uid ? 'You' : displayName(r.f);
 function renderReply() {
 const box = $('cpReply'); if (!box) return;
-const r = state.reply;
-box.classList.toggle('hidden', !r);
-box.innerHTML = r ? `<span class="cr-bar"></span><span class="cr-t"><b>Replying to ${esc(replyWho(r))}</b><span>${esc(replyLabel(r))}</span></span><button type="button" id="crX" aria-label="Cancel reply">${IC.close(18)}</button>` : '';
-$('crX')?.addEventListener('click', () => { state.reply = null; renderReply(); });
+const r = state.reply, e = state.edit;
+box.classList.toggle('hidden', !r && !e);
+box.innerHTML = e ? `<span class="cr-bar"></span><span class="cr-t"><b>✏️ Editing message</b><span>${esc(e.text)}</span></span><button type="button" id="crX" aria-label="Cancel edit">${IC.close(18)}</button>`
+: r ? `<span class="cr-bar"></span><span class="cr-t"><b>Replying to ${esc(replyWho(r))}</b><span>${esc(replyLabel(r))}</span></span><button type="button" id="crX" aria-label="Cancel reply">${IC.close(18)}</button>` : '';
+$('crX')?.addEventListener('click', () => { if (state.edit) cancelEdit(); else { state.reply = null; renderReply(); } });
+}
+function startEdit(id, text) {
+state.edit = { id, text: String(text || '').slice(0, 90) }; state.reply = null; renderReply();
+input.value = text; autoGrow(); updateComp(); input.focus();
+}
+function cancelEdit() { state.edit = null; input.value = ''; autoGrow(); updateComp(); renderReply(); }
+async function doEdit() {
+const ed = state.edit, uid = state.active, x = input.value.trim(); if (!ed || !uid) return;
+if (!x) return toast('A message can’t be empty', 'info');
+const old = plain.get(ed.id);
+if (!old || old.k !== 't' || x === old.x) { cancelEdit(); return; }
+state.edit = null; input.value = ''; autoGrow(); updateComp(); stopTyping(); renderReply();
+try {
+const key = await sharedKey(uid), cid = chatId(state.uid, uid), payload = { ...old, x };
+const { iv, ct } = await encJSON(key, payload);
+await updateDoc(doc(D(), 'chats', cid, 'messages', ed.id), { iv, ct, edited: true });
+plain.set(ed.id, payload); pct.set(ed.id, ct); toast('Message edited ✏️', 'success');
+} catch (e) { console.error(e); toast('Couldn’t edit — publish the updated Firestore rules', 'error'); }
 }
 function startReply(id) {
 const m = (state.msgDocs || []).find((x) => x.id === id), p = plain.get(id);
@@ -731,23 +854,24 @@ inner = `<div class="bub media"><button class="m-load" data-load="${m.id}">${p.k
 }
 const rq = p.r && p.r.id ? `<div class="rq" data-rq="${esc(p.r.id)}"><b>${esc(replyWho(p.r))}</b><span>${esc(replyLabel(p.r))}</span></div>` : '';
 const rp = p.k === 'err' ? '' : `<button type="button" class="rp" data-reply="${m.id}" aria-label="Reply">${REPLY_SVG}</button>`;
+const stars = local.star.has(m.id) ? '<b class="st">★</b>' : '', edt = m.edited ? '<i class="ed">edited</i>' : '';
 const at = tsOf(m.at), seen = !!(theirRead && at && theirRead >= at);
 const tick = !mine ? '' : m.pending ? '<em class="rd pend">🕓 Sending…</em>' : seen ? '<em class="rd seen">✓✓ Seen</em>' : '<em class="rd">✓ Delivered</em>';
-return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${rq}${inner}<span class="mt">${time}${tick}</span>${rp}</div>`;
+return `<div class="msg ${mine ? 'me' : 'them'}${state.sel.has(m.id) ? ' picked' : ''}" data-mid="${m.id}"><span class="sel-ck"></span>${rq}${inner}<span class="mt">${stars}${edt}${time}${tick}</span>${rp}</div>`;
 }
 let paintTok = 0, pq = 0, hyd = 0; const badMedia = new Set();
 const queuePaint = () => { if (!pq) pq = requestAnimationFrame(() => { pq = 0; paint(); }); };
 async function paint() {
 const uid = state.active; if (!uid) return;
-const tok = ++paintTok, box = $('cpMsgs'), docs = state.msgDocs;
+const tok = ++paintTok, box = $('cpMsgs'), docs = state.msgDocs.filter((m) => !local.hide.has(m.id));
 let key = null; try { key = await sharedKey(uid); } catch {}
 if (tok !== paintTok || uid !== state.active) return;
 const bodies = new Map();
 await Promise.all(docs.map(async (m) => {
-let p = plain.get(m.id);
+let p = plain.get(m.id); if (p && pct.get(m.id) !== m.ct) p = null;
 if (!p) {
 if (!key) p = { k: 'err' };
-else { try { p = await decJSON(key, m.iv, m.ct); plain.set(m.id, p); } catch { p = { k: 'err' }; } }
+else { try { p = await decJSON(key, m.iv, m.ct); plain.set(m.id, p); pct.set(m.id, m.ct); } catch { p = { k: 'err' }; } }
 }
 bodies.set(m.id, p);
 }));
@@ -836,6 +960,7 @@ toast('Add a friend to start chatting 💬', 'info');
 if (!state.friends.length) openAddSheet(); else openSide();
 return true;
 } function sendText() {
+if (state.edit) { doEdit(); return; }
 const x = input.value.trim(); if (!x) return;
 if (needFriend()) return;
 input.value = ''; autoGrow(); updateComp(); stopTyping();
@@ -1051,39 +1176,33 @@ toast('Username updated', 'success'); closeSheet();
 /* =========================================================
 Delete messages / delete all chats (wipes Firestore docs too)
 ========================================================= */
+const selMsgs = () => [...state.sel].map((id) => state.msgDocs.find((x) => x.id === id)).filter(Boolean);
+function markPicked() { $('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid))); }
 function updateSelUI() {
-const n = state.sel.size;
-$('selCount').textContent = n ? `${n} selected` : 'Select messages';
-$('selDel').disabled = !n;
-const all = state.msgDocs.length > 0 && n >= state.msgDocs.length;
-$('selAll').textContent = all ? 'Clear' : 'Select all';
+const ms = selMsgs(), n = ms.length, one = n === 1 ? ms[0] : null, p = one ? plain.get(one.id) : null;
+$('selCount').textContent = n || 1;
+$('selEdit').classList.toggle('off', !(one && one.from === state.uid && p && p.k === 't'));
+$('selReply').classList.toggle('off', !(one && p && p.k !== 'err'));
+$('selStar').classList.toggle('on', n > 0 && ms.every((m) => local.star.has(m.id)));
 }
-function enterSelect() {
-if (!state.active) return toast('Open a chat first', 'info');
-state.selecting = true; state.sel.clear();
-pane.classList.add('selecting'); $('cpMsgs').classList.add('selecting');
-stopTyping(); updateSelUI();
+/* only a long press on a message starts this (the top bar fades in); back / swipe-back / ✕ fades it out */
+function enterSelect(id) {
+if (!state.active || !id) return;
+state.selecting = true; state.sel.clear(); state.sel.add(id);
+pane.classList.add('selecting'); $('cpMsgs').classList.add('selecting'); $('cpSelBar').classList.add('on');
+$('cpMenu')?.classList.remove('open'); stopTyping(); input.blur(); markPicked(); updateSelUI();
 }
 function exitSelect() {
 if (!state.selecting && !state.sel.size) return;
 state.selecting = false; state.sel.clear();
-pane.classList.remove('selecting'); $('cpMsgs').classList.remove('selecting');
-$('cpMsgs').querySelectorAll('.msg.picked').forEach((el) => el.classList.remove('picked'));
-updateSelUI();
+pane.classList.remove('selecting'); $('cpMsgs').classList.remove('selecting'); $('cpSelBar').classList.remove('on');
+markPicked(); updateSelUI();
 }
 function toggleSel(id) {
 if (!id) return;
 if (state.sel.has(id)) state.sel.delete(id); else state.sel.add(id);
-const el = $('cpMsgs').querySelector(`.msg[data-mid="${id}"]`);
-if (el) el.classList.toggle('picked', state.sel.has(id));
-updateSelUI();
-}
-function toggleSelAll() {
-const all = state.msgDocs.length > 0 && state.sel.size >= state.msgDocs.length;
-state.sel.clear();
-if (!all) state.msgDocs.forEach((m) => state.sel.add(m.id));
-$('cpMsgs').querySelectorAll('.msg').forEach((el) => el.classList.toggle('picked', state.sel.has(el.dataset.mid)));
-updateSelUI();
+if (!state.sel.size) { exitSelect(); return; }
+markPicked(); updateSelUI();
 }
 /* run deletes a few at a time (each delete is checked by the security rules) */
 async function delRefs(refs) {
@@ -1093,11 +1212,9 @@ function forgetLocal(ids) {
 ids.forEach((id) => { const u = media.get(id); if (u) { URL.revokeObjectURL(u); media.delete(id); } plain.delete(id); });
 state.sig = '';
 }
-async function deleteSelected() {
-const uid = state.active, ids = [...state.sel];
-if (!uid || !ids.length) return;
-if (!confirm(`Delete ${ids.length} message${ids.length > 1 ? 's' : ''} for both of you? This can’t be undone.`)) return;
-const cid = chatId(state.uid, uid), btn = $('selDel'); btn.disabled = true;
+async function deleteForBoth(ids) {
+const uid = state.active; if (!uid || !ids.length) return;
+const cid = chatId(state.uid, uid);
 try {
 const refs = [];
 ids.forEach((id) => {
@@ -1106,11 +1223,19 @@ for (let i = 0; mid && i < n; i++) refs.push(doc(D(), 'chats', cid, 'blobs', `${
 });
 await delRefs(refs);
 await delRefs(ids.map((id) => doc(D(), 'chats', cid, 'messages', id))); // then the messages themselves
+ids.forEach((id) => { local.star.delete(id); local.hide.delete(id); }); saveLocal();
 forgetLocal(ids); exitSelect(); toast('Deleted for both of you 🗑️', 'success');
-} catch (e) {
-console.error(e); btn.disabled = !state.sel.size;
-toast('Couldn’t delete — publish the updated Firestore rules', 'error');
+} catch (e) { console.error(e); toast('Couldn’t delete — publish the updated Firestore rules', 'error'); }
 }
+function openDeleteSheet() {
+const ids = [...state.sel]; if (!ids.length) return;
+openSheet(ids.length > 1 ? `Delete ${ids.length} messages` : 'Delete message', `<p class="sh-note">Choose how you want to delete ${ids.length > 1 ? 'these messages' : 'this message'}.</p>
+<button id="dmMe" class="sh-btn">Delete msg for me</button>
+<button id="dmBoth" class="sh-btn danger">Delete msg for both</button>
+<button id="dmNo" class="sh-btn">Cancel</button>`);
+$('dmNo').onclick = closeSheet;
+$('dmMe').onclick = () => { ids.forEach((id) => local.hide.add(id)); saveLocal(); closeSheet(); exitSelect(); forgetLocal(ids); paint(); toast('Deleted for you', 'success'); };
+$('dmBoth').onclick = () => { closeSheet(); deleteForBoth(ids); };
 }
 /* wipe EVERYTHING in one conversation: messages (incl. inline photos/voice) + media chunks */
 async function wipeChat(uid) {
@@ -1124,35 +1249,58 @@ await delRefs(s.docs.map((d) => d.ref));
 }
 try { await updateDoc(doc(D(), 'chats', cid), { lastAt: deleteField(), lastFrom: deleteField() }); } catch {}
 }
-function openDeleteAllSheet() {
-const cur = state.active;
-openSheet('Delete all chats', `<p class="sh-note">Every message, photo, video and voice message is permanently erased from the database — for <b>both</b> of you. This can’t be undone.</p>
-${cur ? `<button id="daThis" class="sh-btn danger">Delete this chat · ${esc(displayName(cur))}</button>` : ''}
-<button id="daAll" class="sh-btn danger">Delete chats with everyone (${state.friends.length})</button>
-<button id="daNo" class="sh-btn">Cancel</button>`);
-const run = async (list, label) => {
-if (!list.length) return toast('No chats to delete', 'info');
-if (!confirm(`${label}? This can’t be undone.`)) return;
-exitSelect(); closeSheet(); toast('Deleting…', 'info');
-try {
-for (const u of list) await wipeChat(u);
-media.forEach((u) => URL.revokeObjectURL(u)); media.clear(); plain.clear(); state.sig = ''; paint();
-toast('Chats deleted for both of you 🗑️', 'success');
-} catch (e) { console.error(e); toast('Couldn’t delete everything — publish the updated Firestore rules', 'error'); }
-};
-$('daNo').onclick = closeSheet;
-if (cur) $('daThis').onclick = () => run([cur], `Delete the whole chat with ${displayName(cur)}`);
-$('daAll').onclick = () => run(state.friends.map((f) => f.uid), 'Delete ALL your chats with every friend');
-}
 /* 3-dots menu + selection bar wiring */
 $('cpMore').onclick = (e) => { e.stopPropagation(); $('cpMenu').classList.toggle('open'); };
 document.addEventListener('click', (e) => { if (!e.target.closest('#cpMenu') && !e.target.closest('#cpMore')) $('cpMenu').classList.remove('open'); });
-$('cpmSelect').onclick = () => { $('cpMenu').classList.remove('open'); if (!state.active) return toast('Open a chat first', 'info'); if (!state.msgDocs.length) return toast('No messages to delete', 'info'); enterSelect(); };
-$('cpmAll').onclick = () => { $('cpMenu').classList.remove('open'); if (!state.friends.length) return toast('No chats yet', 'info'); openDeleteAllSheet(); };
+$('cpmRemove').onclick = async () => {
+$('cpMenu').classList.remove('open');
+const uid = state.active, f = state.friends.find((x) => x.uid === uid); if (!uid || !f) return toast('Open a chat first', 'info');
+if (!confirm(`Remove ${displayName(uid)} from your friends?`)) return;
+try { await deleteDoc(doc(D(), 'chatRequests', f.req.id)); toast('Friend removed', 'success'); closeConversation(); if (!wide()) openSide(); }
+catch { toast('Couldn’t remove this friend', 'error'); }
+};
+$('cpmEmpty').onclick = async () => {
+$('cpMenu').classList.remove('open');
+const uid = state.active; if (!uid) return toast('Open a chat first', 'info');
+if (!confirm(`Delete ALL messages with ${displayName(uid)} for both of you? This can’t be undone.`)) return;
+exitSelect(); toast('Emptying…', 'info');
+try {
+await wipeChat(uid);
+media.forEach((u) => URL.revokeObjectURL(u)); media.clear(); plain.clear(); pct.clear(); local.hide.clear(); local.star.clear(); saveLocal(); state.sig = ''; paint();
+toast('All messages deleted for both of you 🧹', 'success');
+} catch (e) { console.error(e); toast('Couldn’t delete everything — publish the updated Firestore rules', 'error'); }
+};
 $('cpmClose').onclick = () => { $('cpMenu').classList.remove('open'); closeChat(); };
 $('selCancel').onclick = () => exitSelect();
-$('selAll').onclick = toggleSelAll;
-$('selDel').onclick = deleteSelected;
+$('selStar').onclick = () => {
+const ms = selMsgs(); if (!ms.length) return;
+const all = ms.every((m) => local.star.has(m.id));
+ms.forEach((m) => { if (all) local.star.delete(m.id); else local.star.add(m.id); });
+saveLocal(); exitSelect(); paint(); toast(all ? 'Removed from starred' : 'Starred ⭐', 'success');
+};
+$('selDel').onclick = openDeleteSheet;
+$('selEdit').onclick = () => {
+const m = selMsgs()[0], p = m && plain.get(m.id);
+if (!m || m.from !== state.uid || !p || p.k !== 't') return;
+exitSelect(); startEdit(m.id, p.x);
+};
+$('selReply').onclick = () => { const m = selMsgs()[0]; if (!m) return; exitSelect(); startReply(m.id); };
+/* long press on any message (text, photo, video, voice) = select it */
+(function () {
+const box = $('cpMsgs'); let t = 0, sx = 0, sy = 0, tgt = null, fired = false;
+const clear = () => { clearTimeout(t); t = 0; tgt = null; };
+box.addEventListener('pointerdown', (e) => {
+if (e.button > 0 || state.selecting) return;
+const m = e.target.closest('.msg'); if (!m || e.target.closest('.rp')) return;
+tgt = m; sx = e.clientX; sy = e.clientY; fired = false;
+t = setTimeout(() => { t = 0; if (!tgt) return; fired = true; navigator.vibrate?.(24); enterSelect(tgt.dataset.mid); }, 420);
+});
+box.addEventListener('pointermove', (e) => { if (t && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) clear(); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach((n) => box.addEventListener(n, () => { if (t) clear(); if (fired) setTimeout(() => { fired = false; }, 450); }));
+box.addEventListener('scroll', clear, { passive: true });
+box.addEventListener('contextmenu', (e) => { if (e.target.closest('.msg')) e.preventDefault(); });
+box.addEventListener('click', (e) => { if (fired) { fired = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true); // the tap that ends the long press must not toggle it again
+})();
 window.OSChat = { open: (uid) => openChat().then(() => uid && openConversation(uid)) };
 /* =========================================================
 v5 — typing cloud + Seen / Not seen (paste at the VERY END of chat.js)
@@ -1270,13 +1418,28 @@ FRIEND LIST (beside the home button) — only accepted friends
 ========================================================= */
 var frPage = null;
 document.body.insertAdjacentHTML('beforeend', `<div id="frPage" class="fp" aria-hidden="true"><div class="fp-bg"></div>
-<header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div class="fp-title">Friends</div><span id="frCount" class="fp-count">0</span></header>
-<div id="frList" class="fp-list"></div></div>`);
+<header class="fp-top"><button id="frClose" class="fp-x" type="button" aria-label="Close">${IC.close(20)}</button><div id="frTitle" class="fp-title">Friends</div><button id="frCancel" class="fp-link" type="button" hidden>Cancel</button><button id="frMore" class="fp-x" type="button" aria-label="More options">${IC.dots}</button>
+<div id="frMenu" class="cs-menu cp-menu fp-menu"><button id="frRemove" class="danger">🗑️ Remove friend</button></div></header>
+<div id="frList" class="fp-list"></div>
+<div id="frRmBar" class="fp-rmbar"><span id="frRmCount">Select friends</span><button id="frRmGo" type="button" disabled>Remove</button></div></div>`);
 frPage = $('frPage');
+/* friends page: 3-dots -> "Remove friend" -> tick the friends to remove */
+let rmMode = false; const rmSel = new Set(); const rmBar = $('frRmBar');
+function rmUI() { const n = rmSel.size; $('frRmCount').textContent = n ? `${n} selected` : 'Select friends'; $('frRmGo').disabled = !n; }
+function enterRm() {
+if (!state.friends.length) return toast('No friends to remove', 'info');
+rmMode = true; rmSel.clear(); frPage.classList.add('rm'); rmBar.classList.add('on');
+$('frMore').hidden = true; $('frCancel').hidden = false; $('frTitle').textContent = 'Select friends'; rmUI(); renderFriendsPage();
+}
+function exitRm() {
+if (!rmMode) return;
+rmMode = false; rmSel.clear(); frPage.classList.remove('rm'); rmBar.classList.remove('on');
+$('frMore').hidden = false; $('frCancel').hidden = true; $('frTitle').textContent = 'Friends'; renderFriendsPage();
+}
+function toggleRm(uid) { if (rmSel.has(uid)) rmSel.delete(uid); else rmSel.add(uid); rmUI(); renderFriendsPage(); }
 function renderFriendsPage() {
 if (!frPage || !frPage.classList.contains('active')) return;
 const list = $('frList'), fr = [...state.friends].sort((a, b) => displayName(a.uid).localeCompare(displayName(b.uid)));
-$('frCount').textContent = fr.length;
 const items = [];
 if (state.incoming.length) {
 items.push({ k: 'l:rq', html: cnt('Friend requests · ' + state.incoming.length) });
@@ -1294,7 +1457,7 @@ items.push({ k: 'ro:' + r.id, html: `<div class="rq-out"><span>Waiting for @${es
 });
 }
 items.push({ k: 'l:fr', html: cnt('Friends · ' + fr.length) });
-if (fr.length) fr.forEach(({ uid }) => items.push({ k: 'fr:' + uid, html: friendRow(uid) }));
+if (fr.length) fr.forEach(({ uid }) => items.push({ k: 'fr:' + uid, html: friendRow(uid, rmMode ? (rmSel.has(uid) ? 2 : 1) : 0) }));
 else items.push({ k: 'empty', html: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>' });
 setList(list, items, true);
 }
@@ -1306,6 +1469,7 @@ document.documentElement.style.overflow = 'hidden';
 renderFriendsPage();
 }
 function closeFriends() {
+exitRm(); $('frMenu')?.classList.remove('open');
 if (frPage.classList.contains('active')) dockSet('dkHome');
 frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
 if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
@@ -1313,6 +1477,7 @@ if (!app.classList.contains('active')) document.documentElement.style.overflow =
 $('frClose').onclick = closeFriends;
 $('frList').onclick = async (e) => {
 const t = e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]'); if (!t) return;
+if (t.dataset.open && rmMode) { toggleRm(t.dataset.open); return; }
 if (t.dataset.open) { const uid = t.dataset.open; closeFriends(); await openChat(); openConversation(uid); return; }
 try {
 if (t.dataset.acc) await updateDoc(doc(D(), 'chatRequests', t.dataset.acc), { status: 'accepted', seenFrom: false, seenTo: false });
@@ -1320,6 +1485,17 @@ else await deleteDoc(doc(D(), 'chatRequests', t.dataset.dec || t.dataset.cancel)
 } catch { toast('Something went wrong', 'error'); }
 };
 window.OSBack?.add(frPage, closeFriends);
+$('frMore').onclick = (e) => { e.stopPropagation(); $('frMenu').classList.toggle('open'); };
+$('frRemove').onclick = () => { $('frMenu').classList.remove('open'); enterRm(); };
+$('frCancel').onclick = exitRm;
+document.addEventListener('click', (e) => { if (!e.target.closest('#frMenu') && !e.target.closest('#frMore')) $('frMenu').classList.remove('open'); });
+$('frRmGo').onclick = async () => {
+const ids = [...rmSel].filter((u) => state.friends.some((f) => f.uid === u)); if (!ids.length) return;
+if (!confirm(`Remove ${ids.length} friend${ids.length > 1 ? 's' : ''}?`)) return;
+try { await Promise.all(ids.map((u) => deleteDoc(doc(D(), 'chatRequests', state.friends.find((f) => f.uid === u).req.id)))); toast('Removed', 'success'); exitRm(); }
+catch { toast('Couldn’t remove', 'error'); }
+};
+window.OSBack?.add(rmBar, exitRm, () => rmMode);
 /* ---------- Post a memory page (dock symbol beside Friends) ---------- */
 const postPage = $('postPage');
 function openPost() {
