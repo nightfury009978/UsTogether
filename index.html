@@ -67,7 +67,7 @@ document.getElementById('osStartDust').innerHTML = h;
 <div id="menuDrawer" class="menu-drawer">
 <div class="drawer-header">
 <h3 class="glow-text">Menu</h3>
-<button id="closeDrawerBtn" class="close-drawer" aria-label="Close menu">&times;</button>
+<button id="closeDrawerBtn" class="close-drawer" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
 </div>
 <div class="dr-groups">
 <section class="dr-group">
@@ -140,7 +140,7 @@ Wait 7s...
 <!-- Post a Memory page (opened from the dock, beside Friends) -->
 <div id="postPage" class="pp" aria-hidden="true">
 <div class="pp-bg"></div>
-<header class="pp-top"><button id="ppClose" class="fp-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="fp-title">Post a Memory</div><span class="pp-spark" aria-hidden="true">✨</span></header>
+<header class="pp-top"><button id="ppClose" class="fp-x" type="button" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><div class="fp-title">Post a Memory</div><span class="pp-spark" aria-hidden="true">✨</span></header>
 <div class="pp-body">
 <p class="pp-lead">Write something sweet. It appears in <b>moments shared</b> on Home.</p>
 <section class="pp-compose">
@@ -171,26 +171,29 @@ Wait 7s...
 </div>
 <div class="memory-reveal-exit-hint">Tap anywhere to close</div>
 </div>
-<!-- Our Memories: swipeable sticky notes -->
+<!-- Our Memories: premium timeline (newest first) -->
 <div id="memNotes" class="mn" aria-hidden="true">
 <div class="mn-bg"><i></i><i></i><i></i></div>
 <header class="mn-top">
-<button id="mnClose" class="mn-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+<button id="mnClose" class="mn-x" type="button" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
 <div class="mn-title"><span class="shine-soft">Our Memories</span> ✨</div>
-<div id="mnCount" class="mn-count">0 / 0</div>
+<div id="mnCount" class="mn-count">0</div>
 </header>
-<div id="mnStage" class="mn-stage"></div>
-<button id="mnPrev" class="mn-nav prev" type="button" aria-label="Previous memory"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-<button id="mnNext" class="mn-nav next" type="button" aria-label="Next memory"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-<div id="mnFx" class="mn-fx" aria-hidden="true"></div>
-<div class="mn-foot"><div id="mnDots" class="mn-dots"></div><div id="mnHint" class="mn-hint">Swipe for more memories</div></div>
+<div id="mnScroll" class="mn-scroll">
+<section class="mn-hero">
+<div class="mn-hero-k">Moments we kept</div>
+<div id="mnHeroN" class="mn-hero-n">0</div>
+<div id="mnHeroS" class="mn-hero-s">memories shared · newest first</div>
+</section>
+<div id="mnList" class="mn-list"></div>
+</div>
 </div>
 <!-- To-Do: premium checklist page -->
 <div id="todoModalOverlay" class="story-modal-overlay"></div>
 <div id="todoBottomSheet" class="story-bottom-sheet td-page">
 <div class="td-bg"></div>
 <header class="td-top">
-<button id="closeTodoSheetBtn" class="td-x" type="button" aria-label="Close">&times;</button>
+<button id="closeTodoSheetBtn" class="td-x" type="button" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
 <div class="td-ttl">To-Do</div>
 <button id="openTodoHistoryBtn" class="td-pill" type="button">History</button>
 </header>
@@ -216,7 +219,7 @@ Wait 7s...
 <div id="todoHistoryBottomSheet" class="story-bottom-sheet td-page td-hist">
 <div class="td-bg"></div>
 <header class="td-top">
-<button id="closeTodoHistorySheetBtn" class="td-x" type="button" aria-label="Close">&times;</button>
+<button id="closeTodoHistorySheetBtn" class="td-x" type="button" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
 <div class="td-ttl">History</div>
 <span class="td-spark" aria-hidden="true">✨</span>
 </header>
@@ -228,7 +231,7 @@ Wait 7s...
 <div class="sheet-handle-bar"></div>
 <div class="story-sheet-header">
 <h2>📖 <span class="shine-soft">Our Story Book</span></h2>
-<button id="closeStorySheetBtn" class="close-sheet-btn">&times;</button>
+<button id="closeStorySheetBtn" class="close-sheet-btn" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
 </div>
 <div class="story-sheet-content">
 <div class="story-input-box">
@@ -250,7 +253,7 @@ Wait 7s...
 <div class="ow-bg"></div>
 <div class="ow-dust" id="owDust"></div>
 <div class="ow-fw" id="owFw"></div>
-<button id="owClose" class="ow-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+<button id="owClose" class="ow-x" type="button" aria-label="Back"><svg class="back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
 <section class="ow-intro" id="owIntro">
 <div class="ow-halo"></div>
 <div class="ow-welcome">Welcome to</div>
