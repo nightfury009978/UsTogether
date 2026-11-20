@@ -44,11 +44,11 @@
 </div>
 <script>
 (function () {
-  var s = document.getElementById('osStart');
-  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { s.remove(); return; }
-  var g = ['✦', '·', '✧'], h = '';
-  for (var i = 0; i < 30; i++) h += '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--s:' + (8 + Math.random() * 14).toFixed(0) + 'px;--t:' + (7 + Math.random() * 8).toFixed(1) + 's;--dl:' + (-Math.random() * 12).toFixed(1) + 's;--sw:' + ((Math.random() - .5) * 60).toFixed(0) + 'px">' + g[(Math.random() * 3) | 0] + '</i>';
-  document.getElementById('osStartDust').innerHTML = h;
+var s = document.getElementById('osStart');
+if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { s.remove(); return; }
+var g = ['✦', '·', '✧'], h = '';
+for (var i = 0; i < 30; i++) h += '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--s:' + (8 + Math.random() * 14).toFixed(0) + 'px;--t:' + (7 + Math.random() * 8).toFixed(1) + 's;--dl:' + (-Math.random() * 12).toFixed(1) + 's;--sw:' + ((Math.random() - .5) * 60).toFixed(0) + 'px">' + g[(Math.random() * 3) | 0] + '</i>';
+document.getElementById('osStartDust').innerHTML = h;
 })();
 </script>
 <!-- Toast Notifications -->
@@ -188,55 +188,42 @@ Posting as: <strong id="currentUserLabel">Loading...</strong>
 <div id="mnFx" class="mn-fx" aria-hidden="true"></div>
 <div class="mn-foot"><div id="mnDots" class="mn-dots"></div><div id="mnHint" class="mn-hint">Swipe for more memories</div></div>
 </div>
-<!-- To-Do Sticky Note Bottom Sheet -->
+<!-- To-Do: premium checklist page -->
 <div id="todoModalOverlay" class="story-modal-overlay"></div>
-<div id="todoBottomSheet" class="story-bottom-sheet">
-<div class="sheet-handle-bar"></div>
-<div class="story-sheet-header">
-<h2>📌 <span class="shine-soft">Our To-Do List</span></h2>
-<div style="display:flex; align-items:center; gap:10px;">
-<button id="openTodoHistoryBtn" class="clear-completed-btn">History</button>
-<button id="clearCompletedBtn" class="clear-completed-btn">Clear done</button>
-<button id="closeTodoSheetBtn" class="close-sheet-btn">&times;</button>
-</div>
-</div>
-<div class="story-sheet-content">
+<div id="todoBottomSheet" class="story-bottom-sheet td-page">
+<div class="td-bg"></div>
+<header class="td-top">
+<button id="closeTodoSheetBtn" class="td-x" type="button" aria-label="Close">&times;</button>
+<div class="td-ttl">To-Do</div>
+<button id="openTodoHistoryBtn" class="td-pill" type="button">History</button>
+</header>
+<section class="td-hero">
+<div class="td-day" id="tdDay">Today</div>
+<div class="td-date" id="tdDate"></div>
 <div class="todo-progress-wrap">
 <div class="todo-progress-bar"><div id="todoProgressFill" class="todo-progress-fill"></div></div>
 <span id="todoProgressText" class="todo-progress-text">0 of 0 done today</span>
 </div>
-<input type="text" id="todoSearchInput" class="todo-search-input" placeholder="Search tasks...">
-<div class="todo-input-row-container">
-<input type="text" id="todoInput" placeholder="Write a task..." />
-<select id="todoPriority" title="Priority">
-<option value="low">Low</option>
-<option value="medium" selected>Medium</option>
-<option value="high">High</option>
-</select>
-<input type="date" id="todoDueDate" title="Due date (optional)">
-<button id="addTodoBtn">+</button>
-</div>
-<div class="todo-paper">
-<i class="tp-tape" aria-hidden="true"></i>
-<div id="todoList" class="sticky-notes-container">
-<!-- Task rows rendered here dynamically -->
+</section>
+<div class="td-scroll"><div id="todoList" class="td-list"></div></div>
+<div class="td-compose">
+<div class="td-oval"><div class="td-in">
+<input type="text" id="todoInput" placeholder="Write a task…" autocomplete="off" enterkeyhint="done" maxlength="200">
+<button id="addTodoBtn" type="button" aria-label="Add task"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+</div></div>
+<button id="clearCompletedBtn" class="td-clear" type="button">Clear done tasks</button>
 </div>
 </div>
-</div>
-</div>
-<!-- To-Do Sub-History Bottom Sheet -->
+<!-- To-Do History: premium timeline -->
 <div id="todoHistoryModalOverlay" class="story-modal-overlay"></div>
-<div id="todoHistoryBottomSheet" class="story-bottom-sheet">
-<div class="sheet-handle-bar"></div>
-<div class="story-sheet-header">
-<h2>📜 To-Do History</h2>
-<button id="closeTodoHistorySheetBtn" class="close-sheet-btn">&times;</button>
-</div>
-<div class="story-sheet-content">
-<div id="todoHistoryList" class="ios-notifications-wrapper">
-<!-- History items rendered here dynamically -->
-</div>
-</div>
+<div id="todoHistoryBottomSheet" class="story-bottom-sheet td-page td-hist">
+<div class="td-bg"></div>
+<header class="td-top">
+<button id="closeTodoHistorySheetBtn" class="td-x" type="button" aria-label="Close">&times;</button>
+<div class="td-ttl">History</div>
+<span class="td-spark" aria-hidden="true">✨</span>
+</header>
+<div class="td-scroll"><div id="todoHistoryList" class="th-list"></div></div>
 </div>
 <!-- Story Book Sheet -->
 <div id="storyModalOverlay" class="story-modal-overlay"></div>
