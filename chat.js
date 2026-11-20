@@ -40,6 +40,40 @@ opacity: 0; animation: cbgRise var(--t) linear var(--dl) infinite; will-change: 
 html body .chat-app .me .bub { color: #2b190b; text-shadow: none; background: linear-gradient(135deg, #f3d9ae 0%, #e0b377 55%, #c9965a 100%); box-shadow: 0 6px 18px rgba(201,150,90,.32), inset 0 1px 0 rgba(255,255,255,.45); }
 html body .chat-app .them .bub { color: #f7ecdc; background: rgba(42,30,24,.78); border: 1px solid rgba(227,192,141,.24); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 html body .chat-app .bub.lock { color: #d8c3a2; }
+
+/* =========================================================
+v12 — menu above messages · call button + call screen · dock stays on its pages
+========================================================= */
+.chat-pane > .cp-head { z-index: 6; }
+html body .cp-menu { z-index: 8; background: #1a1410; border: 1px solid rgba(227,192,141,.38); box-shadow: 0 22px 48px rgba(0,0,0,.65); -webkit-backdrop-filter: none; backdrop-filter: none; }
+html body .cp-menu::before { background: #1a1410; border-left-color: rgba(227,192,141,.38); border-top-color: rgba(227,192,141,.38); }
+html body .chat-app .cp-head .cp-btn.cp-call { color: #e9cd9f; }
+html body .cp-btn.cp-call svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+html body .dock { width: auto; min-width: 232px; padding: 0 12px; gap: 8px; justify-content: space-around; }
+body.dock-up .dock { z-index: 620; }
+html body .fp-list { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+.pp-body { padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important; }
+#callUI { position: fixed; inset: 0; z-index: 900; display: none; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; color: #f4e9dc;
+padding: calc(env(safe-area-inset-top, 0px) + 64px) 24px calc(env(safe-area-inset-bottom, 0px) + 52px); font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+background: radial-gradient(110% 80% at 50% 18%, #43291a 0%, #170d08 58%, #080403 100%); }
+#callUI.active { display: flex; animation: callIn .4s ease both; }
+@keyframes callIn { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+#callUI .call-lbl { font-family: 'Cinzel', Georgia, serif; font-size: .72rem; letter-spacing: .4em; text-indent: .4em; text-transform: uppercase; color: #cdb48f; }
+#callUI .call-mid { display: grid; justify-items: center; gap: 14px; }
+#callUI .call-av { position: relative; width: 132px; height: 132px; border-radius: 50%; padding: 4px; background: conic-gradient(from 0deg, #b98558, #fff1cf, #e3c08d, #b98558); box-shadow: 0 0 46px rgba(227,192,141,.4); }
+#callUI.ringing .call-av { animation: callPulse 1.8s ease-in-out infinite; }
+@keyframes callPulse { 0%, 100% { box-shadow: 0 0 30px rgba(227,192,141,.3); } 50% { box-shadow: 0 0 70px rgba(227,192,141,.7); } }
+#callUI .call-av .pfp { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: grid; place-items: center; font-size: 3rem; background: #2a1c14; color: #e9cd9f; border: 3px solid #120b08; }
+#callUI h2 { margin: 6px 0 0; font-family: 'Bodoni Moda', Georgia, serif; font-weight: 600; font-size: 1.9rem; color: #fff1d6; }
+#callUI .call-state { margin: 0; font-size: .95rem; letter-spacing: .06em; color: #cdb48f; }
+#callUI .call-acts { display: flex; gap: 30px; align-items: center; justify-content: center; }
+#callUI .call-btn { width: 70px; height: 70px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; cursor: pointer; color: #fff; -webkit-tap-highlight-color: transparent; }
+#callUI .call-btn svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#callUI .call-btn.end { background: #e5484d; box-shadow: 0 8px 26px rgba(229,72,77,.45); } #callUI .call-btn.end svg { transform: rotate(135deg); }
+#callUI .call-btn.ok { background: #2fbf71; box-shadow: 0 8px 26px rgba(47,191,113,.45); }
+#callUI .call-btn.mute { background: rgba(255,255,255,.1); border: 1px solid rgba(227,192,141,.35); color: #e9cd9f; }
+#callUI .call-btn.mute.on { background: #e3c08d; color: #1b120c; }
+#callUI .call-btn:active { transform: scale(.92); }
 html body .chat-app .mt { color: #bfa98b; }
 html body .chat-app .mt .rd { color: #d3b98c; font-weight: 600; letter-spacing: .03em; }
 html body .chat-app .mt .rd.seen { color: #ffe3a6; text-shadow: 0 0 8px rgba(255,214,140,.75); }
@@ -196,6 +230,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <header class="cp-head">
 <button id="cpToggle" class="cp-btn" aria-label="Friends">${IC.panel}</button>
 <button id="cpWho" class="cp-who"></button>
+<button id="cpCall" class="cp-btn cp-call" aria-label="Voice call"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></button>
 <button id="cpMore" class="cp-btn" aria-label="More options">${IC.dots}</button>
 <div id="cpMenu" class="cs-menu cp-menu">
 <button id="cpmSelect">☑️ Delete messages</button>
@@ -1204,7 +1239,7 @@ $('bnTitle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.pr
 $('bnTodo').onclick = () => O().openTodo?.();
 $('bnStory').onclick = () => O().openStory?.();
 $('bnChat').onclick = () => openChat();
-$('dkHome').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+$('dkHome').onclick = () => { closeFriends(); closePost(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 $('dkFr').onclick = () => openFriends();
 $('bnDaysBox').onclick = () => document.getElementById('annivCard')?.click(); // set the anniversary only from "days together"
 const set = (id, v) => { const e = $(id); if (e && e.textContent !== String(v)) e.textContent = v; };
@@ -1265,12 +1300,15 @@ if (fr.length) fr.forEach(({ uid }) => items.push({ k: 'fr:' + uid, html: friend
 else items.push({ k: 'empty', html: '<div class="fp-empty"><span>💫</span><b>No friends yet</b><i>Add a friend from Chat. When they accept, they show up here.</i></div>' });
 setList(list, items, true);
 }
+function dockSet(id) { ['dkHome', 'dkFr', 'dkPost'].forEach((b) => $(b)?.classList.toggle('on', b === id)); document.body.classList.toggle('dock-up', id !== 'dkHome'); }
 function openFriends() {
-frPage.classList.add('active'); frPage.setAttribute('aria-hidden', 'false');
+closePost();
+frPage.classList.add('active'); dockSet('dkFr'); frPage.setAttribute('aria-hidden', 'false');
 document.documentElement.style.overflow = 'hidden';
 renderFriendsPage();
 }
 function closeFriends() {
+if (frPage.classList.contains('active')) dockSet('dkHome');
 frPage.classList.remove('active'); frPage.setAttribute('aria-hidden', 'true');
 if (!app.classList.contains('active')) document.documentElement.style.overflow = '';
 }
@@ -1287,10 +1325,12 @@ window.OSBack?.add(frPage, closeFriends);
 /* ---------- Post a memory page (dock symbol beside Friends) ---------- */
 const postPage = $('postPage');
 function openPost() {
-postPage.classList.add('active'); postPage.setAttribute('aria-hidden', 'false');
+closeFriends();
+postPage.classList.add('active'); dockSet('dkPost'); postPage.setAttribute('aria-hidden', 'false');
 document.documentElement.style.overflow = 'hidden';
 }
 function closePost() {
+if (postPage.classList.contains('active')) dockSet('dkHome');
 postPage.classList.remove('active'); postPage.setAttribute('aria-hidden', 'true');
 if (!app.classList.contains('active') && !frPage.classList.contains('active')) document.documentElement.style.overflow = '';
 }
@@ -1301,3 +1341,98 @@ window.OSBack?.add(postPage, closePost);
 const rv = $('memoryRevealOverlay');
 if (rv) new MutationObserver(() => { if (rv.classList.contains('posting') && postPage.classList.contains('active')) closePost(); }).observe(rv, { attributes: true, attributeFilter: ['class'] });
 setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while it is open
+
+/* =========================================================
+VOICE CALLS — WebRTC audio, the two phones find each other through Firestore ("calls" collection)
+========================================================= */
+const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
+const PH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><div class="call-lbl" id="callLbl">Voice call</div><div class="call-mid"><div class="call-av" id="callAv"></div><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="call-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
+const call = { id: null, pc: null, stream: null, role: null, uid: null, unsubs: [], t0: 0, tick: 0, ringTo: 0, ring: null, muted: false, accepting: false, queue: [], incoming: null };
+const callDoc = (id) => doc(D(), 'calls', id);
+function ringStop() { if (call.ring) { clearInterval(call.ring.iv); try { call.ring.ctx.close(); } catch {} call.ring = null; } }
+function ringStart(incoming) {
+ringStop();
+try {
+const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+const beep = () => {
+const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+o.type = 'sine'; o.frequency.value = incoming ? 880 : 440;
+g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .05); g.gain.linearRampToValueAtTime(0, t + .6);
+o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .65);
+if (incoming) navigator.vibrate?.([300, 150, 300]);
+};
+beep(); call.ring = { ctx, iv: setInterval(beep, 2200) };
+} catch {}
+}
+function callActs(mode) {
+const b = (cls, id, label, svg) => `<button type="button" class="call-btn ${cls}" id="${id}" aria-label="${label}">${svg}</button>`;
+$('callActs').innerHTML = mode === 'in' ? b('end', 'callNo', 'Decline', PH) + b('ok', 'callYes', 'Accept', PH)
+: mode === 'live' ? b('mute' + (call.muted ? ' on' : ''), 'callMute', 'Mute', MIC) + b('end', 'callEnd', 'End call', PH) : b('end', 'callEnd', 'End call', PH);
+if ($('callNo')) $('callNo').onclick = declineCall;
+if ($('callYes')) $('callYes').onclick = acceptCall;
+if ($('callEnd')) $('callEnd').onclick = () => hangup('ended');
+if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; call.stream?.getAudioTracks().forEach((t) => { t.enabled = !call.muted; }); $('callMute').classList.toggle('on', call.muted); };
+}
+async function showCall(uid, mode, text) {
+const ui = $('callUI'); call.uid = uid;
+ui.classList.add('active'); ui.classList.toggle('ringing', mode !== 'live'); ui.setAttribute('aria-hidden', 'false');
+$('callLbl').textContent = mode === 'in' ? 'Incoming voice call' : 'Voice call';
+$('callState').textContent = text || '';
+callActs(mode);
+const p = await getProfile(uid); if (call.uid !== uid) return;
+$('callAv').innerHTML = av(p, displayName(uid)); $('callName').textContent = displayName(uid);
+}
+function makePc() {
+const pc = new RTCPeerConnection(ICE); call.pc = pc; call.queue = [];
+pc.ontrack = (e) => { const a = $('callAudio'); a.srcObject = e.streams[0]; a.play?.().catch(() => {}); };
+pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') hangup('ended', 'Connection lost'); };
+return pc;
+}
+const addCand = (c) => { const pc = call.pc; if (!pc) return; if (pc.remoteDescription) pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}); else call.queue.push(c); };
+const flushCands = () => { const q = call.queue; call.queue = []; q.forEach(addCand); };
+function goLive() {
+if (call.t0) return;
+ringStop(); clearTimeout(call.ringTo); call.t0 = Date.now();
+$('callUI').classList.remove('ringing'); callActs('live');
+const upd = () => { const s = Math.floor((Date.now() - call.t0) / 1000); $('callState').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+upd(); call.tick = setInterval(upd, 1000);
+}
+function endLocal(msg) {
+if (!call.id && !call.stream && !call.pc && !call.incoming) return;
+ringStop(); clearTimeout(call.ringTo); clearInterval(call.tick);
+call.unsubs.forEach((u) => { try { u(); } catch {} });
+call.stream?.getTracks().forEach((t) => t.stop());
+try { call.pc?.close(); } catch {}
+const ui = $('callUI'); $('callAudio').srcObject = null;
+if (msg) { $('callState').textContent = msg; ui.classList.remove('ringing'); $('callActs').innerHTML = ''; }
+Object.assign(call, { id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, ringTo: 0, muted: false, accepting: false, queue: [], incoming: null });
+setTimeout(() => { if (!call.id && !call.incoming) { ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); } }, msg ? 1300 : 0);
+}
+async function hangup(status, msg) {
+const id = call.id; endLocal(msg || (status === 'ended' ? 'Call ended' : ''));
+if (id) { try { await updateDoc(callDoc(id), { status }); } catch {} }
+}
+async function startCall(uid) {
+if (call.id || call.incoming) return toast('You’re already in a call', 'info');
+if (!state.friends.some((f) => f.uid === uid)) return toast('You can only call friends', 'info');
+if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) return toast('Calling isn’t supported on this browser', 'error');
+try { call.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+catch { return toast('Please allow the microphone to make a call', 'error'); }
+call.role = 'caller'; showCall(uid, 'out', 'Calling…'); ringStart(false);
+const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+const ref = doc(collection(D(), 'calls')); call.id = ref.id;
+let ready = false; const buf = [];
+pc.onicecandidate = (e) => { if (!e.candidate) return; const c = e.candidate.toJSON(); if (ready) addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}); else buf.push(c); };
+try {
+const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+await setDoc(ref, { from: state.uid, to: uid, status: 'ringing', offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
+} catch { endLocal('Couldn’t start the call'); toast('Couldn’t start the call', 'error'); return; }
+ready = true; buf.forEach((c) => addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}));
+call.unsubs.push(onSnapshot(ref, async (sn) => {
+const d = sn.data(); if (!d || call.id !== ref.id) return;
+if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(d.answer); flushCands(); } catch {} }
+if (d.status === 'active') { $('callState').textContent = 'Connecting…'; }
+if (d.status === 'declined') endLocal('Call declined');
+else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Ca
