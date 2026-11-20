@@ -1160,4 +1160,5 @@ opacity: 0; visibility: hidden; transform: translateY(14px); transition: opacity
 html body .chat-congrats { background: radial-gradient(80% 60% at 50% 40%, rgba(64,38,22,.94), rgba(8,5,4,.97)); }
 html body .cc-card { background: linear-gradient(165deg, #261a12, #110b08); border: 1px solid rgba(227,192,141,.55);
 box-shadow: 0 0 0 1px rgba(255,236,200,.06) inset, 0 0 70px rgba(227,192,141,.38), 0 30px 60px rgba(0,0,0,.6); }
-html body .cc-card h2 { background: linear-gradient(100deg, #b98558, #fff1cf 45%, #e3c08d 60%, #b98558
+html body .cc-card h2 { background: linear-gradient(100deg, #b98558, #fff1cf 45%, #e3c08d 60%, #b98558 100%); background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+-webkit-text-fill-color: transparent; color: transparent; animation: shineMove 6s linear infinite; }
