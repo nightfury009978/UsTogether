@@ -67,6 +67,33 @@ queueSync();
 }
 };
 /* =========================================================
+2b. SWIPE TO GO BACK
+Swipe right from the left edge, or pull down on a header / handle, to close the top screen.
+(Bottom sheets inside chat have their own pull-down.)
+========================================================= */
+(() => {
+const HEAD = '.td-top,.mn-top,.fp-top,.pp-top,.ow-top,.drawer-header,.story-sheet-header,.sheet-grip,.cp-head,header';
+let sw = null;
+document.addEventListener('touchstart', (e) => {
+sw = null; if (e.touches.length !== 1 || !stack.length) return;
+const t = e.touches[0], tg = e.target, l = stack[stack.length - 1];
+if (!l || tg.closest?.('input,textarea,select,video,audio,canvas,[data-noswipe],.vm-track,.att-menu')) return;
+const inside = l.el.contains(tg) || l.el === tg;
+sw = { x: t.clientX, y: t.clientY, l, done: false,
+edge: t.clientX <= 24 && !l.el.classList.contains('chat-pane'), // the chat screen has its own edge gesture
+head: inside && !!tg.closest?.(HEAD),
+drawer: l.el.id === 'menuDrawer' && inside };
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+if (!sw || sw.done) return;
+const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+if ((sw.edge || sw.drawer) && dx > 80 && Math.abs(dy) < 45) { sw.done = true; sw.l.close(); }
+else if (sw.head && dy > 90 && Math.abs(dx) < 50) { sw.done = true; sw.l.close(); }
+}, { passive: true });
+document.addEventListener('touchend', () => { sw = null; }, { passive: true });
+document.addEventListener('touchcancel', () => { sw = null; }, { passive: true });
+})();
+/* =========================================================
 3. EXTRA MENU ITEM: Export backup
 ========================================================= */
 const ICONS = window.OSIcons || {};
