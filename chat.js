@@ -238,9 +238,6 @@ html body .cs-burger { border: 1px solid rgba(227,192,141,.35); background: line
 html body .cs-burger span { background: #f0d3a2; box-shadow: 0 0 6px rgba(227,192,141,.6); }
 /* ---------- no reply arrow beside messages (reply = long-press, then pick Reply) ---------- */
 html body .msg .rp { display: none !important; }
-/* ---------- chat text uses the same elegant font as the names in the Friends list ---------- */
-html body .chat-app .cp-msgs .bub:not(.vm):not(.fl):not(.media):not(.lock), html body .chat-app #cpInput, html body .chat-app #cpInput::placeholder { font-family: var(--display, 'Bodoni Moda', Georgia, serif); font-weight: 500; font-size: 1.02rem; letter-spacing: .005em; line-height: 1.42; }
-html body .chat-app .fl-tx b { font-family: var(--display, 'Bodoni Moda', Georgia, serif); font-weight: 600; }
 
 /* ---------- banners: premium effects for the three photos ---------- */
 .bn2 { position: absolute; inset: 0; display: block; overflow: hidden; border-radius: inherit; isolation: isolate; background: #05070d; }
@@ -402,6 +399,44 @@ html body .mn-count { flex: none; width: auto; min-width: 42px; height: 34px; pa
 .mc.flash { animation: mcFlash 1.7s ease; }
 @keyframes mcFlash { 0%, 100% { box-shadow: 0 10px 26px rgba(0,0,0,.35); } 30% { box-shadow: 0 0 0 2px #e3c08d, 0 0 34px rgba(227,192,141,.6); } }
 @media (prefers-reduced-motion: reduce) { .mc-shine, .dr-group::after, .mn-hero-n, #callUI .cl-av::before, #callUI .cl-av::after { animation: none !important; } }
+/* ---------- premium typography for every chat screen ---------- */
+html body .chat-app, html body .chat-app *, html body .att-menu, html body .att-menu * { font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+html body .chat-app { font-weight: 600; letter-spacing: .012em; }
+html body .chat-app .cp-msgs .bub:not(.vm):not(.fl):not(.media):not(.lock), html body .chat-app #cpInput, html body .chat-app #cpInput::placeholder { font-weight: 600; font-size: 1.2rem; line-height: 1.28; letter-spacing: .012em; }
+html body .chat-app #cpInput::placeholder { font-style: italic; font-weight: 500; opacity: .7; }
+html body .chat-app .cs-menu .ml, html body .chat-app .cp-menu .ml, html body .att-menu .ml { font-size: 1.12rem; font-weight: 700; letter-spacing: .02em; }
+html body .att-menu .ml small { font-size: .86rem; font-weight: 600; font-style: italic; }
+html body .chat-app .sh-btn, html body .chat-app .gate-btn, html body .chat-app .sh-lab { font-size: 1.08rem; font-weight: 700; letter-spacing: .03em; }
+html body .chat-app .sheet-card input, html body .chat-app .sheet-card textarea, html body .chat-app .sh-note, html body .chat-app .pv-bio { font-size: 1.12rem; }
+html body .chat-app .fr-text i, html body .chat-app .rq-name i { font-size: .98rem; font-weight: 600; font-style: italic; letter-spacing: .02em; }
+html body .chat-app .mt, html body .chat-app .mt * { font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important; font-size: .62rem; font-weight: 500; letter-spacing: .03em; }
+html body .chat-app .vm-t, html body .chat-app .up-prog, html body .chat-app .up-prog * { font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important; }
+html body .chat-app .day-sep, html body .chat-app .cs-label { font-family: 'Cinzel', Georgia, serif !important; font-weight: 600; }
+html body .chat-app .cp-who b, html body .chat-app .cp-selbar .sel-count, html body .chat-app .cs-me b { font-family: 'Bodoni Moda', Georgia, serif !important; }
+html body .chat-app .bub b, html body .chat-app .bub strong { font-weight: 700; }
+/* ---------- call: back button, mute slash ---------- */
+html body #callUI .cl-back { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 14px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: #f0d3a2; background: linear-gradient(145deg, rgba(227,192,141,.2), rgba(227,192,141,.04)); border: 1px solid rgba(227,192,141,.38); box-shadow: 0 4px 14px rgba(0,0,0,.35); -webkit-tap-highlight-color: transparent; }
+html body #callUI .cl-back:active { transform: scale(.92); }
+html body #callUI.incoming .cl-back, html body #callUI.offline .cl-back { display: none; }
+html body #callUI .call-btn.mute { position: relative; }
+html body #callUI .call-btn.mute.on::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 2.5px; border-radius: 2px; background: currentColor; transform: translate(-50%, -50%) rotate(-45deg); box-shadow: 0 0 0 1.5px rgba(27,18,12,.5); }
+html body #callUI.swiping { transition: none; }
+/* ---------- the "on call" banner (call keeps running while you chat) ---------- */
+.call-pill { position: fixed; z-index: 850; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 8px); transform: translate(-50%, -140%); display: flex; align-items: center; gap: 10px; max-width: min(92vw, 380px); padding: 8px 18px 8px 8px; border-radius: 999px; cursor: pointer; color: #fff; opacity: 0; pointer-events: none; background: linear-gradient(135deg, #1f9f58, #3fd988); box-shadow: 0 10px 28px rgba(47,191,113,.45), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .35s cubic-bezier(.2,.9,.3,1), opacity .25s ease, background .3s ease, box-shadow .3s ease; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+.call-pill.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.call-pill::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); transform: translateX(-160%) skewX(-18deg); animation: mcSheen 4.5s ease-in-out infinite; }
+.call-pill.muted { background: linear-gradient(135deg, #6b3f22, #b47a48); box-shadow: 0 10px 28px rgba(180,122,72,.45), inset 0 1px 0 rgba(255,255,255,.25); }
+.call-pill .cpl-ic { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.2); animation: clOk 1.8s ease-in-out infinite; }
+.call-pill.muted .cpl-ic { animation: none; }
+.call-pill .cpl-ic svg { width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.call-pill b { font: 700 1rem 'Outfit', sans-serif; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.call-pill small { font: 600 .72rem 'Outfit', sans-serif; letter-spacing: .06em; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ---------- home "Chat" tile while you are on a call ---------- */
+html body .bn-tile.on-call { border-color: rgba(255,45,70,.65); box-shadow: 0 0 0 1px rgba(255,45,70,.4), 0 0 30px rgba(255,45,70,.3); animation: tileCall 1.8s ease-in-out infinite; }
+@keyframes tileCall { 50% { box-shadow: 0 0 0 1px rgba(255,45,70,.6), 0 0 40px rgba(255,45,70,.5); } }
+html body .bn-tile.on-call-mute { border-color: rgba(190,130,80,.7); box-shadow: 0 0 0 1px rgba(190,130,80,.4), 0 0 28px rgba(190,130,80,.3); animation: tileMute 2.2s ease-in-out infinite; }
+@keyframes tileMute { 50% { box-shadow: 0 0 0 1px rgba(190,130,80,.6), 0 0 38px rgba(190,130,80,.5); } }
+#bnChatT.bn-call-mute { background-image: linear-gradient(100deg, #a8683a 0%, #a8683a 36%, #f2d2b0 50%, #a8683a 64%, #a8683a 100%) !important; filter: drop-shadow(0 0 6px rgba(190,130,80,.7)) !important; }
 `; document.head.appendChild(s); })();
 const O = () => window.OS;
 const D = () => O().db;
@@ -469,6 +504,7 @@ async function unwrapPriv(w, pass) {
 const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await pwKey(pass, unb64(w.salt)), unb64(w.ct));
 return JSON.parse(dec.decode(pt)); }
 const keyCache = new Map();
+const callSt = { on: false, muted: false }; // read by the home tile; kept up to date by the call code
 /* ---------- private profiles: bio, photo and banner are encrypted separately for each friend (and for you) ---------- */
 const pubDoc = new Map(), privRaw = new Map(), privProf = new Map(), reqSeen = { f: false, t: false };
 let privReady = false, pubSigs = null, pubBusy = false, pubAgain = false, pubForce = false;
@@ -601,7 +637,21 @@ const comp = $('cpComp'), input = $('cpInput');
 function openSheet(title, html) { sheetBody.innerHTML = `<h3 class="sheet-title">${esc(title)}</h3>` + html; sheet.classList.add('active'); sheet.querySelector('.sheet-card').scrollTop = 0; }
 const closeSheet = () => sheet.classList.remove('active');
 sheet.addEventListener('click', (e) => { if (e.target === sheet) closeSheet(); });
+{ /* pull a sheet down to close it (profile, settings …) */
+const card = sheet.querySelector('.sheet-card'); let st = null;
+card.addEventListener('touchstart', (e) => { st = e.touches.length === 1 && !e.target.closest('input,textarea,select') ? { y: e.touches[0].clientY, x: e.touches[0].clientX, dy: 0, on: false, t: Date.now() } : null; }, { passive: true });
+card.addEventListener('touchmove', (e) => {
+if (!st) return; const t = e.touches[0], dy = t.clientY - st.y, dx = t.clientX - st.x;
+if (!st.on) { if (card.scrollTop <= 0 && dy > 8 && Math.abs(dx) < dy) { st.on = true; card.style.transition = 'none'; } else return; }
+e.preventDefault(); st.dy = Math.max(0, dy); card.style.transform = 'translateY(' + st.dy + 'px)';
+}, { passive: false });
+const endDrag = () => { if (!st) return; const s = st; st = null; if (!s.on) return; card.style.transition = '';
+if (s.dy > 100 || s.dy / Math.max(1, Date.now() - s.t) > .6) { card.style.transform = 'translateY(100%)'; closeSheet(); setTimeout(() => { card.style.transform = ''; }, 350); } else card.style.transform = ''; };
+card.addEventListener('touchend', endDrag); card.addEventListener('touchcancel', endDrag);
+}
 const closeLight = () => light.classList.remove('active');
+{ let ly = null; light.addEventListener('touchstart', (e) => { ly = e.touches.length === 1 ? e.touches[0].clientY : null; }, { passive: true });
+light.addEventListener('touchend', (e) => { if (ly !== null && e.changedTouches[0].clientY - ly > 90) closeLight(); ly = null; }, { passive: true }); }
 light.onclick = closeLight;
 const closeCongrats = () => congrats.classList.remove('active');
 $('ccClose').onclick = closeCongrats;
@@ -1759,10 +1809,10 @@ const chs = document.querySelectorAll('#storiesFeed .story-accordion-card');
 set('bnStoryT', chs.length ? 'Chapter ' + chs.length : 'Our chapters');
 set('bnStoryS', chs[0]?.querySelector('.story-accordion-title')?.textContent || '');
 const un = state.friends.filter((f) => unreadFor(f.uid)).length, rq = state.incoming.length;
-const ct = $('bnChatT'), ctxt = un ? 'New message' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'Welcome to chat';
+const ct = $('bnChatT'), ctxt = callSt.on ? (callSt.muted ? 'You are on call, the call is muted' : 'You are on call') : un ? 'New message' : rq ? rq + ' new request' + (rq > 1 ? 's' : '') : 'Welcome to chat';
 if (ct && ct.textContent !== ctxt) { ct.textContent = ctxt; ct.classList.remove('swap'); void ct.offsetWidth; ct.classList.add('swap'); }
-ct?.classList.toggle('bn-new', !!un); $('bnChat')?.classList.toggle('has-new', !!un);
-const dot = !!(un || rq);
+ct?.classList.toggle('bn-new', !!un || callSt.on); ct?.classList.toggle('bn-call-mute', callSt.on && callSt.muted); $('bnChat')?.classList.toggle('has-new', !!un && !callSt.on); $('bnChat')?.classList.toggle('on-call', callSt.on); $('bnChat')?.classList.toggle('on-call-mute', callSt.on && callSt.muted);
+const dot = !!(un || rq) && !callSt.on;
 $('bnChatDot').classList.toggle('hidden', !dot);
 }
 tick(); setInterval(tick, 1000);
@@ -1882,8 +1932,9 @@ const MIC_OPTS = { audio: { echoCancellation: true, noiseSuppression: true, auto
 const PH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
 const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.500v5h3.500l5 4v-13l-5 4z"/><path d="M16 9a4 4 0 0 1 0 6M18.500 6.500a8 8 0 0 1 0 11"/></svg>';
-document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><div class="cl-bg"><i></i><i></i><i></i></div><div class="cl-top"><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="cl-mid"><div class="cl-av" id="callAv"><span id="callInit"></span></div></div><div class="cl-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
-const call = { id: null, pc: null, stream: null, role: null, uid: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, ring: null, muted: false, spk: true, accepting: false, queue: [], incoming: null };
+document.body.insertAdjacentHTML('beforeend', '<div id="callPill" class="call-pill" role="button" aria-label="Return to call"><span class="cpl-ic">' + PH + '</span><b id="cpillTime">00:00</b><small id="cpillSub"></small></div>');
+document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><button id="callBack" class="cl-back" type="button" aria-label="Back">' + IC.back(22) + '</button><div class="cl-bg"><i></i><i></i><i></i></div><div class="cl-top"><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="cl-mid"><div class="cl-av" id="callAv"><span id="callInit"></span></div></div><div class="cl-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
+const call = { min: false, id: null, pc: null, stream: null, role: null, uid: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, ring: null, muted: false, spk: true, accepting: false, queue: [], incoming: null };
 const callDoc = (id) => doc(D(), 'calls', id);
 /* keep the screen awake and the audio playing for the whole call */
 let wake = null;
@@ -1923,18 +1974,18 @@ $('callActs').innerHTML = mode === 'off'
 : mode === 'in'
 ? b('end', 'callNo', 'Decline', PH, 'Decline') + b('ok', 'callYes', 'Answer', PH, 'Answer')
 : b('spk' + (call.spk ? ' on' : ''), 'callSpk', 'Speaker', SPK, 'Speaker') + b('end', 'callEnd', 'End call', PH, 'End')
-+ (mode === 'live' ? b('mute' + (call.muted ? ' on' : ''), 'callMute', 'Mute', MIC, 'Mute') : '<span class="call-sp"></span>');
++ b('mute' + (call.muted ? ' on' : ''), 'callMute', call.muted ? 'Unmute' : 'Mute', MIC, 'Mute');
 if ($('callOffX')) $('callOffX').onclick = closeOffline;
 if ($('callNo')) $('callNo').onclick = declineCall;
 if ($('callYes')) $('callYes').onclick = acceptCall;
 if ($('callEnd')) $('callEnd').onclick = () => hangup('ended');
 if ($('callSpk')) $('callSpk').onclick = () => { call.spk = !call.spk; applySpeaker(); };
-if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; call.stream?.getAudioTracks().forEach((t) => { t.enabled = !call.muted; }); $('callMute').classList.toggle('on', call.muted); };
+if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; call.stream?.getAudioTracks().forEach((t) => { t.enabled = !call.muted; }); $('callMute').classList.toggle('on', call.muted); paintPill(); };
 }
 function showCall(uid, mode, text) {
 const ui = $('callUI'); call.uid = uid;
 const nm = displayName(uid) || 'Unknown';
-ui.classList.add('active'); ui.classList.toggle('ringing', mode === 'in' || mode === 'dial'); if (mode !== 'off') ui.classList.remove('offline'); ui.setAttribute('aria-hidden', 'false');
+ui.classList.add('active'); ui.classList.toggle('ringing', mode === 'in' || mode === 'dial'); if (mode !== 'off') ui.classList.remove('offline'); ui.classList.toggle('incoming', mode === 'in'); ui.setAttribute('aria-hidden', 'false');
 $('callName').textContent = nm; $('callInit').textContent = (Array.from(nm.trim())[0] || '?').toUpperCase();
 $('callState').textContent = text || '';
 callActs(mode);
@@ -1958,24 +2009,46 @@ return pc;
 }
 const addCand = (c) => { const pc = call.pc; if (!pc) return; if (pc.remoteDescription) pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}); else call.queue.push(c); };
 const flushCands = () => { const q = call.queue; call.queue = []; q.forEach(addCand); };
+const fmtCall = () => { const s = Math.max(0, Math.floor((Date.now() - call.t0) / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60, p = (n) => String(n).padStart(2, '0'); return h ? h + ':' + p(m) + ':' + p(x) : p(m) + ':' + p(x); };
+/* keep the call alive while you read / write chats: the full screen shrinks to a banner (green, or brown when you are muted) */
+function paintPill() {
+callSt.on = !!call.id; callSt.muted = !!call.muted;
+const pill = $('callPill'); if (!pill) return;
+const here = app.classList.contains('active') || !!$('frPage')?.classList.contains('active');
+const show = !!call.id && call.min && here;
+pill.classList.toggle('show', show); pill.classList.toggle('muted', !!call.muted);
+if (show) { $('cpillTime').textContent = call.weak ? 'Reconnecting…' : call.t0 ? fmtCall() : 'Connecting…'; $('cpillSub').textContent = call.muted ? 'Muted' : displayName(call.uid); }
+}
+const canMin = () => !!call.id && !$('callUI').classList.contains('offline') && !$('callUI').classList.contains('incoming');
+function minimizeCall() { if (!canMin() || call.min) return; call.min = true; const ui = $('callUI'); ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); paintPill(); }
+function restoreCall() { if (!call.id || !call.min) return; call.min = false; const ui = $('callUI'); ui.classList.add('active'); ui.setAttribute('aria-hidden', 'false'); paintPill(); }
+$('callBack').onclick = minimizeCall; $('callPill').onclick = restoreCall;
+window.OSBack?.add($('callUI'), minimizeCall, () => $('callUI').classList.contains('active') && canMin());
+new MutationObserver(paintPill).observe(app, { attributes: true, attributeFilter: ['class'] });
+{ let g = null; const ui = $('callUI');
+ui.addEventListener('touchstart', (e) => { g = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+ui.addEventListener('touchmove', (e) => { if (!g) return; const t = e.touches[0], dx = t.clientX - g.x, dy = t.clientY - g.y; if ((dy > 110 && Math.abs(dx) < 70) || (g.x < 30 && dx > 90 && Math.abs(dy) < 60)) { g = null; minimizeCall(); } }, { passive: true });
+ui.addEventListener('touchend', () => { g = null; }, { passive: true }); }
 function goLive() {
 if (call.t0) return;
 ringStop(); clearTimeout(call.ringTo); call.t0 = Date.now();
 $('callUI').classList.remove('ringing'); callActs('live');
-call.upd = () => { if (call.weak) return; const s = Math.floor((Date.now() - call.t0) / 1000); $('callState').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+call.upd = () => { if (!call.weak) $('callState').textContent = fmtCall(); paintPill(); };
 call.upd(); call.tick = setInterval(call.upd, 1000);
 $('callAudio').play?.().catch(() => {});
 }
 function endLocal(msg) {
 if (!call.id && !call.stream && !call.pc && !call.incoming) return;
+if (call.min && msg) { toast(msg, 'info'); msg = ''; }
 ringStop(); clearTimeout(call.ringTo); clearTimeout(call.dropTo); clearInterval(call.tick); wakeOff();
 call.unsubs.forEach((u) => { try { u(); } catch {} });
 call.stream?.getTracks().forEach((t) => t.stop());
 try { call.pc?.close(); } catch {}
 const ui = $('callUI'); $('callAudio').srcObject = null;
 if (msg) { $('callState').textContent = msg; ui.classList.remove('ringing'); $('callActs').innerHTML = ''; }
-Object.assign(call, { id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, muted: false, spk: true, accepting: false, queue: [], incoming: null });
+Object.assign(call, { min: false, id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, muted: false, spk: true, accepting: false, queue: [], incoming: null });
 setTimeout(() => { if (!call.id && !call.incoming) { ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); } }, msg ? 1300 : 0);
+paintPill();
 }
 async function hangup(status, msg) {
 const id = call.id; endLocal(msg || (status === 'ended' ? 'Call ended' : ''));
@@ -2017,7 +2090,7 @@ try { await updateDoc(callDoc(inc.id), { status: 'declined' }); } catch {}
 }
 async function acceptCall() {
 const inc = call.incoming; if (!inc || call.accepting) return;
-call.accepting = true; ringStop(); $('callState').textContent = 'Connecting…'; callActs('dial');
+call.accepting = true; ringStop(); $('callState').textContent = 'Connecting…'; $('callUI').classList.remove('incoming'); callActs('dial');
 if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) { toast('Calling isn’t supported on this browser', 'error'); declineCall(); return; }
 try { call.stream = await navigator.mediaDevices.getUserMedia(MIC_OPTS); }
 catch { toast('Please allow the microphone to answer', 'error'); declineCall(); return; }
