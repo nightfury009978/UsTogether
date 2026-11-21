@@ -399,21 +399,31 @@ html body .mn-count { flex: none; width: auto; min-width: 42px; height: 34px; pa
 .mc.flash { animation: mcFlash 1.7s ease; }
 @keyframes mcFlash { 0%, 100% { box-shadow: 0 10px 26px rgba(0,0,0,.35); } 30% { box-shadow: 0 0 0 2px #e3c08d, 0 0 34px rgba(227,192,141,.6); } }
 @media (prefers-reduced-motion: reduce) { .mc-shine, .dr-group::after, .mn-hero-n, #callUI .cl-av::before, #callUI .cl-av::after { animation: none !important; } }
-/* ---------- premium typography for every chat screen ---------- */
-html body .chat-app, html body .chat-app *, html body .att-menu, html body .att-menu * { font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
-html body .chat-app { font-weight: 600; letter-spacing: .012em; }
-html body .chat-app .cp-msgs .bub:not(.vm):not(.fl):not(.media):not(.lock), html body .chat-app #cpInput, html body .chat-app #cpInput::placeholder { font-weight: 600; font-size: 1.2rem; line-height: 1.28; letter-spacing: .012em; }
-html body .chat-app #cpInput::placeholder { font-style: italic; font-weight: 500; opacity: .7; }
-html body .chat-app .cs-menu .ml, html body .chat-app .cp-menu .ml, html body .att-menu .ml { font-size: 1.12rem; font-weight: 700; letter-spacing: .02em; }
-html body .att-menu .ml small { font-size: .86rem; font-weight: 600; font-style: italic; }
-html body .chat-app .sh-btn, html body .chat-app .gate-btn, html body .chat-app .sh-lab { font-size: 1.08rem; font-weight: 700; letter-spacing: .03em; }
-html body .chat-app .sheet-card input, html body .chat-app .sheet-card textarea, html body .chat-app .sh-note, html body .chat-app .pv-bio { font-size: 1.12rem; }
-html body .chat-app .fr-text i, html body .chat-app .rq-name i { font-size: .98rem; font-weight: 600; font-style: italic; letter-spacing: .02em; }
-html body .chat-app .mt, html body .chat-app .mt * { font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important; font-size: .62rem; font-weight: 500; letter-spacing: .03em; }
-html body .chat-app .vm-t, html body .chat-app .up-prog, html body .chat-app .up-prog * { font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important; }
-html body .chat-app .day-sep, html body .chat-app .cs-label { font-family: 'Cinzel', Georgia, serif !important; font-weight: 600; }
-html body .chat-app .cp-who b, html body .chat-app .cp-selbar .sel-count, html body .chat-app .cs-me b { font-family: 'Bodoni Moda', Georgia, serif !important; }
+/* ---------- cute + elegant typography for every chat screen ---------- */
+html body .chat-app, html body .chat-app *, html body .att-menu, html body .att-menu * { font-family: 'Quicksand', 'Nunito', 'Trebuchet MS', system-ui, sans-serif !important; -webkit-font-smoothing: antialiased; }
+html body .chat-app { font-weight: 600; letter-spacing: .005em; }
+html body .chat-app .cp-msgs .bub:not(.vm):not(.fl):not(.media):not(.lock), html body .chat-app #cpInput, html body .chat-app #cpInput::placeholder { font-weight: 600; font-size: 1rem; line-height: 1.4; letter-spacing: .005em; font-style: normal; }
+html body .chat-app #cpInput::placeholder { font-weight: 500; opacity: .65; }
+html body .chat-app .bub.lock { font-size: .84rem; }
+html body .chat-app .cs-menu .ml, html body .chat-app .cp-menu .ml, html body .att-menu .ml { font-size: .98rem; font-weight: 700; letter-spacing: .01em; }
+html body .att-menu .ml small { font-size: .74rem; font-weight: 600; font-style: normal; }
+html body .chat-app .sh-btn, html body .chat-app .gate-btn, html body .chat-app .sh-lab { font-size: .95rem; font-weight: 700; letter-spacing: .02em; }
+html body .chat-app .sheet-card input, html body .chat-app .sheet-card textarea, html body .chat-app .sh-note, html body .chat-app .pv-bio { font-size: 1rem; font-weight: 600; }
+html body .chat-app .fr-text i, html body .chat-app .rq-name i, html body .chat-app .cp-who i { font-size: .8rem; font-weight: 600; font-style: normal; letter-spacing: .01em; }
+html body .chat-app .mt, html body .chat-app .mt * { font-size: .66rem; font-weight: 600; letter-spacing: .02em; }
+html body .chat-app .vm-t { font-weight: 700; }
+html body .chat-app .day-sep, html body .chat-app .cs-label { font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 html body .chat-app .bub b, html body .chat-app .bub strong { font-weight: 700; }
+/* names and headings: a cute, flowing script */
+html body .chat-app .cs-title, html body .chat-app .cp-title, html body .chat-app .sheet-title, html body .chat-app .gate-card h2, html body .chat-app .cp-empty > div > span, html body .chat-app .cs-me b, html body .chat-app .fr-text b, html body .chat-app .cp-who b, html body .chat-app .pv-name, html body .chat-app .cp-selbar .sel-count { font-family: 'Dancing Script', 'Quicksand', cursive !important; font-weight: 700; letter-spacing: .01em; line-height: 1.15; }
+html body .chat-app .cs-title { font-size: 2.1rem; }
+html body .chat-app .sheet-title, html body .chat-app .gate-card h2 { font-size: 1.7rem; }
+html body .chat-app .cp-empty > div > span { font-size: 1.9rem; }
+html body .chat-app .pv-name { font-size: 2rem; }
+html body .chat-app .fr-text b { font-size: 1.5rem; }
+html body .chat-app .cs-me b { font-size: 1.45rem; }
+html body .chat-app .cp-who b { font-size: 1.5rem; }
+html body .chat-app .cp-selbar .sel-count { font-size: 1.5rem; }
 /* ---------- call: back button, mute slash ---------- */
 html body #callUI .cl-back { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 14px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: #f0d3a2; background: linear-gradient(145deg, rgba(227,192,141,.2), rgba(227,192,141,.04)); border: 1px solid rgba(227,192,141,.38); box-shadow: 0 4px 14px rgba(0,0,0,.35); -webkit-tap-highlight-color: transparent; }
 html body #callUI .cl-back:active { transform: scale(.92); }
@@ -1423,8 +1433,8 @@ function autoGrow() { if (agRaf) return; agRaf = requestAnimationFrame(() => { a
 function updateComp() {
 const has = input.value.trim().length > 0 || !!rec;
 $('cpSend').classList.toggle('hide', !has); $('cpMic').classList.toggle('hide', has && !rec ? true : false); }
-let ucLast = null;
-input.addEventListener('input', () => { autoGrow(); const has = input.value.trim().length > 0; if (has !== ucLast) { ucLast = has; updateComp(); } if (has) typingPing(); else stopTyping(); });
+input.addEventListener('input', () => { autoGrow(); updateComp(); if (input.value.trim().length > 0) typingPing(); else stopTyping(); });
+['keyup', 'change', 'paste', 'compositionend', 'focus'].forEach((ev) => input.addEventListener(ev, () => setTimeout(updateComp, 0)));
 input.addEventListener('blur', () => stopTyping());
 input.addEventListener('focus', () => setTimeout(() => { fit(); $('cpMsgs').scrollTop = $('cpMsgs').scrollHeight; }, 300));
 input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches) { e.preventDefault(); sendText(); } });
