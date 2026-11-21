@@ -414,16 +414,16 @@ html body .chat-app .mt, html body .chat-app .mt * { font-size: .66rem; font-wei
 html body .chat-app .vm-t { font-weight: 700; }
 html body .chat-app .day-sep, html body .chat-app .cs-label { font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 html body .chat-app .bub b, html body .chat-app .bub strong { font-weight: 700; }
-/* names and headings: a cute, flowing script */
-html body .chat-app .cs-title, html body .chat-app .cp-title, html body .chat-app .sheet-title, html body .chat-app .gate-card h2, html body .chat-app .cp-empty > div > span, html body .chat-app .cs-me b, html body .chat-app .fr-text b, html body .chat-app .cp-who b, html body .chat-app .pv-name, html body .chat-app .cp-selbar .sel-count { font-family: 'Dancing Script', 'Quicksand', cursive !important; font-weight: 700; letter-spacing: .01em; line-height: 1.15; }
-html body .chat-app .cs-title { font-size: 2.1rem; }
-html body .chat-app .sheet-title, html body .chat-app .gate-card h2 { font-size: 1.7rem; }
-html body .chat-app .cp-empty > div > span { font-size: 1.9rem; }
-html body .chat-app .pv-name { font-size: 2rem; }
-html body .chat-app .fr-text b { font-size: 1.5rem; }
-html body .chat-app .cs-me b { font-size: 1.45rem; }
-html body .chat-app .cp-who b { font-size: 1.5rem; }
-html body .chat-app .cp-selbar .sel-count { font-size: 1.5rem; }
+/* names and headings: Quicksand too, a little bolder and larger */
+html body .chat-app .cs-title, html body .chat-app .cp-title, html body .chat-app .sheet-title, html body .chat-app .gate-card h2, html body .chat-app .cp-empty > div > span, html body .chat-app .cs-me b, html body .chat-app .fr-text b, html body .chat-app .cp-who b, html body .chat-app .pv-name, html body .chat-app .cp-selbar .sel-count { font-family: 'Quicksand', 'Nunito', 'Trebuchet MS', system-ui, sans-serif !important; font-weight: 700; letter-spacing: .005em; line-height: 1.2; }
+html body .chat-app .cs-title { font-size: 1.6rem; }
+html body .chat-app .sheet-title, html body .chat-app .gate-card h2 { font-size: 1.3rem; }
+html body .chat-app .cp-empty > div > span { font-size: 1.3rem; }
+html body .chat-app .pv-name { font-size: 1.5rem; }
+html body .chat-app .fr-text b { font-size: 1.08rem; }
+html body .chat-app .cs-me b { font-size: 1.05rem; }
+html body .chat-app .cp-who b { font-size: 1.1rem; }
+html body .chat-app .cp-selbar .sel-count { font-size: 1.1rem; }
 /* ---------- call: back button, mute slash ---------- */
 html body #callUI .cl-back { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 14px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: #f0d3a2; background: linear-gradient(145deg, rgba(227,192,141,.2), rgba(227,192,141,.04)); border: 1px solid rgba(227,192,141,.38); box-shadow: 0 4px 14px rgba(0,0,0,.35); -webkit-tap-highlight-color: transparent; }
 html body #callUI .cl-back:active { transform: scale(.92); }
