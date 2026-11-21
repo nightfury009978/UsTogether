@@ -1,4 +1,4 @@
-const CACHE = 'our-space-v24';
+const CACHE = 'our-space-v25';
 const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.js', './chat.css', './chat.js', './notify.js', './manifest.json',
 './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', (e) => {
