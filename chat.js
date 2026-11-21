@@ -238,6 +238,48 @@ html body .cs-burger { border: 1px solid rgba(227,192,141,.35); background: line
 html body .cs-burger span { background: #f0d3a2; box-shadow: 0 0 6px rgba(227,192,141,.6); }
 /* ---------- no reply arrow beside messages (reply = long-press, then pick Reply) ---------- */
 html body .msg .rp { display: none !important; }
+/* ---------- banners: premium effects for the three photos ---------- */
+.bn2 { position: absolute; inset: 0; display: block; overflow: hidden; border-radius: inherit; isolation: isolate; background: #05070d; }
+.bn2 img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.06); animation: b2Drift 16s ease-in-out infinite alternate; }
+@keyframes b2Drift { from { transform: scale(1.06) translate3d(-1.2%, 0, 0); } to { transform: scale(1.12) translate3d(1.2%, -1%, 0); } }
+.bn2 b2-gl, .bn2 b2-fx, .bn2 b2-sh, .bn2 b2-ed { position: absolute; display: block; pointer-events: none; }
+.bn2 b2-gl { inset: 0; z-index: 1; background: radial-gradient(90% 120% at 50% 110%, var(--b2g), transparent 65%); mix-blend-mode: screen; animation: b2Breath 4.5s ease-in-out infinite; }
+@keyframes b2Breath { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.bn2 b2-fx { inset: 0; z-index: 2; mix-blend-mode: screen; }
+.bn2 b2-sh { z-index: 3; top: -20%; bottom: -20%; left: 0; width: 38%; background: linear-gradient(100deg, transparent, var(--b2s), transparent); transform: translateX(-180%) skewX(-18deg); animation: b2Shine 6.5s ease-in-out infinite; }
+@keyframes b2Shine { 0%, 55% { transform: translateX(-180%) skewX(-18deg); } 100% { transform: translateX(420%) skewX(-18deg); } }
+.bn2 b2-ed { inset: 0; z-index: 4; border-radius: inherit; box-shadow: inset 0 0 0 1.5px var(--b2c), inset 0 0 24px var(--b2g); animation: b2Edge 3.4s ease-in-out infinite; }
+@keyframes b2Edge { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+/* 1 · Midnight Smoke — silver shimmer + drifting dust */
+.bt-silver { --b2c: rgba(236,242,255,.85); --b2g: rgba(215,225,255,.34); --b2s: rgba(255,255,255,.42); --b2o: rgba(225,235,255,.4); }
+.bt-silver b2-fx { background-image: radial-gradient(1.6px 1.6px at 14% 78%, #fff, transparent), radial-gradient(1.2px 1.2px at 36% 38%, #fff, transparent), radial-gradient(1.8px 1.8px at 58% 66%, #fff, transparent), radial-gradient(1.2px 1.2px at 77% 28%, #fff, transparent), radial-gradient(1.5px 1.5px at 92% 82%, #fff, transparent); background-size: 190px 120px; animation: b2Up 9s linear infinite, b2Tw 3s ease-in-out infinite; }
+@keyframes b2Up { to { background-position: 0 -120px; } }
+@keyframes b2Tw { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+/* 2 · Starlit Dream — indigo glow + twinkling constellation stars */
+.bt-indigo { --b2c: rgba(130,178,255,.9); --b2g: rgba(80,125,255,.42); --b2s: rgba(170,205,255,.4); }
+.bt-indigo b2-fx { background-image: radial-gradient(1.5px 1.5px at 10% 20%, #cfe0ff, transparent), radial-gradient(1.2px 1.2px at 30% 72%, #fff, transparent), radial-gradient(2px 2px at 52% 30%, #bcd3ff, transparent), radial-gradient(1.2px 1.2px at 70% 80%, #fff, transparent), radial-gradient(1.6px 1.6px at 88% 24%, #d8e6ff, transparent); background-size: 170px 110px; animation: b2Tw 2.6s ease-in-out infinite; }
+.bt-indigo b2-gl { background: radial-gradient(80% 110% at 22% 40%, rgba(90,130,255,.35), transparent 62%), radial-gradient(90% 120% at 50% 110%, var(--b2g), transparent 65%); }
+/* 3 · Neon Wolf — cyan neon pulse + scan line */
+.bt-cyan { --b2c: #38e8ff; --b2g: rgba(0,215,255,.5); --b2s: rgba(110,245,255,.5); }
+.bt-cyan b2-fx { background: linear-gradient(90deg, transparent 0, rgba(70,240,255,.34) 50%, transparent 100%); width: 28%; left: 0; transform: translateX(-120%); animation: b2Scan 4.2s ease-in-out infinite; }
+@keyframes b2Scan { 0% { transform: translateX(-120%); } 100% { transform: translateX(450%); } }
+.bt-cyan b2-ed { animation: b2Neon 2.8s linear infinite; }
+@keyframes b2Neon { 0%, 100% { opacity: 1; } 46% { opacity: .95; } 48% { opacity: .5; } 50% { opacity: 1; } 78% { opacity: .75; } }
+/* glow around the banner boxes themselves */
+.fr-row.bt-silver { box-shadow: 0 0 0 1px rgba(236,242,255,.4), 0 8px 24px rgba(200,215,255,.2); }
+.fr-row.bt-indigo { box-shadow: 0 0 0 1px rgba(130,178,255,.5), 0 8px 26px rgba(70,115,255,.3); }
+.fr-row.bt-cyan { box-shadow: 0 0 0 1px rgba(56,232,255,.55), 0 8px 28px rgba(0,210,255,.32); }
+.pv-banner.bt-silver { box-shadow: 0 0 22px rgba(200,215,255,.25); } .pv-banner.bt-indigo { box-shadow: 0 0 24px rgba(80,125,255,.35); } .pv-banner.bt-cyan { box-shadow: 0 0 26px rgba(0,215,255,.4); }
+.bn-pick { border-radius: 16px; overflow: hidden; }
+.bn-pick i { z-index: 6; text-shadow: 0 1px 6px rgba(0,0,0,.9); }
+.fr-row.off .bn2 *, .fr-row.off .bn2, .fp:not(.active) .bn2 *, .fp:not(.active) .bn2 img { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .bn2 *, .bn2 img { animation: none !important; } }
+/* offline notice on the call screen */
+html body #callUI.offline.offline .cl-av { filter: grayscale(.9) brightness(.7); animation: none; box-shadow: none; }
+html body #callUI.offline.offline .call-state { color: #ff9aa6; }
+html body #callUI .cb.off-note { width: min(88vw, 320px); gap: 14px; }
+html body #callUI .cb.off-note p { margin: 0; text-align: center; font: 500 .92rem/1.5 'Outfit', sans-serif; color: #d8c8b2; } html body #callUI .cb.off-note p b { color: #fff1d6; }
+
 /* ---------- attach button + menu ---------- */
 html body #cpFileBtn.open { background: linear-gradient(135deg, #f6e1b4, #c89556); color: #1b120c; border-color: transparent; transform: rotate(-18deg); box-shadow: 0 6px 18px rgba(227,192,141,.4); }
 #cpFileBtn { transition: transform .25s cubic-bezier(.2,1.2,.4,1), background .2s ease; }
@@ -367,26 +409,14 @@ const INLINE = 700000;// max base64 chars kept inside one Firestore doc
 const CHUNK = 600000;// raw bytes per encrypted piece (about 800 KB once encoded, safely under Firestore's 1 MB document limit)
 const safeImg = (s) => (typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)) ? s : '';
 const chatId = (a, b) => [a, b].sort().join('_');
-const BANNERS = [['volt', 'Golden Thunder'], ['aurora', 'Night Aurora'], ['storm', 'White Thunder'], ['tide', 'Ocean Bubbles'], ['cosmos', 'Cosmic Drift']];
-const BOLT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>';
-const bolts = () => [['0s', 19], ['-2s', 15], ['-4s', 15]].map(([l, s]) => `<em class="ob" style="--d:6s;--dl:${l};--s:${s}px"><u>${BOLT}</u></em>`).join('');
-const rocks = (a) => a.map(([s, d, l, dir, sh]) => `<em class="ob" style="--d:${d}s;--dl:${l}s;--dir:${dir};--s:${s}px"><u class="rk ${sh}"></u></em>`).join('');
-const bubbles = [[8, 8, 6, -1, 4], [19, 13, 8, -4, -6], [31, 7, 5.5, -2, 5], [44, 11, 7.5, -6, -5], [57, 15, 9, -3, 6], [68, 8, 6.5, -5, -4], [79, 12, 8, -1.5, 5], [90, 9, 6, -4.5, -5], [50, 6, 5, -.5, 3]]
-.map(([x, s, d, l, dx]) => `<em class="bb" style="left:${x}%;--s:${s}px;--d:${d}s;--dl:${l}s;--x:${dx}px"></em>`).join('');
-const BX = '<b class="rg"></b><b class="cv"></b>';
-const BNFX = {
-volt: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
-storm: BX + '<b class="fx"></b><b class="glo"></b><b class="fl"></b><b class="pth">' + bolts() + '</b><b class="shn"></b>',
-aurora: BX + '<b class="fx"><b class="st"></b><em class="au a1"></em><em class="au a2"></em><em class="au a3"></em></b><b class="glo"></b><b class="shn"></b>',
-tide: BX + '<b class="fx"><em class="wv"></em>' + bubbles + '</b><b class="glo"></b><b class="pth"><em class="ob" style="--d:7s;--s:12px"><u class="dr"></u></em><em class="ob" style="--d:7s;--dl:-3.5s;--s:10px"><u class="dr"></u></em></b><b class="shn"></b>',
-cosmos: BX + '<b class="fx"><b class="st"></b><b class="st s2"></b></b><b class="glo"></b><b class="pth">' +
-rocks([[9, 11, 0, 'normal', 'r1'], [6, 8, -3, 'reverse', 'r2'], [11, 14, -6, 'normal', 'r3'], [7, 9.5, -8, 'reverse', 'r1']]) +
-'</b><b class="pth p2">' + rocks([[5, 7, -1, 'normal', 'r2'], [8, 12, -5, 'reverse', 'r3'], [6, 10, -9, 'normal', 'r1']]) + '</b><b class="shn"></b>'
-};
-const bannerEl = (p, cls) => {
-if (p?.bannerId && BNFX[p.bannerId]) return `<span class="${cls} bn bnx bn-${p.bannerId}">${BNFX[p.bannerId]}</span>`;
-const s = safeImg(p?.banner);
-return s ? `<img class="${cls}" src="${s}" alt="">` : `<span class="${cls} bn bnx bn-cosmos">${BNFX.cosmos}</span>`; };
+/* ---------- banners: your three photos (they sit in the repository root) ---------- */
+const BANNERS = [
+['smoke', 'Midnight Smoke', '1795189305061~2.jpg', 'silver'],
+['stars', 'Starlit Dream', '1795189305061~3.jpg', 'indigo'],
+['wolf', 'Neon Wolf', '1795189305061~4.jpg', 'cyan']
+];
+const bannerOf = (p) => BANNERS.find((x) => x[0] === p?.bannerId) || BANNERS[[...String(p?.username || p?.pubKey || 'x')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % BANNERS.length];
+const bannerEl = (p, cls) => { const b = bannerOf(p); return `<span class="${cls} bn2 bt-${b[3]}"><img src="${b[2]}" alt="" draggable="false"><b2-gl></b2-gl><b2-fx></b2-fx><b2-sh></b2-sh><b2-ed></b2-ed></span>`; };
 const wide = () => matchMedia('(min-width:820px)').matches; const svg = (d, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const mi = (ic, label) => `<span class="mi">${ic}</span><span class="ml">${label}</span>`;
 const IC = { add: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M19 8v6M16 11h6"/>'),
@@ -857,7 +887,7 @@ $('csBurgerDot')?.classList.toggle('hidden', !state.incoming.length);
 } function friendRow(uid, pick) {
 const p = state.profiles.get(uid) || {}, nm = displayName(uid), b = safeImg(p.banner), un = p.username ? '@' + p.username : '';
 const pr = presence(uid);
-return `<button class="fr-row${state.active === uid ? ' sel' : ''}${pick ? ' pickable' : ''}${pick === 2 ? ' picked' : ''}" data-open="${uid}">
+return `<button class="fr-row bt-${bannerOf(p)[3]}${state.active === uid ? ' sel' : ''}${pick ? ' pickable' : ''}${pick === 2 ? ' picked' : ''}" data-open="${uid}">
 ${bannerEl(p, 'fr-banner')}
 <span class="fr-sheen"></span><span class="fr-scrim"></span>
 <span class="pfp-wrap"><span class="pfp-ring">${av(p, nm)}</span><i class="pdot ${pr.on ? 'on' : 'off'}"></i></span>
@@ -1362,7 +1392,7 @@ catch { toast('Couldn’t remove', 'error'); }
 }
 function openFriendSheet(uid) {
 const p = state.profiles.get(uid) || {}, nm = displayName(uid), b = safeImg(p.banner);
-openSheet('Profile', `<div class="pv-banner">${bannerEl(p, 'pv-bn')}<span class="fr-sheen"></span></div>
+openSheet('Profile', `<div class="pv-banner bt-${bannerOf(p)[3]}">${bannerEl(p, 'pv-bn')}<span class="fr-sheen"></span></div>
 <div class="pv-pfpwrap"><span class="pfp-ring lg">${av(p, nm)}</span></div>
 <h3 class="pv-name">${esc(nm)}</h3><div class="pv-user">@${esc(p.username || '')}</div>
 ${(() => { const q = presence(uid); return `<div class="pv-user pres${q.on ? ' on' : ''}">● ${esc(q.txt)}</div>`; })()}
@@ -1397,9 +1427,9 @@ openSheet('My profile', `<div class="pv-banner" id="mpBanner"></div>
 <button id="mpSave" class="sh-btn primary">Save profile</button>`);
 const draw = () => {
 const q = state.profile;
-$('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
+$('mpBanner').className = 'pv-banner bt-' + bannerOf(q)[3]; $('mpBanner').innerHTML = bannerEl(q, 'pv-bn') + '<span class="fr-sheen"></span>';
 $('mpPfp').innerHTML = av(q, q.username);
-$('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick${q.bannerId === id ? ' sel' : ''}" data-bn="${id}"><span class="bn bnx bn-${id}">${BNFX[id]}</span><i>${n}</i></button>`).join('');
+const cur = bannerOf(q)[0]; $('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<button class="bn-pick bt-${bannerOf({ bannerId: id })[3]}${cur === id ? ' sel' : ''}" data-bn="${id}">${bannerEl({ bannerId: id }, 'pv-bn')}<i>${n}</i></button>`).join('');
 };
 draw();
 const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
@@ -1785,10 +1815,11 @@ setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while
 /* =========================================================
 VOICE CALLS — WebRTC audio, the two phones find each other through Firestore ("calls" collection)
 ========================================================= */
-const ICE = { iceServers: [
-{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
-{ urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' } // free public relay: helps when two phones can't reach each other directly
-], iceCandidatePoolSize: 4, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
+/* No STUN / TURN: no outside server ever sees your IP. The two phones connect directly and the audio is encrypted end-to-end (DTLS-SRTP).
+   The call set-up (offer, answer, network addresses) is sealed with your private chat key before it touches Firestore. */
+const ICE = { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
+const sealC = async (uid, obj) => { const { iv, ct } = await encJSON(await sharedKey(uid), obj); return { iv, ct }; };
+const openC = async (uid, o) => decJSON(await sharedKey(uid), o.iv, o.ct);
 const MIC_OPTS = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } };
 const PH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
 const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
@@ -1829,10 +1860,13 @@ beep(); call.ring = { ctx, iv: setInterval(beep, 2200) };
 }
 function callActs(mode) {
 const b = (cls, id, label, svg, cap) => `<div class="cb"><button type="button" class="call-btn ${cls}" id="${id}" aria-label="${label}">${svg}</button><small>${cap}</small></div>`;
-$('callActs').innerHTML = mode === 'in'
+$('callActs').innerHTML = mode === 'off'
+? `<div class="cb off-note"><p><b>${esc(displayName(call.uid))}</b> is offline right now.<br>You can call when they’re online.</p><button type="button" class="call-btn spk" id="callOffX" aria-label="Close">${IC.close(26)}</button><small>Close</small></div>`
+: mode === 'in'
 ? b('end', 'callNo', 'Decline', PH, 'Decline') + b('ok', 'callYes', 'Answer', PH, 'Answer')
 : b('spk' + (call.spk ? ' on' : ''), 'callSpk', 'Speaker', SPK, 'Speaker') + b('end', 'callEnd', 'End call', PH, 'End')
 + (mode === 'live' ? b('mute' + (call.muted ? ' on' : ''), 'callMute', 'Mute', MIC, 'Mute') : '<span class="call-sp"></span>');
+if ($('callOffX')) $('callOffX').onclick = closeOffline;
 if ($('callNo')) $('callNo').onclick = declineCall;
 if ($('callYes')) $('callYes').onclick = acceptCall;
 if ($('callEnd')) $('callEnd').onclick = () => hangup('ended');
@@ -1842,10 +1876,16 @@ if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; cal
 function showCall(uid, mode, text) {
 const ui = $('callUI'); call.uid = uid;
 const nm = displayName(uid) || 'Unknown';
-ui.classList.add('active'); ui.classList.toggle('ringing', mode !== 'live'); ui.setAttribute('aria-hidden', 'false');
+ui.classList.add('active'); ui.classList.toggle('ringing', mode === 'in' || mode === 'dial'); if (mode !== 'off') ui.classList.remove('offline'); ui.setAttribute('aria-hidden', 'false');
 $('callName').textContent = nm; $('callInit').textContent = (Array.from(nm.trim())[0] || '?').toUpperCase();
 $('callState').textContent = text || '';
 callActs(mode);
+}
+let offTo = 0;
+function closeOffline() { clearTimeout(offTo); const ui = $('callUI'); if (ui.classList.contains('offline') && !call.id && !call.incoming) { ui.classList.remove('active', 'offline'); ui.setAttribute('aria-hidden', 'true'); } }
+function showOffline(uid) {
+const ui = $('callUI'); ui.classList.add('offline'); showCall(uid, 'off', 'Offline');
+$('callName').textContent = displayName(uid); clearTimeout(offTo); offTo = setTimeout(closeOffline, 4500);
 }
 function makePc() {
 const pc = new RTCPeerConnection(ICE); call.pc = pc; call.queue = [];
@@ -1886,6 +1926,7 @@ if (id) { try { await updateDoc(callDoc(id), { status }); } catch {} }
 async function startCall(uid) {
 if (call.id || call.incoming) return toast('You’re already in a call', 'info');
 if (!state.friends.some((f) => f.uid === uid)) return toast('You can only call friends', 'info');
+if (!presence(uid).on) return showOffline(uid);
 if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) return toast('Calling isn’t supported on this browser', 'error');
 try { call.stream = await navigator.mediaDevices.getUserMedia(MIC_OPTS); }
 catch { return toast('Please allow the microphone to make a call', 'error'); }
@@ -1893,20 +1934,21 @@ call.role = 'caller'; showCall(uid, 'dial', 'Connecting…'); ringStart(false); 
 const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
 const ref = doc(collection(D(), 'calls')); call.id = ref.id;
 let ready = false; const buf = [];
-pc.onicecandidate = (e) => { if (!e.candidate) return; const c = e.candidate.toJSON(); if (ready) addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}); else buf.push(c); };
+const putC = async (c) => addDoc(collection(ref, 'callerCandidates'), await sealC(uid, c)).catch(() => {});
+pc.onicecandidate = (e) => { if (!e.candidate) return; const c = e.candidate.toJSON(); if (ready) putC(c); else buf.push(c); };
 try {
 const offer = await pc.createOffer({ offerToReceiveAudio: true }); offer.sdp = tuneSdp(offer.sdp); await pc.setLocalDescription(offer); tuneSender(pc);
-await setDoc(ref, { from: state.uid, to: uid, status: 'ringing', offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
+await setDoc(ref, { from: state.uid, to: uid, status: 'ringing', offer: await sealC(uid, { type: offer.type, sdp: offer.sdp }), createdAt: serverTimestamp() });
 } catch { endLocal('Couldn’t start the call'); toast('Couldn’t start the call', 'error'); return; }
-ready = true; buf.forEach((c) => addDoc(collection(ref, 'callerCandidates'), c).catch(() => {}));
+ready = true; buf.forEach((c) => putC(c));
 call.unsubs.push(onSnapshot(ref, async (sn) => {
 const d = sn.data(); if (!d || call.id !== ref.id) return;
-if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(d.answer); flushCands(); } catch {} }
+if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(await openC(uid, d.answer)); flushCands(); } catch {} }
 if (d.status === 'active' && !call.t0) { $('callState').textContent = 'Connecting…'; }
 if (d.status === 'declined') endLocal('Call declined');
 else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'No answer');
 }, () => {}));
-call.unsubs.push(onSnapshot(collection(ref, 'calleeCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
+call.unsubs.push(onSnapshot(collection(ref, 'calleeCandidates'), (sn) => { sn.docChanges().forEach(async (c) => { if (c.type === 'added') { try { addCand(await openC(uid, c.doc.data())); } catch {} } }); }, () => {}));
 pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
 call.ringTo = setTimeout(() => { if (call.id === ref.id && !call.t0) hangup('missed', 'No answer'); }, 45000);
 }
@@ -1925,14 +1967,14 @@ if (call.incoming !== inc) { call.stream?.getTracks().forEach((t) => t.stop()); 
 wakeOn();
 const ref = callDoc(inc.id); call.id = inc.id; call.role = 'callee';
 const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
-pc.onicecandidate = (e) => { if (e.candidate) addDoc(collection(ref, 'calleeCandidates'), e.candidate.toJSON()).catch(() => {}); };
+pc.onicecandidate = async (e) => { if (e.candidate) { try { await addDoc(collection(ref, 'calleeCandidates'), await sealC(inc.uid, e.candidate.toJSON())); } catch {} } };
 pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
 try {
-await pc.setRemoteDescription(inc.offer); flushCands();
+await pc.setRemoteDescription(await openC(inc.uid, inc.offer)); flushCands();
 const answer = await pc.createAnswer(); answer.sdp = tuneSdp(answer.sdp); await pc.setLocalDescription(answer); tuneSender(pc);
-await updateDoc(ref, { answer: { type: answer.type, sdp: answer.sdp }, status: 'active' });
+await updateDoc(ref, { answer: await sealC(inc.uid, { type: answer.type, sdp: answer.sdp }), status: 'active' });
 } catch { endLocal('Couldn’t connect the call'); toast('Couldn’t connect the call', 'error'); return; }
-call.unsubs.push(onSnapshot(collection(ref, 'callerCandidates'), (sn) => { sn.docChanges().forEach((c) => { if (c.type === 'added') addCand(c.doc.data()); }); }, () => {}));
+call.unsubs.push(onSnapshot(collection(ref, 'callerCandidates'), (sn) => { sn.docChanges().forEach(async (c) => { if (c.type === 'added') { try { addCand(await openC(inc.uid, c.doc.data())); } catch {} } }); }, () => {}));
 call.unsubs.push(onSnapshot(ref, (sn) => { const d = sn.data(); if (!d || call.id !== ref.id) return; if (d.status === 'ended' || d.status === 'missed') endLocal('Call ended'); }, () => {}));
 }
 /* incoming calls: listen for a "ringing" call addressed to me */
