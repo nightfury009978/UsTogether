@@ -238,6 +238,10 @@ html body .cs-burger { border: 1px solid rgba(227,192,141,.35); background: line
 html body .cs-burger span { background: #f0d3a2; box-shadow: 0 0 6px rgba(227,192,141,.6); }
 /* ---------- no reply arrow beside messages (reply = long-press, then pick Reply) ---------- */
 html body .msg .rp { display: none !important; }
+/* ---------- chat text uses the same elegant font as the names in the Friends list ---------- */
+html body .chat-app .cp-msgs .bub:not(.vm):not(.fl):not(.media):not(.lock), html body .chat-app #cpInput, html body .chat-app #cpInput::placeholder { font-family: var(--display, 'Bodoni Moda', Georgia, serif); font-weight: 500; font-size: 1.02rem; letter-spacing: .005em; line-height: 1.42; }
+html body .chat-app .fl-tx b { font-family: var(--display, 'Bodoni Moda', Georgia, serif); font-weight: 600; }
+
 /* ---------- banners: premium effects for the three photos ---------- */
 .bn2 { position: absolute; inset: 0; display: block; overflow: hidden; border-radius: inherit; isolation: isolate; background: #05070d; }
 .bn2 img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.06); animation: b2Drift 16s ease-in-out infinite alternate; }
@@ -465,6 +469,9 @@ async function unwrapPriv(w, pass) {
 const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await pwKey(pass, unb64(w.salt)), unb64(w.ct));
 return JSON.parse(dec.decode(pt)); }
 const keyCache = new Map();
+/* ---------- private profiles: bio, photo and banner are encrypted separately for each friend (and for you) ---------- */
+const pubDoc = new Map(), privRaw = new Map(), privProf = new Map(), reqSeen = { f: false, t: false };
+let privReady = false, pubSigs = null, pubBusy = false, pubAgain = false, pubForce = false;
 async function sharedKey(uid) {
 const p = state.profiles.get(uid);
 if (!p?.pubKey || !state.priv) throw new Error('no key');
@@ -647,7 +654,7 @@ teardown(); state.uid = u.uid; state.bootP = boot();
 function teardown() {
 state.unsubs.forEach((f) => f()); state.watch.forEach((f) => f()); state.unsubMsgs?.(); Object.assign(state, { uid: null, profile: null, private: null, priv: null, nick: {}, bootErr: false, reqFrom: [], reqTo: [], friends: [], incoming: [], outgoing: [], unsubs: [], unsubMsgs: null, listening: false, warned: false, selecting: false, active: null, msgDocs: [], sig: '', gotTo: false, chatsReady: false });
 clearInterval(hbTimer); hbTimer = null;
-state.profiles.clear(); state.presence.clear(); state.typeUntil.clear(); state.typeStamp.clear(); state.sel.clear(); state.watch.clear(); state.chats.clear(); state.celebrated.clear(); keyCache.clear();
+pubDoc.clear(); privRaw.clear(); privProf.clear(); pubSigs = null; privReady = false; reqSeen.f = reqSeen.t = false; state.profiles.clear(); state.presence.clear(); state.typeUntil.clear(); state.typeStamp.clear(); state.sel.clear(); state.watch.clear(); state.chats.clear(); state.celebrated.clear(); keyCache.clear();
 closeChat(); closeCongrats(); updateBadges(); }
 async function boot() {
 const me = state.uid;
@@ -713,10 +720,10 @@ await runTransaction(D(), async (tx) => {
 const ref = doc(D(), 'usernames', lower);
 if ((await tx.get(ref)).exists()) throw new Error('taken');
 tx.set(ref, { uid: me });
-tx.set(doc(D(), 'chatUsers', me), { username: name, usernameLower: lower, pubKey: JSON.stringify(keys.pub), bio: '', pfp: '', banner: '', createdAt: serverTimestamp() });
+tx.set(doc(D(), 'chatUsers', me), { username: name, usernameLower: lower, pubKey: JSON.stringify(keys.pub), createdAt: serverTimestamp() });
 tx.set(doc(D(), 'chatPrivate', me), { keyBackup: wrapped, nicknames: {} });
 }); state.priv = await importPriv(keys.priv);
-await kvSet('priv:' + me, state.priv); state.profile = { username: name, usernameLower: lower, pubKey: JSON.stringify(keys.pub), bio: '', pfp: '', banner: '' };
+await kvSet('priv:' + me, state.priv); state.profile = { username: name, usernameLower: lower, pubKey: JSON.stringify(keys.pub), bio: '', pfp: '', bannerId: '' };
 state.private = { keyBackup: wrapped, nicknames: {} };
 startListeners(); route(); toast('Chat identity created 🔐', 'success');
 } catch (e) {
@@ -752,11 +759,11 @@ const me = state.uid;
 const err = (e) => { console.error(e); if (!state.warned) { state.warned = true; toast('Chat permission error — check Firestore rules', 'error'); } };
 watchProfile(me); startPresence();
 const rq = collection(D(), 'chatRequests');
-state.unsubs.push(onSnapshot(query(rq, where('from', '==', me)), (s) => { state.reqFrom = s.docs.map((d) => ({ id: d.id, ...d.data() })); recompute(); }, err));
+state.unsubs.push(onSnapshot(query(rq, where('from', '==', me)), (s) => { state.reqFrom = s.docs.map((d) => ({ id: d.id, ...d.data() })); reqSeen.f = true; recompute(); }, err));
 state.unsubs.push(onSnapshot(query(rq, where('to', '==', me)), (s) => {
 const next = s.docs.map((d) => ({ id: d.id, ...d.data() }));
 if (state.gotTo) next.filter((r) => r.status === 'pending' && !state.reqTo.some((o) => o.id === r.id)).forEach(notifyReq);
-state.gotTo = true; state.reqTo = next; recompute();
+state.gotTo = true; reqSeen.t = true; state.reqTo = next; recompute();
 }, err));
 state.unsubs.push(onSnapshot(query(collection(D(), 'chats'), where('members', 'array-contains', me)), (s) => {
 s.docChanges().forEach((ch) => { if (ch.type === 'removed' || !state.chatsReady || ch.doc.metadata.hasPendingWrites) return;
@@ -765,18 +772,70 @@ if (c.lastFrom && c.lastFrom !== me && c.lastAt && prev?.lastAt?.seconds !== c.l
 state.chats = new Map(s.docs.map((d) => [d.id, d.data()])); state.chatsReady = true; renderAll(); if (state.active) queuePaint();
 }, err));
 }
+function mergeProfile(uid) {
+const pub = pubDoc.get(uid);
+if (!pub) { state.profiles.set(uid, null); return; }
+const m = { ...pub, ...(privProf.get(uid) || {}) };
+state.profiles.set(uid, m);
+if (uid === state.uid) state.profile = m;
+}
+async function openPriv(uid) {
+const raw = privRaw.get(uid); let pr = null;
+if (raw) { try { pr = await decJSON(await sharedKey(uid), raw.iv, raw.ct); } catch { return; } } // key not ready yet: we try again when their profile arrives
+privProf.set(uid, pr); mergeProfile(uid);
+if (uid === state.uid && !privReady) { privReady = true; syncProfileCopies(); }
+if (uid === state.active) state.sig = '';
+renderAll(); if (uid === state.active) queuePaint();
+}
 function watchProfile(uid) {
 if (state.watch.has(uid)) return;
 state.watch.set('p:' + uid, onSnapshot(doc(D(), 'chatPresence', uid), (s) => {
 const pd = s.exists() ? s.data({ serverTimestamps: 'estimate' }) : null; state.presence.set(uid, pd); trackTyping(uid, pd); if (uid !== state.uid) renderAll();
 }, () => {}));
 state.watch.set(uid, onSnapshot(doc(D(), 'chatUsers', uid), (s) => {
-const d = s.exists() ? s.data() : null;
-state.profiles.set(uid, d);
-if (uid === state.uid && d) state.profile = d;
+pubDoc.set(uid, s.exists() ? s.data() : null); mergeProfile(uid);
 if (uid === state.active) state.sig = '';
 renderAll(); if (uid === state.active) queuePaint();
+if (privRaw.has(uid)) openPriv(uid);
+syncProfileCopies();
 }));
+/* the encrypted copy that this friend made for me (for my own profile: the copy I made for myself) */
+state.watch.set('pp:' + uid, onSnapshot(doc(D(), 'chatProfiles', uid + '_' + state.uid), (s) => {
+if (s.exists()) { privRaw.set(uid, s.data()); openPriv(uid); }
+else { privRaw.delete(uid); privProf.delete(uid); mergeProfile(uid); if (uid === state.uid && !privReady) { privReady = true; syncProfileCopies(); } renderAll(); }
+}, () => {}));
+}
+const hashStr = (t) => { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return h + ':' + t.length; };
+async function syncProfileCopies(force) {
+if (!state.profile || !state.priv || !privReady) return;
+if (pubBusy) { pubAgain = true; if (force) pubForce = true; return; }
+pubBusy = true;
+try {
+const me = state.uid;
+if (!pubSigs) pubSigs = (await kvGet('pubsig:' + me)) || {};
+const p = state.profile, data = { bio: p.bio || '', pfp: safeImg(p.pfp) || '', bannerId: p.bannerId || '' };
+const sig = hashStr(JSON.stringify(data)), targets = [me, ...state.friends.map((f) => f.uid)];
+let changed = false;
+for (const t of targets) {
+if (!force && pubSigs[t] === sig) continue;
+let key; try { key = await sharedKey(t); } catch { continue; } // their profile isn't loaded yet: we try again when it is
+const e = await encJSON(key, data);
+await setDoc(doc(D(), 'chatProfiles', me + '_' + t), { owner: me, viewer: t, iv: e.iv, ct: e.ct, at: serverTimestamp() });
+pubSigs[t] = sig; changed = true;
+}
+if (reqSeen.f && reqSeen.t) for (const t of Object.keys(pubSigs)) {
+if (t === me || targets.includes(t)) continue;
+try { await deleteDoc(doc(D(), 'chatProfiles', me + '_' + t)); } catch {}
+delete pubSigs[t]; changed = true; // no longer friends: they lose access to my profile
+}
+if (changed) await kvSet('pubsig:' + me, pubSigs);
+const old = pubDoc.get(me);
+if (pubSigs[me] === sig && old && ['bio', 'pfp', 'banner', 'bannerId'].some((k) => old[k] !== undefined)) {
+await updateDoc(doc(D(), 'chatUsers', me), { bio: deleteField(), pfp: deleteField(), banner: deleteField(), bannerId: deleteField() }); // the readable copies are no longer needed
+}
+} catch (e) { console.error(e); if (force) toast('Couldn’t save your profile', 'error'); }
+pubBusy = false;
+if (pubAgain) { pubAgain = false; const f = pubForce; pubForce = false; syncProfileCopies(f); }
 }
 async function getProfile(uid) {
 if (state.profiles.get(uid)) return state.profiles.get(uid);
@@ -789,7 +848,7 @@ state.friends = all.filter((r) => r.status === 'accepted').map((r) => ({ uid: r.
 state.outgoing = state.reqFrom.filter((r) => r.status === 'pending');
 [...state.friends.map((f) => f.uid), ...state.incoming.map((r) => r.from), ...state.outgoing.map((r) => r.to)].forEach(watchProfile);
 if (state.active && !state.friends.some((f) => f.uid === state.active)) closeConversation();
-checkCongrats(); renderAll();
+checkCongrats(); renderAll(); syncProfileCopies();
 }
 function checkCongrats() {
 const me = state.uid;
@@ -1433,22 +1492,20 @@ const cur = bannerOf(q)[0]; $('mpGrid').innerHTML = BANNERS.map(([id, n]) => `<b
 };
 draw();
 const apply = (patch) => { state.profile = { ...state.profile, ...patch }; state.profiles.set(me, state.profile); draw(); renderAll(); };
-$('mpGrid').onclick = async (e) => { const b = e.target.closest('[data-bn]'); if (!b) return;
-apply({ bannerId: b.dataset.bn, banner: '' });
-try { await updateDoc(doc(D(), 'chatUsers', me), { bannerId: b.dataset.bn, banner: '' }); toast('Banner applied ✨', 'success'); }
-catch { toast('Couldn’t save banner', 'error'); }
+const notReady = () => { if (privReady) return false; toast('Loading your profile… try again in a moment', 'info'); return true; };
+$('mpGrid').onclick = (e) => { const b = e.target.closest('[data-bn]'); if (!b || notReady()) return;
+apply({ bannerId: b.dataset.bn }); syncProfileCopies(true); toast('Banner applied ✨', 'success');
 };
 $('mpPfpBtn').onclick = () => $('mpPfpF').click();
 $('mpPfpF').onchange = async (e) => {
-const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-let data; try { data = await cropImg(f, 256, 256, .82); } catch { return toast('Couldn’t read that image', 'error'); } apply({ pfp: data });
-try { await updateDoc(doc(D(), 'chatUsers', me), { pfp: data }); toast('Profile photo updated ✨', 'success'); }
-catch { toast('Couldn’t save photo', 'error'); }
+const f = e.target.files[0]; e.target.value = ''; if (!f || notReady()) return;
+let data; try { data = await cropImg(f, 256, 256, .82); } catch { return toast('Couldn’t read that image', 'error'); }
+apply({ pfp: data }); syncProfileCopies(true); toast('Profile photo updated ✨', 'success');
 };
 $('mpForgot').onclick = openUsernameSheet;
-$('mpSave').onclick = async () => {
-try { await updateDoc(doc(D(), 'chatUsers', me), { bio: $('mpBio').value.trim().slice(0, 120) }); toast('Profile saved ✨', 'success'); closeSheet(); }
-catch { toast('Couldn’t save profile', 'error'); }
+$('mpSave').onclick = () => {
+if (notReady()) return;
+apply({ bio: $('mpBio').value.trim().slice(0, 120) }); syncProfileCopies(true); toast('Profile saved ✨', 'success'); closeSheet();
 };
 }
 function openUsernameSheet() {
@@ -1815,9 +1872,10 @@ setInterval(renderFriendsPage, 15000); // keeps "online / last seen" fresh while
 /* =========================================================
 VOICE CALLS — WebRTC audio, the two phones find each other through Firestore ("calls" collection)
 ========================================================= */
-/* No STUN / TURN: no outside server ever sees your IP. The two phones connect directly and the audio is encrypted end-to-end (DTLS-SRTP).
-   The call set-up (offer, answer, network addresses) is sealed with your private chat key before it touches Firestore. */
-const ICE = { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
+/* STUN only (no TURN relay). Google's STUN server just tells each phone its own public address — it never receives, hears or relays any audio.
+   The call itself goes phone-to-phone and is encrypted end-to-end (DTLS-SRTP). The call set-up (offer, answer, network addresses) is also
+   sealed with your private chat key before it touches Firestore. */
+const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }], iceCandidatePoolSize: 2, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
 const sealC = async (uid, obj) => { const { iv, ct } = await encJSON(await sharedKey(uid), obj); return { iv, ct }; };
 const openC = async (uid, o) => decJSON(await sharedKey(uid), o.iv, o.ct);
 const MIC_OPTS = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } };
