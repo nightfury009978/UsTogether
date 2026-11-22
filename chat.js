@@ -447,6 +447,15 @@ html body .bn-tile.on-call { border-color: rgba(255,45,70,.65); box-shadow: 0 0 
 html body .bn-tile.on-call-mute { border-color: rgba(190,130,80,.7); box-shadow: 0 0 0 1px rgba(190,130,80,.4), 0 0 28px rgba(190,130,80,.3); animation: tileMute 2.2s ease-in-out infinite; }
 @keyframes tileMute { 50% { box-shadow: 0 0 0 1px rgba(190,130,80,.6), 0 0 38px rgba(190,130,80,.5); } }
 #bnChatT.bn-call-mute { background-image: linear-gradient(100deg, #a8683a 0%, #a8683a 36%, #f2d2b0 50%, #a8683a 64%, #a8683a 100%) !important; filter: drop-shadow(0 0 6px rgba(190,130,80,.7)) !important; }
+
+/* ---------- call: "Connecting" shading, green sweep on connect ---------- */
+html body #callUI .call-state.shade { color: transparent; background-image: linear-gradient(100deg, #8c7a60 0%, #8c7a60 32%, #fff3d9 50%, #8c7a60 68%, #8c7a60 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: clShade 2.2s linear infinite; }
+html body #callUI.ringing .call-state.shade { animation: clShade 2.2s linear infinite; }
+html body #callUI .call-state.shade.ok { background-image: linear-gradient(100deg, #22a85c 0%, #22a85c 32%, #e4ffef 50%, #22a85c 68%, #22a85c 100%); }
+@keyframes clShade { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+html body #callUI #callWave { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transform: translateY(100%); background: linear-gradient(to top, rgba(63,217,136,0) 0%, rgba(63,217,136,.5) 40%, rgba(120,255,180,.65) 50%, rgba(63,217,136,.5) 60%, rgba(63,217,136,0) 100%); }
+html body #callUI.wave #callWave { animation: clWave 1.6s cubic-bezier(.4,0,.2,1) 1 both; }
+@keyframes clWave { 0% { transform: translateY(100%); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
 `; document.head.appendChild(s); })();
 const O = () => window.OS;
 const D = () => O().db;
@@ -1935,7 +1944,10 @@ VOICE CALLS — WebRTC audio, the two phones find each other through Firestore (
 /* STUN only (no TURN relay). Google's STUN server just tells each phone its own public address — it never receives, hears or relays any audio.
    The call itself goes phone-to-phone and is encrypted end-to-end (DTLS-SRTP). The call set-up (offer, answer, network addresses) is also
    sealed with your private chat key before it touches Firestore. */
-const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }], iceCandidatePoolSize: 2, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
+/* Optional relay for networks that block direct calls. Leave empty to stay STUN-only.
+   To use one, paste your own server here, e.g. { urls: 'turn:your.server:3478', username: '…', credential: '…' } */
+const TURN_SERVERS = [];
+const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...TURN_SERVERS], iceCandidatePoolSize: 2, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
 const sealC = async (uid, obj) => { const { iv, ct } = await encJSON(await sharedKey(uid), obj); return { iv, ct }; };
 const openC = async (uid, o) => decJSON(await sharedKey(uid), o.iv, o.ct);
 const MIC_OPTS = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } };
@@ -1943,7 +1955,7 @@ const PH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 
 const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.500v5h3.500l5 4v-13l-5 4z"/><path d="M16 9a4 4 0 0 1 0 6M18.500 6.500a8 8 0 0 1 0 11"/></svg>';
 document.body.insertAdjacentHTML('beforeend', '<div id="callPill" class="call-pill" role="button" aria-label="Return to call"><span class="cpl-ic">' + PH + '</span><b id="cpillTime">00:00</b><small id="cpillSub"></small></div>');
-document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><button id="callBack" class="cl-back" type="button" aria-label="Back">' + IC.back(22) + '</button><div class="cl-bg"><i></i><i></i><i></i></div><div class="cl-top"><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="cl-mid"><div class="cl-av" id="callAv"><span id="callInit"></span></div></div><div class="cl-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
+document.body.insertAdjacentHTML('beforeend', '<div id="callUI" aria-hidden="true"><button id="callBack" class="cl-back" type="button" aria-label="Back">' + IC.back(22) + '</button><div class="cl-bg"><i></i><i></i><i></i></div><div id="callWave"></div><div class="cl-top"><h2 id="callName"></h2><p class="call-state" id="callState"></p></div><div class="cl-mid"><div class="cl-av" id="callAv"><span id="callInit"></span></div></div><div class="cl-acts" id="callActs"></div><audio id="callAudio" autoplay playsinline></audio></div>');
 const call = { min: false, id: null, pc: null, stream: null, role: null, uid: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, ring: null, muted: false, spk: true, accepting: false, queue: [], incoming: null };
 const callDoc = (id) => doc(D(), 'calls', id);
 /* keep the screen awake and the audio playing for the whole call */
@@ -1992,12 +2004,13 @@ if ($('callEnd')) $('callEnd').onclick = () => hangup('ended');
 if ($('callSpk')) $('callSpk').onclick = () => { call.spk = !call.spk; applySpeaker(); };
 if ($('callMute')) $('callMute').onclick = () => { call.muted = !call.muted; call.stream?.getAudioTracks().forEach((t) => { t.enabled = !call.muted; }); $('callMute').classList.toggle('on', call.muted); paintPill(); };
 }
+function setState(t, shade, ok) { const el = $('callState'); el.textContent = t; el.classList.toggle('shade', !!shade); el.classList.toggle('ok', !!ok); }
 function showCall(uid, mode, text) {
 const ui = $('callUI'); call.uid = uid;
 const nm = displayName(uid) || 'Unknown';
 ui.classList.add('active'); ui.classList.toggle('ringing', mode === 'in' || mode === 'dial'); if (mode !== 'off') ui.classList.remove('offline'); ui.classList.toggle('incoming', mode === 'in'); ui.setAttribute('aria-hidden', 'false');
 $('callName').textContent = nm; $('callInit').textContent = (Array.from(nm.trim())[0] || '?').toUpperCase();
-$('callState').textContent = text || '';
+setState(text || '', /^Connecting/.test(text || ''));
 callActs(mode);
 }
 let offTo = 0;
@@ -2006,13 +2019,19 @@ function showOffline(uid) {
 const ui = $('callUI'); ui.classList.add('offline'); showCall(uid, 'off', 'Offline');
 $('callName').textContent = displayName(uid); clearTimeout(offTo); offTo = setTimeout(closeOffline, 4500);
 }
+function armConn() { // starts counting only once the other person has answered
+clearTimeout(call.connTo);
+call.connTo = setTimeout(() => { if (call.id && !call.t0) { toast('Couldn’t connect. Your two networks may be blocking direct calls.', 'error'); hangup('ended', 'Couldn’t connect'); } }, 30000);
+}
 function makePc() {
 const pc = new RTCPeerConnection(ICE); call.pc = pc; call.queue = [];
+pc.addEventListener('icecandidate', (e) => { if (e.candidate) console.log('[call] candidate:', e.candidate.type, e.candidate.protocol); });
+pc.addEventListener('iceconnectionstatechange', () => console.log('[call] ice:', pc.iceConnectionState));
 pc.ontrack = (e) => { const a = $('callAudio'); a.srcObject = e.streams[0]; applySpeaker(); a.play?.().catch(() => {}); };
 pc.onconnectionstatechange = () => {
 const st = pc.connectionState; clearTimeout(call.dropTo);
 if (st === 'connected') { call.weak = false; call.upd?.(); }
-else if (st === 'disconnected') { call.weak = true; $('callState').textContent = 'Reconnecting…'; call.dropTo = setTimeout(() => hangup('ended', 'Connection lost'), 20000); } // a short network blip heals by itself — we only hang up if it lasts
+else if (st === 'disconnected') { call.weak = true; setState('Reconnecting', true); call.dropTo = setTimeout(() => hangup('ended', 'Connection lost'), 20000); } // a short network blip heals by itself — we only hang up if it lasts
 else if (st === 'failed') hangup('ended', 'Connection lost');
 };
 return pc;
@@ -2041,22 +2060,24 @@ ui.addEventListener('touchmove', (e) => { if (!g) return; const t = e.touches[0]
 ui.addEventListener('touchend', () => { g = null; }, { passive: true }); }
 function goLive() {
 if (call.t0) return;
-ringStop(); clearTimeout(call.ringTo); call.t0 = Date.now();
-$('callUI').classList.remove('ringing'); callActs('live');
-call.upd = () => { if (!call.weak) $('callState').textContent = fmtCall(); paintPill(); };
+ringStop(); clearTimeout(call.ringTo); clearTimeout(call.connTo); call.t0 = Date.now();
+const ui = $('callUI'); ui.classList.remove('ringing'); callActs('live');
+setState('Connected', true, true); ui.classList.remove('wave'); void ui.offsetWidth; ui.classList.add('wave'); navigator.vibrate?.(60);
+call.hold = true; setTimeout(() => { ui.classList.remove('wave'); call.hold = false; call.upd?.(); }, 1900);
+call.upd = () => { if (!call.weak && !call.hold) setState(fmtCall(), false); paintPill(); };
 call.upd(); call.tick = setInterval(call.upd, 1000);
 $('callAudio').play?.().catch(() => {});
 }
 function endLocal(msg) {
 if (!call.id && !call.stream && !call.pc && !call.incoming) return;
 if (call.min && msg) { toast(msg, 'info'); msg = ''; }
-ringStop(); clearTimeout(call.ringTo); clearTimeout(call.dropTo); clearInterval(call.tick); wakeOff();
+ringStop(); clearTimeout(call.ringTo); clearTimeout(call.dropTo); clearTimeout(call.connTo); clearInterval(call.tick); wakeOff();
 call.unsubs.forEach((u) => { try { u(); } catch {} });
 call.stream?.getTracks().forEach((t) => t.stop());
 try { call.pc?.close(); } catch {}
 const ui = $('callUI'); $('callAudio').srcObject = null;
-if (msg) { $('callState').textContent = msg; ui.classList.remove('ringing'); $('callActs').innerHTML = ''; }
-Object.assign(call, { min: false, id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, muted: false, spk: true, accepting: false, queue: [], incoming: null });
+if (msg) { setState(msg, false); ui.classList.remove('ringing'); $('callActs').innerHTML = ''; }
+Object.assign(call, { hold: false, connTo: 0, min: false, id: null, pc: null, stream: null, role: null, unsubs: [], t0: 0, tick: 0, upd: null, ringTo: 0, dropTo: 0, weak: false, muted: false, spk: true, accepting: false, queue: [], incoming: null });
 setTimeout(() => { if (!call.id && !call.incoming) { ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); } }, msg ? 1300 : 0);
 paintPill();
 }
@@ -2071,7 +2092,7 @@ if (!presence(uid).on) return showOffline(uid);
 if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) return toast('Calling isn’t supported on this browser', 'error');
 try { call.stream = await navigator.mediaDevices.getUserMedia(MIC_OPTS); }
 catch { return toast('Please allow the microphone to make a call', 'error'); }
-call.role = 'caller'; showCall(uid, 'dial', 'Connecting…'); ringStart(false); wakeOn();
+call.role = 'caller'; showCall(uid, 'dial', 'Connecting'); ringStart(false); wakeOn();
 const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
 const ref = doc(collection(D(), 'calls')); call.id = ref.id;
 let ready = false; const buf = [];
@@ -2085,7 +2106,7 @@ ready = true; buf.forEach((c) => putC(c));
 call.unsubs.push(onSnapshot(ref, async (sn) => {
 const d = sn.data(); if (!d || call.id !== ref.id) return;
 if (d.answer && !pc.currentRemoteDescription) { try { await pc.setRemoteDescription(await openC(uid, d.answer)); flushCands(); } catch {} }
-if (d.status === 'active' && !call.t0) { $('callState').textContent = 'Connecting…'; }
+if (d.status === 'active' && !call.t0) { setState('Connecting', true); if (!call.connTo) armConn(); }
 if (d.status === 'declined') endLocal('Call declined');
 else if (d.status === 'ended' || d.status === 'missed') endLocal(call.t0 ? 'Call ended' : 'No answer');
 }, () => {}));
@@ -2100,14 +2121,14 @@ try { await updateDoc(callDoc(inc.id), { status: 'declined' }); } catch {}
 }
 async function acceptCall() {
 const inc = call.incoming; if (!inc || call.accepting) return;
-call.accepting = true; ringStop(); $('callState').textContent = 'Connecting…'; $('callUI').classList.remove('incoming'); callActs('dial');
+call.accepting = true; ringStop(); setState('Connecting', true); $('callUI').classList.remove('incoming'); callActs('dial');
 if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) { toast('Calling isn’t supported on this browser', 'error'); declineCall(); return; }
 try { call.stream = await navigator.mediaDevices.getUserMedia(MIC_OPTS); }
 catch { toast('Please allow the microphone to answer', 'error'); declineCall(); return; }
 if (call.incoming !== inc) { call.stream?.getTracks().forEach((t) => t.stop()); return; }
 wakeOn();
 const ref = callDoc(inc.id); call.id = inc.id; call.role = 'callee';
-const pc = makePc(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+const pc = makePc(); armConn(); call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
 pc.onicecandidate = async (e) => { if (e.candidate) { try { await addDoc(collection(ref, 'calleeCandidates'), await sealC(inc.uid, e.candidate.toJSON())); } catch {} } };
 pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') goLive(); });
 try {
