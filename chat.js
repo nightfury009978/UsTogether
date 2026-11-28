@@ -943,7 +943,7 @@ addEventListener('pagehide', () => beat(false));
 function trackTyping(uid, d) {
 if (d && d.typing === true && d.typingTo === state.uid) {
 const t = d.typingAt, st = t ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
-if (st !== state.typeStamp.get(uid)) { state.typeStamp.set(uid, st); state.typeUntil.set(uid, Date.now() + 6000); setTimeout(() => { if (state.profile) renderAll(); }, 6200); }
+if (st !== state.typeStamp.get(uid)) { state.typeStamp.set(uid, st); state.typeUntil.set(uid, Date.now() + 3500); setTimeout(() => { if (state.profile) renderAll(); }, 3700); }
 } else { state.typeUntil.delete(uid); state.typeStamp.delete(uid); }
 }
 function setTyping(on) {
@@ -953,8 +953,8 @@ setDoc(doc(D(), 'chatPresence', state.uid), on ? { typing: true, typingTo: state
 function typingPing() {
 if (!state.active) return;
 const now = Date.now();
-if (now - typeLast > 2500) { typeLast = now; setTyping(true); }
-clearTimeout(typeOff); typeOff = setTimeout(stopTyping, 3000);
+if (now - typeLast > 2000) { typeLast = now; setTyping(true); }
+clearTimeout(typeOff); typeOff = setTimeout(stopTyping, 2000);
 }
 function stopTyping() {
 clearTimeout(typeOff); typeOff = null;
@@ -1023,6 +1023,8 @@ ${bannerEl(p, 'fr-banner')}
 ${unreadFor(uid) ? '<span class="fr-dot"></span>' : ''}${pick ? '<span class="fr-ck"></span>' : ''}</button>`; }
 /* ---------- smooth lists: only rows that really changed are touched, so nothing flickers or restarts ---------- */
 const rowIO = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('off', !e.isIntersecting)), { rootMargin: '60px' }) : null;
+/* a playing <video> is carried over into the repainted message, so a new tick / edit never stops or restarts it */
+function keepVideo(oe, ne) { try { const ov = oe.querySelector('video'), nv = ne.querySelector('video'); if (ov && nv && ov.getAttribute('src') === nv.getAttribute('src')) nv.replaceWith(ov); } catch {} }
 function setList(box, items, watch) {
 const old = new Map();
 for (const el of [...box.children]) { if (el.__k == null) el.remove(); else old.set(el.__k, el); }
@@ -1032,7 +1034,7 @@ const el = old.get(it.k);
 if (el && el.__h === it.html) { old.delete(it.k); if (el === ref) ref = ref.nextElementSibling; else box.insertBefore(el, ref); continue; }
 const t = document.createElement('template'); t.innerHTML = it.html; const ne = t.content.firstElementChild; if (!ne) continue;
 ne.__k = it.k; ne.__h = it.html;
-if (el) { old.delete(it.k); if (el === ref) ref = ref.nextElementSibling; el.remove(); }
+if (el) { old.delete(it.k); if (el === ref) ref = ref.nextElementSibling; keepVideo(el, ne); el.remove(); }
 box.insertBefore(ne, ref); if (watch && rowIO) rowIO.observe(ne);
 }
 old.forEach((el) => el.remove());
@@ -1190,7 +1192,7 @@ if (p.k === 'err') inner = '<div class="bub lock">🔒 Can’t decrypt this mess
 else if (p.k === 't') inner = `<div class="bub">${esc(p.x)}</div>`;
 else if (url) {
 inner = p.k === 'img' ? `<div class="bub media"><img class="m-img" data-view src="${url}" alt="" decoding="async"></div>`
-: p.k === 'vid' ? `<div class="bub media"><video controls playsinline preload="metadata" src="${url}"></video></div>`
+: p.k === 'vid' ? `<div class="bub media"><video controls playsinline webkit-playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture src="${url}"></video></div>`
 : p.k === 'file' ? `<div class="bub fl" data-fdl="${m.id}"><span class="fl-ic">${esc(fileExt(p.nm))}</span><span class="fl-tx"><b>${esc(p.nm || 'File')}</b><small>${fmtSize(p.sz)} · Tap to save</small></span></div>`
 : `<div class="bub vm" data-vm="${m.id}" data-dur="${Number(p.dur) || 0}"><button type="button" class="vm-btn" data-vplay aria-label="Play voice message"><svg class="pl" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg><svg class="pa" viewBox="0 0 24 24"><path d="M7 5h3.6v14H7zM13.400 5H17v14h-3.600z"/></svg></button><div class="vm-track" data-vseek><div class="vm-bars">${vmBars(m.id)}</div></div><span class="vm-t">${fmtDur(p.dur)}</span></div>`;
 } else {
@@ -1320,8 +1322,8 @@ const cid = chatId(state.uid, state.active), parts = new Array(p.n); let done = 
 upProg('Downloading…', 0);
 try {
 const key = await sharedKey(state.active);
-for (let i = 0; i < p.n; i += 4) {
-await Promise.all([...Array(Math.min(4, p.n - i))].map(async (_, j) => {
+for (let i = 0; i < p.n; i += 6) {
+await Promise.all([...Array(Math.min(6, p.n - i))].map(async (_, j) => {
 const dd = (await getDoc(doc(D(), 'chats', cid, 'blobs', `${p.mid}_${i + j}`))).data();
 parts[i + j] = p.v === 2 ? await decBytes(key, dd.iv, dd.d) : dd.d;
 upProg('Downloading…', ++done / p.n);
@@ -1732,10 +1734,8 @@ v5 — typing cloud + Seen / Not seen (paste at the VERY END of chat.js)
 const msgsBox = $('cpMsgs');
 const tsMs = (t) => (t && t.seconds != null) ? t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6) : 0;
 /* typing clouds: friend = bottom-left (near photos) · me = bottom-right (near mic) */
-comp.insertAdjacentHTML('beforeend',
-'<div id="tcL" class="tcloud l" aria-hidden="true"><i></i><i></i><i></i></div>' +
-'<div id="tcR" class="tcloud r" aria-hidden="true"><i></i><i></i><i></i></div>');
-const tcL = $('tcL'), tcR = $('tcR');
+/* the little typing cloud was removed — "typing…" now shows in the header, in place of "Online" */
+const tcL = { classList: { remove() {}, toggle() {} } }, tcR = tcL;
 let lastKey = 0, marked = '';
 input.addEventListener('input', () => { lastKey = input.value.trim() ? Date.now() : 0; });
 input.addEventListener('blur', () => { lastKey = 0; });
@@ -1946,7 +1946,7 @@ VOICE CALLS — WebRTC audio, the two phones find each other through Firestore (
    sealed with your private chat key before it touches Firestore. */
 /* Optional relay for networks that block direct calls. Leave empty to stay STUN-only.
    To use one, paste your own server here, e.g. { urls: 'turn:your.server:3478', username: '…', credential: '…' } */
-const TURN_SERVERS = [];
+const TURN_SERVERS = []; // no third-party relay: calls go phone-to-phone only. (To add your own relay later, put { urls: 'turn:your.server:3478', username: '…', credential: '…' } here.)
 const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, ...TURN_SERVERS], iceCandidatePoolSize: 2, bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' };
 const sealC = async (uid, obj) => { const { iv, ct } = await encJSON(await sharedKey(uid), obj); return { iv, ct }; };
 const openC = async (uid, o) => decJSON(await sharedKey(uid), o.iv, o.ct);
@@ -1964,10 +1964,10 @@ const wakeOn = async () => { try { wake = await navigator.wakeLock?.request('scr
 const wakeOff = () => { try { wake?.release(); } catch {} wake = null; };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && (call.id || call.incoming)) { wakeOn(); $('callAudio').play?.().catch(() => {}); } });
 /* clear, steady voice: Opus with forward error correction, no silence-skipping, 40 kbps mono */
-const tuneSdp = (sdp) => { try { return sdp.replace(/a=fmtp:(\d+) ([^\r\n]*)/g, (m, pt, rest) => /minptime/.test(rest) ? `a=fmtp:${pt} ${rest.replace(/;?(maxaveragebitrate|useinbandfec|usedtx|stereo|cbr)=\d+/g, '')};useinbandfec=1;usedtx=0;stereo=0;cbr=0;maxaveragebitrate=40000` : m); } catch { return sdp; } };
+const tuneSdp = (sdp) => { try { return sdp.replace(/a=fmtp:(\d+) ([^\r\n]*)/g, (m, pt, rest) => /minptime/.test(rest) ? `a=fmtp:${pt} ${rest.replace(/;?(maxaveragebitrate|useinbandfec|usedtx|stereo|cbr)=\d+/g, '')};useinbandfec=1;usedtx=0;stereo=0;cbr=0;maxaveragebitrate=32000` : m); } catch { return sdp; } };
 const tuneSender = (pc) => pc.getSenders().forEach((sd) => {
 if (sd.track?.kind !== 'audio' || !sd.getParameters) return;
-try { const p = sd.getParameters(); if (!p.encodings || !p.encodings.length) p.encodings = [{}]; p.encodings[0].maxBitrate = 40000; p.encodings[0].priority = 'high'; p.encodings[0].networkPriority = 'high'; sd.setParameters(p).catch(() => {}); } catch {}
+try { const p = sd.getParameters(); if (!p.encodings || !p.encodings.length) p.encodings = [{}]; p.encodings[0].maxBitrate = 32000; p.encodings[0].priority = 'high'; p.encodings[0].networkPriority = 'high'; sd.setParameters(p).catch(() => {}); } catch {}
 });
 function applySpeaker() {
 const a = $('callAudio'); a.volume = call.spk ? 1 : .45;
@@ -2027,11 +2027,11 @@ function makePc() {
 const pc = new RTCPeerConnection(ICE); call.pc = pc; call.queue = [];
 pc.addEventListener('icecandidate', (e) => { if (e.candidate) console.log('[call] candidate:', e.candidate.type, e.candidate.protocol); });
 pc.addEventListener('iceconnectionstatechange', () => console.log('[call] ice:', pc.iceConnectionState));
-pc.ontrack = (e) => { const a = $('callAudio'); a.srcObject = e.streams[0]; applySpeaker(); a.play?.().catch(() => {}); };
+pc.ontrack = (e) => { try { e.receiver.jitterBufferTarget = 300; } catch {} try { e.receiver.playoutDelayHint = 0.3; } catch {} const a = $('callAudio'); a.srcObject = e.streams[0]; applySpeaker(); a.play?.().catch(() => {}); };
 pc.onconnectionstatechange = () => {
 const st = pc.connectionState; clearTimeout(call.dropTo);
 if (st === 'connected') { call.weak = false; call.upd?.(); }
-else if (st === 'disconnected') { call.weak = true; setState('Reconnecting', true); call.dropTo = setTimeout(() => hangup('ended', 'Connection lost'), 20000); } // a short network blip heals by itself — we only hang up if it lasts
+else if (st === 'disconnected') { call.weak = true; setState('Connection error', true); call.dropTo = setTimeout(() => hangup('ended', 'Connection lost'), 30000); } // a short network blip heals by itself — we only hang up if it lasts
 else if (st === 'failed') hangup('ended', 'Connection lost');
 };
 return pc;
@@ -2046,7 +2046,7 @@ const pill = $('callPill'); if (!pill) return;
 const here = app.classList.contains('active') || !!$('frPage')?.classList.contains('active');
 const show = !!call.id && call.min && here;
 pill.classList.toggle('show', show); pill.classList.toggle('muted', !!call.muted);
-if (show) { $('cpillTime').textContent = call.weak ? 'Reconnecting…' : call.t0 ? fmtCall() : 'Connecting…'; $('cpillSub').textContent = call.muted ? 'Muted' : displayName(call.uid); }
+if (show) { $('cpillTime').textContent = call.weak ? 'Connection error' : call.t0 ? fmtCall() : 'Connecting…'; $('cpillSub').textContent = call.muted ? 'Muted' : displayName(call.uid); }
 }
 const canMin = () => !!call.id && !$('callUI').classList.contains('offline') && !$('callUI').classList.contains('incoming');
 function minimizeCall() { if (!canMin() || call.min) return; call.min = true; const ui = $('callUI'); ui.classList.remove('active'); ui.setAttribute('aria-hidden', 'true'); paintPill(); }
@@ -2163,3 +2163,192 @@ call.ringTo = setTimeout(() => { if (call.incoming && call.incoming.id === id &&
 onAuthStateChanged(O().auth, (u) => { if (!u) { stopCallListener(); endLocal(''); return; } if (callUid !== u.uid) listenCalls(u.uid); });
 $('cpCall').onclick = () => { if (!state.active) return toast('Open a chat first', 'info'); startCall(state.active); };
 window.addEventListener('pagehide', (e) => { if (!e.persisted && call.id) { try { updateDoc(callDoc(call.id), { status: 'ended' }); } catch {} } });
+
+/* =========================================================
+v7 UPGRADE — paste at the VERY END of chat.js
+ 1. smoother video (never restarts, one at a time, light page while playing)
+ 2. call quality monitor ("Connection error" + automatic voice-bitrate adaptation)
+ 3. Inweb premium keyboard (3-dots menu → Enable / Disable)
+========================================================= */
+
+/* ---------- 1. VIDEO: pause the heavy stuff while a video plays, one video at a time ---------- */
+(function () {
+const box = $('cpMsgs');
+box.addEventListener('play', (e) => {
+if (!e.target || e.target.tagName !== 'VIDEO') return;
+box.querySelectorAll('video').forEach((v) => { if (v !== e.target && !v.paused) v.pause(); });
+document.body.classList.add('vid-playing');
+}, true);
+const off = (e) => {
+if (!e.target || e.target.tagName !== 'VIDEO') return;
+if (![...box.querySelectorAll('video')].some((v) => !v.paused && !v.ended)) document.body.classList.remove('vid-playing');
+};
+box.addEventListener('pause', off, true); box.addEventListener('ended', off, true);
+new MutationObserver(() => { if (!box.querySelector('video')) document.body.classList.remove('vid-playing'); }).observe(box, { childList: true });
+})();
+
+/* ---------- 2. CALL QUALITY MONITOR ---------- */
+(function () {
+let last = null, stall = 0, good = 0, low = false, mine = false;
+const setBitrate = (bps) => {
+try {
+call.pc?.getSenders().forEach((sd) => {
+if (sd.track?.kind !== 'audio' || !sd.getParameters) return;
+const p = sd.getParameters(); if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+p.encodings[0].maxBitrate = bps; sd.setParameters(p).catch(() => {});
+});
+} catch {}
+};
+const flag = (on) => {
+if (!call.id) return;
+if (on) { mine = true; call.weak = true; setState('Connection error', true); paintPill(); }
+else if (mine) { mine = false; if (call.pc && call.pc.connectionState === 'connected') { call.weak = false; call.upd?.(); } paintPill(); }
+};
+window.addEventListener('offline', () => { if (call.id && call.t0) flag(true); });
+setInterval(async () => {
+const pc = call.pc;
+if (!pc || !call.id || !call.t0) { last = null; stall = 0; good = 0; low = false; mine = false; return; }
+if (!navigator.onLine) { flag(true); return; }
+try {
+const rep = await pc.getStats(); let rx = null, rtt = 0;
+rep.forEach((r) => {
+if (r.type === 'inbound-rtp' && (r.kind || r.mediaType) === 'audio') rx = r;
+if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded' && r.currentRoundTripTime) rtt = r.currentRoundTripTime;
+});
+if (!rx) return;
+const cur = { p: rx.packetsReceived || 0, l: rx.packetsLost || 0 };
+if (last) {
+const dp = cur.p - last.p, dl = cur.l - last.l, loss = dp + dl > 0 ? dl / (dp + dl) : 0;
+stall = dp <= 0 ? stall + 1 : 0;
+if (loss > .06 || rtt > .45) { good = 0; if (!low) { low = true; setBitrate(16000); } }       // weak network → lighter voice stream, far fewer drops
+else if (loss < .02 && rtt < .3) { if (low && ++good >= 6) { low = false; good = 0; setBitrate(32000); } }
+}
+last = cur;
+if (stall >= 2) flag(true); else if (stall === 0) flag(false);
+} catch {}
+}, 1500);
+})();
+
+/* ---------- 3. INWEB PREMIUM KEYBOARD ---------- */
+(function () {
+const KEY = 'os_inweb_kb';
+const THEMES = [['royal', 'Royal Gold'], ['rose', 'Rose Quartz'], ['aurora', 'Midnight Aurora'], ['emerald', 'Emerald Luxe'], ['neon', 'Violet Neon']];
+let cfg = { on: false, theme: 'royal' };
+try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && THEMES.some((t) => t[0] === s.theme)) cfg = { on: !!s.on, theme: s.theme }; } catch {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch {} };
+
+const L = {
+abc: [['q','w','e','r','t','y','u','i','o','p'], ['a','s','d','f','g','h','j','k','l'], ['shift','z','x','c','v','b','n','m','back'], ['num', ',', 'space', '.', 'enter']],
+num: [['1','2','3','4','5','6','7','8','9','0'], ['-','/',':',';','(',')','$','&','@','"'], ['sym','.',',','?','!',"'",'back'], ['abc', ',', 'space', '.', 'enter']],
+sym: [['[',']','{','}','#','%','^','*','+','='], ['_','\\','|','~','<','>','€','£','¥','•'], ['num','.',',','?','!',"'",'back'], ['abc', ',', 'space', '.', 'enter']]
+};
+let layer = 'abc', sh = 1; // sh: 0 = lower, 1 = next letter capital, 2 = caps lock
+
+const kb = document.createElement('div');
+kb.id = 'kbPanel'; kb.className = 'kb'; kb.setAttribute('aria-hidden', 'true');
+kb.innerHTML = '<div class="kb-top"><button type="button" class="kb-tb" data-top="design">✦ Design</button><span class="kb-name" id="kbName"></span><button type="button" class="kb-tb" data-top="hide" aria-label="Hide keyboard">⌄</button></div><div id="kbBody"></div>';
+comp.after(kb);
+const body = kb.querySelector('#kbBody');
+
+const fire = () => input.dispatchEvent(new Event('input', { bubbles: true }));
+function ins(t) {
+const s = input.selectionStart == null ? input.value.length : input.selectionStart, e = input.selectionEnd == null ? s : input.selectionEnd;
+const prev = input.value.slice(Math.max(0, s - 2), s);
+input.setRangeText(t, s, e, 'end'); fire();
+if (layer === 'abc') {
+if (sh === 1 && t !== ' ' && t !== '\n') setSh(0);
+else if (sh !== 2 && t === ' ' && /[.!?]$/.test(prev)) setSh(1);
+else if (sh !== 2 && t === '\n') setSh(1);
+}
+}
+function back() {
+let s = input.selectionStart, e = input.selectionEnd; if (s == null) { s = e = input.value.length; }
+if (s !== e) input.setRangeText('', s, e, 'end');
+else if (s > 0) { const c = input.value.charCodeAt(s - 1); input.setRangeText('', s - (c >= 0xDC00 && c <= 0xDFFF && s > 1 ? 2 : 1), s, 'end'); }
+fire();
+if (layer === 'abc' && sh !== 2 && !input.value.trim()) setSh(1);
+}
+function setSh(v) { if (sh === v) return; sh = v; if (layer === 'abc') render(); }
+
+function keyHTML(k) {
+if (k === 'shift') return `<button type="button" class="kb-k fn${sh ? ' act' : ''}" data-a="shift">${sh === 2 ? '⇪' : '⇧'}</button>`;
+if (k === 'back') return '<button type="button" class="kb-k fn" data-a="back" aria-label="Delete">⌫</button>';
+if (k === 'num') return '<button type="button" class="kb-k fn" data-a="num">?123</button>';
+if (k === 'sym') return '<button type="button" class="kb-k fn" data-a="sym">#+=</button>';
+if (k === 'abc') return '<button type="button" class="kb-k fn" data-a="abc">ABC</button>';
+if (k === 'space') return '<button type="button" class="kb-k sp" data-a="space" aria-label="Space"></button>';
+if (k === 'enter') return '<button type="button" class="kb-k fn go" data-a="enter" aria-label="New line">↵</button>';
+const ch = layer === 'abc' && sh ? k.toUpperCase() : k;
+return `<button type="button" class="kb-k" data-k="${esc(ch)}">${esc(ch)}</button>`;
+}
+function render() {
+kb.className = 'kb kbt-' + cfg.theme + ' l-' + layer + (kb.classList.contains('open') ? ' open' : '');
+body.innerHTML = L[layer].map((r, i) => `<div class="kb-row r${i}">${r.map(keyHTML).join('')}</div>`).join('');
+$('kbName').textContent = (THEMES.find((t) => t[0] === cfg.theme) || THEMES[0])[1];
+}
+
+let holdT = 0, holdI = 0, lastShift = 0;
+const stopHold = () => { clearTimeout(holdT); clearInterval(holdI); holdT = holdI = 0; };
+function press(b) {
+const a = b.dataset.a; b.classList.add('on'); navigator.vibrate?.(6);
+if (a === 'back') { back(); holdT = setTimeout(() => { holdI = setInterval(back, 55); }, 380); }
+else if (a === 'shift') { const n = Date.now(); if (sh === 2) sh = 0; else if (n - lastShift < 350) sh = 2; else sh = sh ? 0 : 1; lastShift = n; render(); }
+else if (a === 'num' || a === 'sym' || a === 'abc') { layer = a; render(); }
+else if (a === 'space') ins(' ');
+else if (a === 'enter') ins('\n');
+else if (b.dataset.k != null) ins(b.dataset.k);
+}
+kb.addEventListener('pointerdown', (e) => {
+const t = e.target.closest('[data-top]');
+if (t) { e.preventDefault(); if (t.dataset.top === 'hide') { closeKb(); input.blur(); } else openPicker(); return; }
+const b = e.target.closest('.kb-k'); if (!b) { e.preventDefault(); return; }
+e.preventDefault(); press(b);
+});
+['pointerup', 'pointercancel'].forEach((n) => document.addEventListener(n, () => { stopHold(); kb.querySelectorAll('.kb-k.on').forEach((x) => x.classList.remove('on')); }));
+kb.addEventListener('contextmenu', (e) => e.preventDefault());
+kb.addEventListener('mousedown', (e) => e.preventDefault()); // a tap on a key must never take focus away from the message box
+
+function openKb() {
+if (!cfg.on) return;
+if (layer === 'abc' && sh !== 2) sh = input.value.trim() ? 0 : 1;
+kb.classList.add('open'); kb.setAttribute('aria-hidden', 'false'); render();
+requestAnimationFrame(() => { const m = $('cpMsgs'); if (m) m.scrollTop = m.scrollHeight; });
+}
+function closeKb() { stopHold(); kb.classList.remove('open'); kb.setAttribute('aria-hidden', 'true'); }
+input.addEventListener('focus', () => { if (cfg.on) openKb(); });
+input.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== input) closeKb(); }, 140));
+new MutationObserver(() => { if (!app.classList.contains('active')) closeKb(); }).observe(app, { attributes: true, attributeFilter: ['class'] });
+
+/* turn the phone's own keyboard off / on */
+function apply() {
+if (cfg.on) input.setAttribute('inputmode', 'none'); else input.removeAttribute('inputmode');
+const btn = $('cpmKb'); if (btn) btn.querySelector('.ml').textContent = cfg.on ? 'Disable inweb chat keyboard' : 'Enable inweb chat keyboard';
+kb.className = 'kb kbt-' + cfg.theme + ' l-' + layer;
+}
+function enable(theme) {
+cfg = { on: true, theme }; save(); apply(); closeSheet();
+input.blur(); setTimeout(() => { input.focus({ preventScroll: true }); openKb(); }, 60);
+toast('Inweb keyboard enabled ✨', 'success');
+}
+function disable() {
+cfg.on = false; save(); closeKb(); apply();
+toast('Inweb keyboard disabled — your own keyboard is back', 'info');
+if (state.active) { input.blur(); setTimeout(() => input.focus(), 80); }
+}
+
+/* design picker (5 premium designs, live shining previews) */
+function previewHTML(id, name) {
+const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+return `<button type="button" class="kbp kbt-${id}${cfg.on && cfg.theme === id ? ' sel' : ''}" data-kbth="${id}"><span class="kbp-h"><b>${name}</b><i>${cfg.on && cfg.theme === id ? 'Active' : 'Tap to use'}</i></span><span class="kbp-pv">${rows.map((r) => `<span class="kbp-r">${[...r].map((c) => `<i>${c}</i>`).join('')}</span>`).join('')}</span></button>`;
+}
+function openPicker() {
+$('cpMenu').classList.remove('open');
+openSheet('Choose your keyboard', `<p class="sh-note" style="margin:-4px 0 12px">Pick a design — it replaces your phone keyboard inside this chat.</p><div class="kbp-list">${THEMES.map(([id, n]) => previewHTML(id, n)).join('')}</div>`);
+}
+sheetBody.addEventListener('click', (e) => { const b = e.target.closest('[data-kbth]'); if (b) enable(b.dataset.kbth); });
+
+/* 3-dots menu entry: Enable ⇄ Disable */
+$('cpMenu').insertAdjacentHTML('afterbegin', `<button id="cpmKb" type="button">${mi('<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.500" y="6" width="19" height="12" rx="2.500"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>', 'Enable inweb chat keyboard')}</button>`);
+$('cpmKb').onclick = () => { $('cpMenu').classList.remove('open'); if (cfg.on) disable(); else openPicker(); };
+apply();
+})();
