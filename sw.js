@@ -1,4 +1,4 @@
-const CACHE = 'our-space-v27';
+const CACHE = 'our-space-v28';
 const SHELL = ['./', './index.html', './style.css', './app.js', './features.js', './features.css', './premium.js', './chat.css', './chat.js', './notify.js', './manifest.json',
 './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', (e) => {
@@ -50,3 +50,4 @@ return cached || net;
 })
 );
 });
+
